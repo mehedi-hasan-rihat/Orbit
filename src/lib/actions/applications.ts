@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { applicationSchema, updateStatusSchema } from "@/lib/validations";
 import { revalidatePath } from "next/cache";
-import { ApplicationStatus } from "../../generated/prisma/enums";
+import { ApplicationStatus } from "@/generated/prisma/enums";
 
 async function requireUser() {
   const session = await getSession();
