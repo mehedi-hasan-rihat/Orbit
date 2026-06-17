@@ -1,7 +1,6 @@
 import { getApplications } from "@/lib/actions/applications";
 import { getTags } from "@/lib/actions/tags";
 import { ApplicationsList } from "@/components/applications-list";
-import { TagManager } from "@/components/tag-manager";
 import { MobileNav } from "@/components/mobile-nav";
 
 interface Props {
@@ -25,17 +24,14 @@ export default async function ApplicationsPage({ searchParams }: Props) {
 
   return (
     <>
-      <div className="space-y-6">
-        <TagManager tags={JSON.parse(JSON.stringify(tags))} />
-        <ApplicationsList
-          applications={JSON.parse(JSON.stringify(applications))}
-          availableTags={JSON.parse(JSON.stringify(tags))}
-          search={params.search || ""}
-          status={params.status || "ALL"}
-          sort={params.sort || "createdAt"}
-          showArchived={showArchived}
-        />
-      </div>
+      <ApplicationsList
+        applications={JSON.parse(JSON.stringify(applications))}
+        availableTags={JSON.parse(JSON.stringify(tags))}
+        search={params.search || ""}
+        status={params.status || "ALL"}
+        sort={params.sort || "createdAt"}
+        showArchived={showArchived}
+      />
       <MobileNav />
     </>
   );
