@@ -7,6 +7,7 @@ import clsx from "clsx";
 const navigation = [
   { name: "Home", href: "/dashboard", icon: "📊" },
   { name: "Apps", href: "/dashboard/applications", icon: "📋" },
+  { name: "Calendar", href: "/dashboard/calendar", icon: "📅" },
   { name: "Companies", href: "/dashboard/companies", icon: "🏢" },
 ];
 

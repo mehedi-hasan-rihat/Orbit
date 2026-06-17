@@ -4,9 +4,11 @@ import { useState } from "react";
 import Link from "next/link";
 import { StatusBadge } from "./status-badge";
 import { ApplicationForm } from "./application-form";
-import { deleteApplication, archiveApplication, updateApplicationStatus } from "@/lib/actions/applications";
+import { deleteApplication } from "@/lib/actions/applications";
 import { ExportButton } from "./export-button";
+import { QuickActions } from "./quick-actions";
 import { useRouter } from "next/navigation";
+import clsx from "clsx";
 
 interface Tag {
   id: string;
@@ -66,197 +68,180 @@ export function ApplicationsList({
   }
 
   async function handleDelete(id: string) {
-    if (!confirm("Are you sure you want to delete this application?")) return;
+    if (!confirm("Delete this application? This cannot be undone.")) return;
     await deleteApplication(id);
     router.refresh();
   }
 
-  async function handleArchive(id: string) {
-    await archiveApplication(id);
-    router.refresh();
-  }
-
-  async function handleQuickStatus(id: string, newStatus: string) {
-    await updateApplicationStatus(id, newStatus);
-    router.refresh();
-  }
-
-  const isOverdue = (date: Date | null) => {
-    if (!date) return false;
-    return new Date(date) < new Date();
-  };
+  const isOverdue = (date: Date | null) =>
+    date ? new Date(date) < new Date() : false;
 
   return (
-    <div className="space-y-4">
-      {/* Tabs */}
-      <div className="flex gap-1 border-b">
-        <button
-          onClick={() => {
-            const params = new URLSearchParams();
-            if (searchInput) params.set("search", searchInput);
-            if (statusFilter && statusFilter !== "ALL") params.set("status", statusFilter);
-            if (sortBy) params.set("sort", sortBy);
-            router.push(`/dashboard/applications?${params.toString()}`);
-          }}
-          className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-            !showArchived
-              ? "border-foreground text-foreground"
-              : "border-transparent text-muted-foreground hover:text-foreground"
-          }`}
-        >
-          Active
-        </button>
-        <button
-          onClick={() => router.push("/dashboard/applications?archived=true")}
-          className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-            showArchived
-              ? "border-foreground text-foreground"
-              : "border-transparent text-muted-foreground hover:text-foreground"
-          }`}
-        >
-          Archived
-        </button>
-      </div>
-
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div className="space-y-6">
+      {/* Page header */}
+      <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold">
+          <h1 className="text-xl font-semibold tracking-tight">
             {showArchived ? "Archived" : "Applications"}
           </h1>
-          <p className="text-sm text-muted-foreground">
-            {applications.length} application{applications.length !== 1 ? "s" : ""}
+          <p className="text-sm text-muted-foreground mt-0.5">
+            {applications.length} {applications.length === 1 ? "application" : "applications"}
           </p>
         </div>
         {!showArchived && (
-          <div className="flex gap-2">
+          <div className="flex items-center gap-2">
             <ExportButton />
             <button
               onClick={() => setShowForm(true)}
-              className="h-9 px-4 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-colors"
+              className="h-8 px-3 rounded-md bg-primary text-primary-foreground text-xs font-semibold hover:opacity-90 transition-opacity"
             >
-              + New Application
+              + New
             </button>
           </div>
         )}
       </div>
 
-      {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        <input
-          type="text"
-          placeholder="Search company, role..."
-          value={searchInput}
-          onChange={(e) => setSearchInput(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") applyFilters();
-          }}
-          onBlur={() => applyFilters()}
-          className="flex h-9 w-full sm:w-64 rounded-md border bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-        />
-        <select
-          value={statusFilter}
-          onChange={(e) => {
-            setStatusFilter(e.target.value);
-            applyFilters(undefined, e.target.value);
-          }}
-          className="flex h-9 rounded-md border bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-        >
-          <option value="ALL">All Statuses</option>
-          <option value="WISHLIST">Wishlist</option>
-          <option value="APPLIED">Applied</option>
-          <option value="INTERVIEW">Interview</option>
-          <option value="OFFER">Offer</option>
-          <option value="REJECTED">Rejected</option>
-        </select>
-        <select
-          value={sortBy}
-          onChange={(e) => {
-            setSortBy(e.target.value);
-            applyFilters(undefined, undefined, e.target.value);
-          }}
-          className="flex h-9 rounded-md border bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-        >
-          <option value="createdAt">Newest</option>
-          <option value="updatedAt">Recently Updated</option>
-          <option value="company">Company A-Z</option>
-          <option value="appliedDate">Applied Date</option>
-          <option value="followUpDate">Follow-up Date</option>
-        </select>
+      {/* Tabs + Filters row */}
+      <div className="flex flex-col gap-3">
+        {/* Tabs */}
+        <div className="flex gap-0 border-b">
+          <button
+            onClick={() => {
+              const params = new URLSearchParams();
+              if (searchInput) params.set("search", searchInput);
+              if (statusFilter && statusFilter !== "ALL") params.set("status", statusFilter);
+              if (sortBy) params.set("sort", sortBy);
+              router.push(`/dashboard/applications?${params.toString()}`);
+            }}
+            className={clsx(
+              "px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors",
+              !showArchived
+                ? "border-foreground text-foreground"
+                : "border-transparent text-muted-foreground hover:text-foreground"
+            )}
+          >
+            Active
+          </button>
+          <button
+            onClick={() => router.push("/dashboard/applications?archived=true")}
+            className={clsx(
+              "px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors",
+              showArchived
+                ? "border-foreground text-foreground"
+                : "border-transparent text-muted-foreground hover:text-foreground"
+            )}
+          >
+            Archived
+          </button>
+        </div>
+
+        {/* Filters */}
+        <div className="flex flex-col sm:flex-row gap-2">
+          <div className="relative flex-1 sm:max-w-xs">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs">🔍</span>
+            <input
+              type="text"
+              placeholder="Search company or role..."
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") applyFilters(); }}
+              onBlur={() => applyFilters()}
+              className="flex h-8 w-full rounded-md border bg-background pl-8 pr-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+            />
+          </div>
+          <select
+            value={statusFilter}
+            onChange={(e) => { setStatusFilter(e.target.value); applyFilters(undefined, e.target.value); }}
+            className="flex h-8 rounded-md border bg-background px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+          >
+            <option value="ALL">All Statuses</option>
+            <option value="WISHLIST">Wishlist</option>
+            <option value="APPLIED">Applied</option>
+            <option value="INTERVIEW">Interview</option>
+            <option value="OFFER">Offer</option>
+            <option value="REJECTED">Rejected</option>
+          </select>
+          <select
+            value={sortBy}
+            onChange={(e) => { setSortBy(e.target.value); applyFilters(undefined, undefined, e.target.value); }}
+            className="flex h-8 rounded-md border bg-background px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+          >
+            <option value="createdAt">Newest first</option>
+            <option value="updatedAt">Recently updated</option>
+            <option value="company">Company A–Z</option>
+            <option value="appliedDate">Applied date</option>
+            <option value="followUpDate">Follow-up date</option>
+          </select>
+        </div>
       </div>
 
-      {/* List */}
+      {/* Empty state */}
       {applications.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16 text-center">
-          <p className="text-lg font-medium">
+        <div className="flex flex-col items-center justify-center py-20 text-center border rounded-xl">
+          <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center text-xl mb-4">
+            {showArchived ? "📦" : "📋"}
+          </div>
+          <p className="font-medium">
             {showArchived ? "No archived applications" : "No applications yet"}
           </p>
-          <p className="text-sm text-muted-foreground mt-1">
+          <p className="text-sm text-muted-foreground mt-1 max-w-xs">
             {search || (status && status !== "ALL")
-              ? "Try changing your filters"
+              ? "No results match your filters. Try adjusting them."
               : showArchived
-              ? "Archived applications will appear here"
-              : "Add your first job application to get started"}
+              ? "Applications you archive will appear here."
+              : "Track your first job application to get started."}
           </p>
           {!search && (!status || status === "ALL") && !showArchived && (
             <button
               onClick={() => setShowForm(true)}
-              className="mt-4 h-9 px-4 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-colors"
+              className="mt-5 h-8 px-4 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity"
             >
               + New Application
             </button>
           )}
         </div>
       ) : (
-        <div className="space-y-2">
-          {applications.map((app) => (
-            <div
-              key={app.id}
-              className="border rounded-lg p-4 hover:bg-muted/30 transition-colors"
-            >
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex-1 min-w-0">
+        /* Table */
+        <div className="border rounded-xl overflow-hidden">
+          {/* Table header */}
+          <div className="hidden sm:grid grid-cols-[2fr_2fr_1fr_1fr_auto] gap-4 px-4 py-2.5 bg-muted/40 border-b text-xs font-medium text-muted-foreground">
+            <span>Company / Role</span>
+            <span>Role</span>
+            <span>Status</span>
+            <span>Date</span>
+            <span />
+          </div>
+
+          <div className="divide-y">
+            {applications.map((app) => (
+              <div
+                key={app.id}
+                className="group grid grid-cols-1 sm:grid-cols-[2fr_2fr_1fr_1fr_auto] gap-2 sm:gap-4 items-center px-4 py-3.5 hover:bg-muted/30 transition-colors"
+              >
+                {/* Company */}
+                <div className="min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     <Link
                       href={`/dashboard/applications/${app.id}`}
-                      className="font-medium text-sm hover:underline"
+                      className="font-medium text-sm hover:underline underline-offset-2 truncate"
                     >
                       {app.company}
                     </Link>
-                    <StatusBadge status={app.status} />
                     {app.followUpDate && isOverdue(app.followUpDate) && (
-                      <span className="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700 dark:bg-red-900/50 dark:text-red-300">
+                      <span className="inline-flex items-center rounded-full bg-red-100 text-red-600 dark:bg-red-900/40 dark:text-red-400 px-2 py-0.5 text-[10px] font-medium">
                         Overdue
                       </span>
                     )}
                   </div>
-                  <p className="text-sm text-muted-foreground mt-0.5">{app.role}</p>
-                  <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
-                    {app.appliedDate && (
-                      <span>Applied {new Date(app.appliedDate).toLocaleDateString()}</span>
-                    )}
-                    {app.followUpDate && (
-                      <span className={isOverdue(app.followUpDate) ? "text-destructive" : ""}>
-                        Follow-up {new Date(app.followUpDate).toLocaleDateString()}
-                      </span>
-                    )}
-                    {app.jobUrl && (
-                      <a
-                        href={app.jobUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="hover:underline"
-                      >
-                        View posting ↗
-                      </a>
-                    )}
-                  </div>
+                  {/* Mobile: show role inline */}
+                  <p className="text-xs text-muted-foreground sm:hidden mt-0.5">{app.role}</p>
+                  {/* Tags */}
                   {app.tags.length > 0 && (
-                    <div className="flex gap-1.5 mt-2">
+                    <div className="flex gap-1 mt-1.5 flex-wrap">
                       {app.tags.map(({ tag }) => (
                         <span
                           key={tag.id}
-                          className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium text-white"
+                          className="inline-flex items-center rounded-full px-1.5 py-0.5 text-[10px] font-medium text-white"
                           style={{ backgroundColor: tag.color }}
                         >
                           {tag.name}
@@ -266,51 +251,71 @@ export function ApplicationsList({
                   )}
                 </div>
 
-                {/* Quick Actions */}
-                <div className="flex items-center gap-1 shrink-0">
-                  {!showArchived && app.status !== "INTERVIEW" && app.status !== "OFFER" && (
-                    <button
-                      onClick={() => handleQuickStatus(app.id, "INTERVIEW")}
-                      title="Mark as Interview"
-                      className="h-7 px-2 rounded text-xs border hover:bg-accent transition-colors"
+                {/* Role (desktop) */}
+                <div className="hidden sm:block min-w-0">
+                  <p className="text-sm text-muted-foreground truncate">{app.role}</p>
+                  {app.jobUrl && (
+                    <a
+                      href={app.jobUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[10px] text-muted-foreground hover:underline"
                     >
-                      → Interview
-                    </button>
+                      View posting ↗
+                    </a>
                   )}
-                  {!showArchived && app.status === "INTERVIEW" && (
-                    <button
-                      onClick={() => handleQuickStatus(app.id, "OFFER")}
-                      title="Mark as Offer"
-                      className="h-7 px-2 rounded text-xs border hover:bg-accent transition-colors"
-                    >
-                      → Offer
-                    </button>
+                </div>
+
+                {/* Status */}
+                <div>
+                  <StatusBadge status={app.status} />
+                </div>
+
+                {/* Date */}
+                <div className="hidden sm:block">
+                  <p className="text-xs text-muted-foreground">
+                    {app.appliedDate
+                      ? new Date(app.appliedDate).toLocaleDateString([], { month: "short", day: "numeric", year: "numeric" })
+                      : "—"}
+                  </p>
+                  {app.followUpDate && (
+                    <p className={clsx("text-[10px] mt-0.5", isOverdue(app.followUpDate) ? "text-destructive" : "text-muted-foreground")}>
+                      ↻ {new Date(app.followUpDate).toLocaleDateString([], { month: "short", day: "numeric" })}
+                    </p>
                   )}
+                </div>
+
+                {/* Actions */}
+                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Link
+                    href={`/dashboard/applications/${app.id}`}
+                    className="h-7 px-2.5 rounded-md text-xs font-medium border hover:bg-accent transition-colors"
+                  >
+                    View
+                  </Link>
                   <button
                     onClick={() => setEditingApp(app)}
-                    className="h-7 px-2 rounded text-xs border hover:bg-accent transition-colors"
+                    className="h-7 px-2.5 rounded-md text-xs font-medium border hover:bg-accent transition-colors"
                   >
                     Edit
                   </button>
-                  {!showArchived && (
-                    <button
-                      onClick={() => handleArchive(app.id)}
-                      className="h-7 px-2 rounded text-xs border hover:bg-accent transition-colors"
-                      title="Archive"
-                    >
-                      Archive
-                    </button>
-                  )}
                   <button
                     onClick={() => handleDelete(app.id)}
-                    className="h-7 px-2 rounded text-xs text-destructive border border-destructive/30 hover:bg-destructive/10 transition-colors"
+                    className="h-7 px-2.5 rounded-md text-xs font-medium text-destructive border border-destructive/20 hover:bg-destructive/10 transition-colors"
                   >
                     Delete
                   </button>
+                  {!showArchived && (
+                    <QuickActions
+                      applicationId={app.id}
+                      currentStatus={app.status}
+                      company={app.company}
+                    />
+                  )}
                 </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       )}
 

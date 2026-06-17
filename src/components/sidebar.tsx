@@ -13,10 +13,11 @@ interface SidebarProps {
 }
 
 const navigation = [
-  { name: "Dashboard", href: "/dashboard" , icon: "" },
-  { name: "Applications", href: "/dashboard/applications", icon: "" },
-  { name: "Companies", href: "/dashboard/companies", icon: "" },
-  { name: "Tags", href: "/dashboard/tags", icon: "" },
+  { name: "Dashboard", href: "/dashboard" , icon: "📊" },
+  { name: "Applications", href: "/dashboard/applications", icon: "📋" },
+  { name: "Calendar", href: "/dashboard/calendar", icon: "📅" },
+  { name: "Companies", href: "/dashboard/companies", icon: "🏢" },
+  { name: "Tags", href: "/dashboard/tags", icon: "🏷️" },
 ];
 
 export function Sidebar({ user }: SidebarProps) {

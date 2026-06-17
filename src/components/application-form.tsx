@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { createApplication, updateApplication } from "@/lib/actions/applications";
+import { useState, useRef } from "react";
+import { createApplication, updateApplication, checkDuplicate } from "@/lib/actions/applications";
 import { useRouter } from "next/navigation";
 
 interface Tag {
@@ -31,10 +31,26 @@ const statuses = ["WISHLIST", "APPLIED", "INTERVIEW", "OFFER", "REJECTED"];
 export function ApplicationForm({ application, availableTags, onClose }: ApplicationFormProps) {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string[]>>({});
+  const [duplicate, setDuplicate] = useState<{ id: string; company: string; role: string; status: string } | null>(null);
   const [selectedTags, setSelectedTags] = useState<string[]>(
     application?.tags?.map((t) => t.tag.id) || []
   );
+  const duplicateCheckTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const router = useRouter();
+
+  // Debounced duplicate check
+  function handleFieldChange(company: string, role: string) {
+    if (application) return; // skip on edit
+    if (!company.trim() || !role.trim()) {
+      setDuplicate(null);
+      return;
+    }
+    if (duplicateCheckTimer.current) clearTimeout(duplicateCheckTimer.current);
+    duplicateCheckTimer.current = setTimeout(async () => {
+      const result = await checkDuplicate(company.trim(), role.trim());
+      setDuplicate(result as typeof duplicate);
+    }, 500);
+  }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -80,62 +96,73 @@ export function ApplicationForm({ application, availableTags, onClose }: Applica
           <h2 className="text-lg font-semibold">
             {application ? "Edit Application" : "New Application"}
           </h2>
-          <button
-            onClick={onClose}
-            className="text-muted-foreground hover:text-foreground"
-            aria-label="Close"
-          >
+          <button onClick={onClose} className="text-muted-foreground hover:text-foreground" aria-label="Close">
             ✕
           </button>
         </div>
 
+        {/* Duplicate warning */}
+        {duplicate && (
+          <div className="mb-4 rounded-md border border-amber-300 bg-amber-50 dark:bg-amber-900/20 dark:border-amber-700 p-3 text-sm">
+            <p className="font-medium text-amber-800 dark:text-amber-300">Possible duplicate</p>
+            <p className="text-amber-700 dark:text-amber-400 text-xs mt-0.5">
+              You already have an application for <strong>{duplicate.company}</strong> — <strong>{duplicate.role}</strong> with status <strong>{duplicate.status}</strong>.
+            </p>
+            <button
+              type="button"
+              onClick={() => setDuplicate(null)}
+              className="text-xs text-amber-600 dark:text-amber-400 underline mt-1"
+            >
+              Continue anyway
+            </button>
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-4">
           {errors._form && (
             <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
-              {errors._form.join(", ")}
+              {(errors._form as string[]).join(", ")}
             </div>
           )}
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <label htmlFor="company" className="text-sm font-medium">
-                Company *
-              </label>
+              <label htmlFor="company" className="text-sm font-medium">Company *</label>
               <input
                 id="company"
                 name="company"
                 type="text"
                 defaultValue={application?.company || ""}
                 required
+                onChange={(e) => {
+                  const role = (document.getElementById("role") as HTMLInputElement)?.value || "";
+                  handleFieldChange(e.target.value, role);
+                }}
                 className="flex h-10 w-full rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
               />
-              {errors.company && (
-                <p className="text-xs text-destructive">{errors.company[0]}</p>
-              )}
+              {errors.company && <p className="text-xs text-destructive">{errors.company[0]}</p>}
             </div>
 
             <div className="space-y-2">
-              <label htmlFor="role" className="text-sm font-medium">
-                Role *
-              </label>
+              <label htmlFor="role" className="text-sm font-medium">Role *</label>
               <input
                 id="role"
                 name="role"
                 type="text"
                 defaultValue={application?.role || ""}
                 required
+                onChange={(e) => {
+                  const company = (document.getElementById("company") as HTMLInputElement)?.value || "";
+                  handleFieldChange(company, e.target.value);
+                }}
                 className="flex h-10 w-full rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
               />
-              {errors.role && (
-                <p className="text-xs text-destructive">{errors.role[0]}</p>
-              )}
+              {errors.role && <p className="text-xs text-destructive">{errors.role[0]}</p>}
             </div>
           </div>
 
           <div className="space-y-2">
-            <label htmlFor="jobUrl" className="text-sm font-medium">
-              Job URL
-            </label>
+            <label htmlFor="jobUrl" className="text-sm font-medium">Job URL</label>
             <input
               id="jobUrl"
               name="jobUrl"
@@ -144,16 +171,12 @@ export function ApplicationForm({ application, availableTags, onClose }: Applica
               placeholder="https://..."
               className="flex h-10 w-full rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
             />
-            {errors.jobUrl && (
-              <p className="text-xs text-destructive">{errors.jobUrl[0]}</p>
-            )}
+            {errors.jobUrl && <p className="text-xs text-destructive">{errors.jobUrl[0]}</p>}
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="space-y-2">
-              <label htmlFor="status" className="text-sm font-medium">
-                Status
-              </label>
+              <label htmlFor="status" className="text-sm font-medium">Status</label>
               <select
                 id="status"
                 name="status"
@@ -169,35 +192,23 @@ export function ApplicationForm({ application, availableTags, onClose }: Applica
             </div>
 
             <div className="space-y-2">
-              <label htmlFor="appliedDate" className="text-sm font-medium">
-                Applied Date
-              </label>
+              <label htmlFor="appliedDate" className="text-sm font-medium">Applied Date</label>
               <input
                 id="appliedDate"
                 name="appliedDate"
                 type="date"
-                defaultValue={
-                  application?.appliedDate
-                    ? new Date(application.appliedDate).toISOString().split("T")[0]
-                    : ""
-                }
+                defaultValue={application?.appliedDate ? new Date(application.appliedDate).toISOString().split("T")[0] : ""}
                 className="flex h-10 w-full rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
               />
             </div>
 
             <div className="space-y-2">
-              <label htmlFor="followUpDate" className="text-sm font-medium">
-                Follow-up Date
-              </label>
+              <label htmlFor="followUpDate" className="text-sm font-medium">Follow-up</label>
               <input
                 id="followUpDate"
                 name="followUpDate"
                 type="date"
-                defaultValue={
-                  application?.followUpDate
-                    ? new Date(application.followUpDate).toISOString().split("T")[0]
-                    : ""
-                }
+                defaultValue={application?.followUpDate ? new Date(application.followUpDate).toISOString().split("T")[0] : ""}
                 className="flex h-10 w-full rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
               />
             </div>
@@ -218,11 +229,7 @@ export function ApplicationForm({ application, availableTags, onClose }: Applica
                         ? "border-transparent text-white"
                         : "border-border text-muted-foreground hover:border-foreground"
                     }`}
-                    style={
-                      selectedTags.includes(tag.id)
-                        ? { backgroundColor: tag.color }
-                        : undefined
-                    }
+                    style={selectedTags.includes(tag.id) ? { backgroundColor: tag.color } : undefined}
                   >
                     {tag.name}
                   </button>
@@ -232,9 +239,7 @@ export function ApplicationForm({ application, availableTags, onClose }: Applica
           )}
 
           <div className="space-y-2">
-            <label htmlFor="notes" className="text-sm font-medium">
-              Notes
-            </label>
+            <label htmlFor="notes" className="text-sm font-medium">Notes</label>
             <textarea
               id="notes"
               name="notes"

@@ -386,6 +386,51 @@ export async function getCompanyStats() {
     .sort((a, b) => b.total - a.total);
 }
 
+export async function checkDuplicate(company: string, role: string) {
+  const session = await getSession();
+  if (!session) return null;
+
+  return prisma.application.findFirst({
+    where: {
+      userId: session.userId,
+      company: { equals: company, mode: "insensitive" },
+      role: { equals: role, mode: "insensitive" },
+      archived: false,
+    },
+    select: { id: true, company: true, role: true, status: true },
+  });
+}
+
+export async function addQuickNote(id: string, note: string) {
+  const session = await requireUser();
+
+  const existing = await prisma.application.findFirst({
+    where: { id, userId: session.userId },
+  });
+  if (!existing) return { error: "Not found" };
+
+  const newNotes = existing.notes
+    ? `${existing.notes}\n\n[${new Date().toLocaleDateString()}] ${note}`
+    : `[${new Date().toLocaleDateString()}] ${note}`;
+
+  await prisma.application.update({
+    where: { id },
+    data: {
+      notes: newNotes,
+      activities: {
+        create: {
+          type: "NOTE_ADDED",
+          description: `Note added: ${note.slice(0, 60)}${note.length > 60 ? "..." : ""}`,
+        },
+      },
+    },
+  });
+
+  revalidatePath("/dashboard");
+  revalidatePath(`/dashboard/applications/${id}`);
+  return { success: true };
+}
+
 export async function exportApplicationsCsv() {
   const session = await requireUser();
 

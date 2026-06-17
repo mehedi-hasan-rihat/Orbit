@@ -13,6 +13,7 @@ model User {
   email        String        @unique
   password     String
   theme        String        @default("system")
+  pipelineStages String?     // JSON array of custom stage labels
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
   applications Application[]
@@ -45,6 +46,7 @@ model Application {
   createdAt     DateTime          @default(now())
   updatedAt     DateTime          @updatedAt
   activities    Activity[]
+  interviews    Interview[]
   tags          ApplicationTag[]
 
   @@index([userId])
@@ -76,6 +78,32 @@ model Tag {
 
   @@unique([userId, name])
   @@index([userId])
+}
+
+enum InterviewType {
+  HR
+  TECHNICAL
+  SYSTEM_DESIGN
+  BEHAVIORAL
+  CULTURE_FIT
+  TAKE_HOME
+  FINAL
+  OTHER
+}
+
+model Interview {
+  id            String        @id @default(cuid())
+  applicationId String
+  application   Application   @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  type          InterviewType
+  round         Int           @default(1)
+  scheduledAt   DateTime?
+  notes         String?
+  outcome       String?       // PASSED, FAILED, PENDING, CANCELLED
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@index([applicationId])
 }
 
 model ApplicationTag {

@@ -88,15 +88,18 @@ export default async function DashboardPage() {
                     <th className="text-left py-3 px-4 font-medium">Company</th>
                     <th className="text-left py-3 px-4 font-medium">Role</th>
                     <th className="text-left py-3 px-4 font-medium">Status</th>
-                    <th className="text-left py-3 px-4 font-medium hidden sm:table-cell">
-                      Date
-                    </th>
+                    <th className="text-left py-3 px-4 font-medium hidden sm:table-cell">Date</th>
+                    <th className="text-right py-3 px-4 font-medium"></th>
                   </tr>
                 </thead>
                 <tbody className="divide-y">
                   {recentApplications.map((app) => (
-                    <tr key={app.id} className="hover:bg-muted/30 transition-colors">
-                      <td className="py-3 px-4 font-medium">{app.company}</td>
+                    <tr key={app.id} className="hover:bg-muted/30 transition-colors cursor-pointer">
+                      <td className="py-3 px-4 font-medium">
+                        <Link href={`/dashboard/applications/${app.id}`} className="hover:underline">
+                          {app.company}
+                        </Link>
+                      </td>
                       <td className="py-3 px-4 text-muted-foreground">{app.role}</td>
                       <td className="py-3 px-4">
                         <StatusBadge status={app.status} />
@@ -105,6 +108,14 @@ export default async function DashboardPage() {
                         {app.appliedDate
                           ? new Date(app.appliedDate).toLocaleDateString()
                           : "—"}
+                      </td>
+                      <td className="py-3 px-4 text-right">
+                        <Link
+                          href={`/dashboard/applications/${app.id}`}
+                          className="text-xs text-muted-foreground hover:text-foreground"
+                        >
+                          View →
+                        </Link>
                       </td>
                     </tr>
                   ))}
