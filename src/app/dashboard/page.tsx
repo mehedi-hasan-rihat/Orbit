@@ -1,14 +1,16 @@
-import { getApplications, getApplicationStats } from "@/lib/actions/applications";
+import { getApplications, getApplicationStats, getFollowUps } from "@/lib/actions/applications";
 import { AnalyticsCharts } from "@/components/analytics-charts";
 import { KanbanBoard } from "@/components/kanban-board";
+import { FollowUps } from "@/components/follow-ups";
 import { StatusBadge } from "@/components/status-badge";
 import { MobileNav } from "@/components/mobile-nav";
 import Link from "next/link";
 
 export default async function DashboardPage() {
-  const [applications, stats] = await Promise.all([
+  const [applications, stats, followUps] = await Promise.all([
     getApplications(),
     getApplicationStats(),
+    getFollowUps(),
   ]);
 
   const recentApplications = applications.slice(0, 5);
@@ -22,10 +24,26 @@ export default async function DashboardPage() {
             <h1 className="text-2xl font-bold">Dashboard</h1>
             <p className="text-sm text-muted-foreground">
               Overview of your job search progress
+              {stats.thisWeek > 0 && (
+                <span> · {stats.thisWeek} added this week</span>
+              )}
             </p>
           </div>
           <AnalyticsCharts stats={stats} />
         </section>
+
+        {/* Follow-ups Section */}
+        {followUps.length > 0 && (
+          <section>
+            <div className="mb-4">
+              <h2 className="text-xl font-bold">Follow-ups</h2>
+              <p className="text-sm text-muted-foreground">
+                Upcoming and overdue follow-ups
+              </p>
+            </div>
+            <FollowUps applications={JSON.parse(JSON.stringify(followUps))} />
+          </section>
+        )}
 
         {/* Kanban Section */}
         <section>

@@ -5,8 +5,9 @@ import { usePathname } from "next/navigation";
 import clsx from "clsx";
 
 const navigation = [
-  { name: "Dashboard", href: "/dashboard", icon: "📊" },
-  { name: "Applications", href: "/dashboard/applications", icon: "📋" },
+  { name: "Home", href: "/dashboard", icon: "📊" },
+  { name: "Apps", href: "/dashboard/applications", icon: "📋" },
+  { name: "Companies", href: "/dashboard/companies", icon: "🏢" },
 ];
 
 export function MobileNav() {

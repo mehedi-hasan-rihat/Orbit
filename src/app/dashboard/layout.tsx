@@ -14,9 +14,9 @@ export default async function DashboardLayout({
   }
 
   return (
-    <div className="flex flex-1 h-full">
+    <div className="flex h-screen overflow-hidden">
       <Sidebar user={{ name: session.name, email: session.email }} />
-      <main className="flex-1 overflow-auto">
+      <main className="flex-1 overflow-y-auto">
         <div className="p-6 max-w-7xl mx-auto">{children}</div>
       </main>
     </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { logoutAction } from "@/lib/actions/auth";
 import clsx from "clsx";
 
@@ -13,12 +13,24 @@ interface SidebarProps {
 }
 
 const navigation = [
-  { name: "Dashboard", href: "/dashboard", icon: "📊" },
+  { name: "Dashboard", href: "/dashboard" , icon: "📊" },
   { name: "Applications", href: "/dashboard/applications", icon: "📋" },
+  { name: "Companies", href: "/dashboard/companies", icon: "🏢" },
 ];
 
 export function Sidebar({ user }: SidebarProps) {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  function isActive(href: string) {
+    if (href === "/dashboard") {
+      return pathname === "/dashboard";
+    }
+    if (href === "/dashboard/applications") {
+      return pathname.startsWith("/dashboard/applications") && searchParams.get("archived") !== "true";
+    }
+    return pathname.startsWith(href);
+  }
 
   return (
     <aside className="hidden md:flex w-60 flex-col border-r bg-muted/30">
@@ -35,7 +47,7 @@ export function Sidebar({ user }: SidebarProps) {
             href={item.href}
             className={clsx(
               "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
-              pathname === item.href
+              isActive(item.href)
                 ? "bg-accent text-accent-foreground"
                 : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
             )}

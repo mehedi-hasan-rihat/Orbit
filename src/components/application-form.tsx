@@ -4,6 +4,12 @@ import { useState } from "react";
 import { createApplication, updateApplication } from "@/lib/actions/applications";
 import { useRouter } from "next/navigation";
 
+interface Tag {
+  id: string;
+  name: string;
+  color: string;
+}
+
 interface ApplicationFormProps {
   application?: {
     id: string;
@@ -12,16 +18,22 @@ interface ApplicationFormProps {
     jobUrl: string | null;
     status: string;
     appliedDate: Date | null;
+    followUpDate: Date | null;
     notes: string | null;
+    tags?: { tag: Tag }[];
   };
+  availableTags: Tag[];
   onClose: () => void;
 }
 
 const statuses = ["WISHLIST", "APPLIED", "INTERVIEW", "OFFER", "REJECTED"];
 
-export function ApplicationForm({ application, onClose }: ApplicationFormProps) {
+export function ApplicationForm({ application, availableTags, onClose }: ApplicationFormProps) {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string[]>>({});
+  const [selectedTags, setSelectedTags] = useState<string[]>(
+    application?.tags?.map((t) => t.tag.id) || []
+  );
   const router = useRouter();
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -30,6 +42,7 @@ export function ApplicationForm({ application, onClose }: ApplicationFormProps) 
     setErrors({});
 
     const formData = new FormData(e.currentTarget);
+    formData.set("tags", selectedTags.join(","));
 
     try {
       let result;
@@ -50,6 +63,14 @@ export function ApplicationForm({ application, onClose }: ApplicationFormProps) 
     } finally {
       setLoading(false);
     }
+  }
+
+  function toggleTag(tagId: string) {
+    setSelectedTags((prev) =>
+      prev.includes(tagId)
+        ? prev.filter((id) => id !== tagId)
+        : [...prev, tagId]
+    );
   }
 
   return (
@@ -128,7 +149,7 @@ export function ApplicationForm({ application, onClose }: ApplicationFormProps) 
             )}
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="space-y-2">
               <label htmlFor="status" className="text-sm font-medium">
                 Status
@@ -163,7 +184,52 @@ export function ApplicationForm({ application, onClose }: ApplicationFormProps) 
                 className="flex h-10 w-full rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
               />
             </div>
+
+            <div className="space-y-2">
+              <label htmlFor="followUpDate" className="text-sm font-medium">
+                Follow-up Date
+              </label>
+              <input
+                id="followUpDate"
+                name="followUpDate"
+                type="date"
+                defaultValue={
+                  application?.followUpDate
+                    ? new Date(application.followUpDate).toISOString().split("T")[0]
+                    : ""
+                }
+                className="flex h-10 w-full rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              />
+            </div>
           </div>
+
+          {/* Tags */}
+          {availableTags.length > 0 && (
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Tags</label>
+              <div className="flex flex-wrap gap-2">
+                {availableTags.map((tag) => (
+                  <button
+                    key={tag.id}
+                    type="button"
+                    onClick={() => toggleTag(tag.id)}
+                    className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium border transition-colors ${
+                      selectedTags.includes(tag.id)
+                        ? "border-transparent text-white"
+                        : "border-border text-muted-foreground hover:border-foreground"
+                    }`}
+                    style={
+                      selectedTags.includes(tag.id)
+                        ? { backgroundColor: tag.color }
+                        : undefined
+                    }
+                  >
+                    {tag.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div className="space-y-2">
             <label htmlFor="notes" className="text-sm font-medium">
@@ -192,11 +258,7 @@ export function ApplicationForm({ application, onClose }: ApplicationFormProps) 
               disabled={loading}
               className="h-9 px-4 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-colors disabled:opacity-50"
             >
-              {loading
-                ? "Saving..."
-                : application
-                ? "Update"
-                : "Create"}
+              {loading ? "Saving..." : application ? "Update" : "Create"}
             </button>
           </div>
         </form>

@@ -21,6 +21,10 @@ const statusConfig: Record<string, { label: string; className: string }> = {
     label: "Rejected",
     className: "bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300",
   },
+  ARCHIVED: {
+    label: "Archived",
+    className: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300",
+  },
 };
 
 export function StatusBadge({ status }: { status: string }) {

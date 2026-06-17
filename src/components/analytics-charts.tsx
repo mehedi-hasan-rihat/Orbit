@@ -22,9 +22,11 @@ interface StatsProps {
       INTERVIEW: number;
       OFFER: number;
       REJECTED: number;
+      ARCHIVED: number;
     };
     interviewRate: number;
     offerRate: number;
+    thisWeek: number;
   };
 }
 
@@ -50,10 +52,14 @@ export function AnalyticsCharts({ stats }: StatsProps) {
   return (
     <div className="space-y-8">
       {/* Summary Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
         <div className="rounded-lg border p-4 space-y-1">
           <p className="text-sm text-muted-foreground">Total</p>
           <p className="text-2xl font-bold">{stats.total}</p>
+        </div>
+        <div className="rounded-lg border p-4 space-y-1">
+          <p className="text-sm text-muted-foreground">This Week</p>
+          <p className="text-2xl font-bold">{stats.thisWeek}</p>
         </div>
         <div className="rounded-lg border p-4 space-y-1">
           <p className="text-sm text-muted-foreground">Interviews</p>
