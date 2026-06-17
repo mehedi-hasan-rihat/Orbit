@@ -203,24 +203,27 @@ export function ApplicationsList({
       ) : (
         /* Table */
         <div className="border rounded-xl overflow-hidden">
-          {/* Table header */}
-          <div className="hidden sm:grid grid-cols-[2fr_2fr_1fr_1fr_auto] gap-4 px-4 py-2.5 bg-muted/40 border-b text-xs font-medium text-muted-foreground">
-            <span>Company / Role</span>
-            <span>Role</span>
-            <span>Status</span>
-            <span>Date</span>
-            <span />
+          {/* Table header — matches row columns exactly */}
+          <div className="hidden sm:grid items-center px-4 py-2.5 bg-muted/40 border-b"
+            style={{ gridTemplateColumns: "minmax(0,2fr) minmax(0,2fr) 120px 130px 180px" }}
+          >
+            <span className="text-xs font-medium text-muted-foreground">Company</span>
+            <span className="text-xs font-medium text-muted-foreground">Role</span>
+            <span className="text-xs font-medium text-muted-foreground">Status</span>
+            <span className="text-xs font-medium text-muted-foreground">Applied</span>
+            <span className="text-xs font-medium text-muted-foreground text-right">Actions</span>
           </div>
 
           <div className="divide-y">
             {applications.map((app) => (
               <div
                 key={app.id}
-                className="group grid grid-cols-1 sm:grid-cols-[2fr_2fr_1fr_1fr_auto] gap-2 sm:gap-4 items-center px-4 py-3.5 hover:bg-muted/30 transition-colors"
+                className="group hidden sm:grid items-center px-4 py-3 hover:bg-muted/30 transition-colors"
+                style={{ gridTemplateColumns: "minmax(0,2fr) minmax(0,2fr) 120px 130px 180px" }}
               >
                 {/* Company */}
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
+                <div className="min-w-0 pr-3">
+                  <div className="flex items-center gap-1.5 flex-wrap">
                     <Link
                       href={`/dashboard/applications/${app.id}`}
                       className="font-medium text-sm hover:underline underline-offset-2 truncate"
@@ -228,16 +231,13 @@ export function ApplicationsList({
                       {app.company}
                     </Link>
                     {app.followUpDate && isOverdue(app.followUpDate) && (
-                      <span className="inline-flex items-center rounded-full bg-red-100 text-red-600 dark:bg-red-900/40 dark:text-red-400 px-2 py-0.5 text-[10px] font-medium">
+                      <span className="inline-flex items-center rounded-full bg-red-100 text-red-600 dark:bg-red-900/40 dark:text-red-400 px-1.5 py-0.5 text-[10px] font-medium shrink-0">
                         Overdue
                       </span>
                     )}
                   </div>
-                  {/* Mobile: show role inline */}
-                  <p className="text-xs text-muted-foreground sm:hidden mt-0.5">{app.role}</p>
-                  {/* Tags */}
                   {app.tags.length > 0 && (
-                    <div className="flex gap-1 mt-1.5 flex-wrap">
+                    <div className="flex gap-1 mt-1 flex-wrap">
                       {app.tags.map(({ tag }) => (
                         <span
                           key={tag.id}
@@ -251,8 +251,8 @@ export function ApplicationsList({
                   )}
                 </div>
 
-                {/* Role (desktop) */}
-                <div className="hidden sm:block min-w-0">
+                {/* Role */}
+                <div className="min-w-0 pr-3">
                   <p className="text-sm text-muted-foreground truncate">{app.role}</p>
                   {app.jobUrl && (
                     <a
@@ -272,7 +272,7 @@ export function ApplicationsList({
                 </div>
 
                 {/* Date */}
-                <div className="hidden sm:block">
+                <div>
                   <p className="text-xs text-muted-foreground">
                     {app.appliedDate
                       ? new Date(app.appliedDate).toLocaleDateString([], { month: "short", day: "numeric", year: "numeric" })
@@ -285,8 +285,8 @@ export function ApplicationsList({
                   )}
                 </div>
 
-                {/* Actions */}
-                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                {/* Actions — always visible */}
+                <div className="flex items-center justify-end gap-1">
                   <Link
                     href={`/dashboard/applications/${app.id}`}
                     className="h-7 px-2.5 rounded-md text-xs font-medium border hover:bg-accent transition-colors"
@@ -304,6 +304,48 @@ export function ApplicationsList({
                     className="h-7 px-2.5 rounded-md text-xs font-medium text-destructive border border-destructive/20 hover:bg-destructive/10 transition-colors"
                   >
                     Delete
+                  </button>
+                  {!showArchived && (
+                    <QuickActions
+                      applicationId={app.id}
+                      currentStatus={app.status}
+                      company={app.company}
+                    />
+                  )}
+                </div>
+              </div>
+            ))}
+
+            {/* Mobile cards */}
+            {applications.map((app) => (
+              <div
+                key={`m-${app.id}`}
+                className="sm:hidden p-4 space-y-2 hover:bg-muted/30 transition-colors"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <Link
+                      href={`/dashboard/applications/${app.id}`}
+                      className="font-medium text-sm hover:underline"
+                    >
+                      {app.company}
+                    </Link>
+                    <p className="text-xs text-muted-foreground mt-0.5">{app.role}</p>
+                  </div>
+                  <StatusBadge status={app.status} />
+                </div>
+                <div className="flex items-center gap-2">
+                  <Link
+                    href={`/dashboard/applications/${app.id}`}
+                    className="h-7 px-2.5 rounded-md text-xs font-medium border hover:bg-accent transition-colors"
+                  >
+                    View
+                  </Link>
+                  <button
+                    onClick={() => setEditingApp(app)}
+                    className="h-7 px-2.5 rounded-md text-xs font-medium border hover:bg-accent transition-colors"
+                  >
+                    Edit
                   </button>
                   {!showArchived && (
                     <QuickActions

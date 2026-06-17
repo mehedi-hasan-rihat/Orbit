@@ -26,11 +26,9 @@ export function TagManager({ tags }: { tags: Tag[] }) {
     e.preventDefault();
     if (!name.trim()) return;
     setLoading(true);
-
     const formData = new FormData();
     formData.set("name", name.trim());
     formData.set("color", color);
-
     await createTag(formData);
     setName("");
     setColor(presetColors[0]);
@@ -46,25 +44,31 @@ export function TagManager({ tags }: { tags: Tag[] }) {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Create tag section */}
-      <div className="border rounded-lg p-5 space-y-4">
-        <div className="flex items-center justify-between">
-          <h3 className="font-medium">Your Tags</h3>
-          {!showCreate && (
-            <button
-              onClick={() => setShowCreate(true)}
-              className="h-8 px-3 rounded-md bg-primary text-primary-foreground text-xs font-medium hover:opacity-90 transition-colors"
-            >
-              + New Tag
-            </button>
-          )}
+    <div className="border rounded-xl overflow-hidden">
+      {/* Header */}
+      <div className="flex items-center justify-between px-5 py-4 border-b bg-muted/20">
+        <div>
+          <h3 className="text-sm font-semibold">Your Tags</h3>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            {tags.length === 0 ? "No tags yet" : `${tags.length} tag${tags.length !== 1 ? "s" : ""}`}
+          </p>
         </div>
+        {!showCreate && (
+          <button
+            onClick={() => setShowCreate(true)}
+            className="h-7 px-3 rounded-md bg-primary text-primary-foreground text-xs font-medium hover:opacity-90 transition-opacity"
+          >
+            + New Tag
+          </button>
+        )}
+      </div>
 
-        {showCreate && (
-          <form onSubmit={handleCreate} className="border rounded-md p-4 space-y-4 bg-muted/30">
-            <div className="space-y-2">
-              <label htmlFor="tag-name" className="text-sm font-medium">
+      {/* Create form */}
+      {showCreate && (
+        <form onSubmit={handleCreate} className="px-5 py-4 border-b bg-muted/10 space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <label htmlFor="tag-name" className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                 Tag Name
               </label>
               <input
@@ -74,97 +78,105 @@ export function TagManager({ tags }: { tags: Tag[] }) {
                 onChange={(e) => setName(e.target.value)}
                 placeholder="e.g. Remote, Referral, High Priority"
                 required
-                className="flex h-9 w-full rounded-md border bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                autoFocus
+                className="flex h-9 w-full rounded-lg border bg-background px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
               />
             </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Color</label>
-              <div className="flex gap-2">
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                Color
+              </label>
+              <div className="flex items-center gap-2 h-9">
                 {presetColors.map((c) => (
                   <button
                     key={c}
                     type="button"
                     onClick={() => setColor(c)}
-                    className={`w-7 h-7 rounded-full transition-all ${
-                      color === c
-                        ? "ring-2 ring-offset-2 ring-foreground scale-110"
-                        : "hover:scale-105"
+                    className={`w-6 h-6 rounded-full transition-all ${
+                      color === c ? "ring-2 ring-offset-2 ring-foreground scale-110" : "hover:scale-105"
                     }`}
                     style={{ backgroundColor: c }}
-                    aria-label={`Select color ${c}`}
+                    aria-label={`Color ${c}`}
                   />
                 ))}
               </div>
             </div>
-
-            {/* Preview */}
-            {name.trim() && (
-              <div className="space-y-1">
-                <label className="text-xs text-muted-foreground">Preview</label>
-                <div>
-                  <span
-                    className="inline-flex items-center rounded-full px-3 py-1 text-xs font-medium text-white"
-                    style={{ backgroundColor: color }}
-                  >
-                    {name.trim()}
-                  </span>
-                </div>
-              </div>
-            )}
-
-            <div className="flex gap-2">
-              <button
-                type="submit"
-                disabled={loading || !name.trim()}
-                className="h-8 px-4 rounded-md bg-primary text-primary-foreground text-xs font-medium hover:opacity-90 disabled:opacity-50 transition-colors"
-              >
-                {loading ? "Creating..." : "Create Tag"}
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setShowCreate(false);
-                  setName("");
-                  setColor(presetColors[0]);
-                }}
-                className="h-8 px-4 rounded-md border text-xs font-medium hover:bg-accent transition-colors"
-              >
-                Cancel
-              </button>
-            </div>
-          </form>
-        )}
-
-        {/* Tags list */}
-        {tags.length === 0 ? (
-          <div className="text-center py-8">
-            <p className="text-muted-foreground text-sm">No tags created yet</p>
-            <p className="text-muted-foreground text-xs mt-1">
-              Create tags to categorize and filter your applications
-            </p>
           </div>
-        ) : (
-          <div className="flex flex-wrap gap-2">
+
+          {name.trim() && (
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted-foreground">Preview:</span>
+              <span
+                className="inline-flex items-center rounded-full px-3 py-1 text-xs font-medium text-white"
+                style={{ backgroundColor: color }}
+              >
+                {name.trim()}
+              </span>
+            </div>
+          )}
+
+          <div className="flex gap-2">
+            <button
+              type="submit"
+              disabled={loading || !name.trim()}
+              className="h-8 px-4 rounded-lg bg-primary text-primary-foreground text-xs font-semibold hover:opacity-90 disabled:opacity-50 transition-opacity"
+            >
+              {loading ? "Creating..." : "Create Tag"}
+            </button>
+            <button
+              type="button"
+              onClick={() => { setShowCreate(false); setName(""); setColor(presetColors[0]); }}
+              className="h-8 px-4 rounded-lg border text-xs font-medium hover:bg-accent transition-colors"
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      )}
+
+      {/* Tags grid */}
+      {tags.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-16 text-center px-5">
+          <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-lg mb-3">
+            🏷️
+          </div>
+          <p className="text-sm font-medium">No tags created yet</p>
+          <p className="text-xs text-muted-foreground mt-1">
+            Create your first tag to start organizing applications
+          </p>
+          {!showCreate && (
+            <button
+              onClick={() => setShowCreate(true)}
+              className="mt-4 h-8 px-4 rounded-lg border text-xs font-medium hover:bg-accent transition-colors"
+            >
+              + Create Tag
+            </button>
+          )}
+        </div>
+      ) : (
+        <div className="p-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {tags.map((tag) => (
               <div
                 key={tag.id}
-                className="group relative inline-flex items-center rounded-full px-3 py-1.5 text-xs font-medium text-white"
-                style={{ backgroundColor: tag.color }}
+                className="group flex items-center justify-between rounded-lg border p-3 hover:bg-muted/30 transition-colors"
               >
-                {tag.name}
+                <div className="flex items-center gap-2.5">
+                  <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: tag.color }} />
+                  <span className="text-sm font-medium">{tag.name}</span>
+                </div>
                 <button
                   onClick={() => handleDelete(tag.id)}
-                  className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-foreground/80 text-background flex items-center justify-center text-[10px] leading-none opacity-0 group-hover:opacity-100 transition-opacity"
+                  className="text-xs text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-all"
                   aria-label={`Delete ${tag.name}`}
                 >
-                  ×
+                  Remove
                 </button>
               </div>
             ))}
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

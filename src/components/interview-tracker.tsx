@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { createInterview, updateInterview, deleteInterview } from "@/lib/actions/interviews";
+import { DatePicker } from "./date-picker";
 import { useRouter } from "next/navigation";
 import clsx from "clsx";
 
@@ -103,15 +104,15 @@ function InterviewForm({ applicationId, interview, onClose }: InterviewFormProps
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <label className="text-sm font-medium">Date & Time</label>
-              <input
+              <DatePicker
                 name="scheduledAt"
-                type="datetime-local"
-                defaultValue={
+                placeholder="Pick date & time"
+                includeTime
+                value={
                   interview?.scheduledAt
                     ? new Date(interview.scheduledAt).toISOString().slice(0, 16)
                     : ""
                 }
-                className="flex h-9 w-full rounded-md border bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
               />
             </div>
             <div className="space-y-2">

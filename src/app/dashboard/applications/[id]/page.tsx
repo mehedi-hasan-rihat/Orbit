@@ -3,6 +3,7 @@ import { getInterviews } from "@/lib/actions/interviews";
 import { ActivityTimeline } from "@/components/activity-timeline";
 import { InterviewTracker } from "@/components/interview-tracker";
 import { StatusBadge } from "@/components/status-badge";
+import { InlineNoteEditor } from "@/components/inline-note-editor";
 import { MobileNav } from "@/components/mobile-nav";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -30,115 +31,120 @@ export default async function ApplicationDetailPage({ params }: Props) {
 
   return (
     <>
-      <div className="max-w-4xl space-y-6">
+      <div className="max-w-5xl space-y-6 pb-16 md:pb-0">
 
-        {/* Back nav */}
-        <Link
-          href="/dashboard/applications"
-          className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
-        >
-          ← Applications
-        </Link>
+        {/* Breadcrumb */}
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Link href="/dashboard/applications" className="hover:text-foreground transition-colors">
+            Applications
+          </Link>
+          <span>/</span>
+          <span className="text-foreground font-medium truncate">{application.company}</span>
+        </div>
 
-        {/* Hero card */}
-        <div className="border rounded-xl p-6 space-y-4">
+        {/* Hero */}
+        <div className="border rounded-xl p-6">
           <div className="flex items-start justify-between gap-4 flex-wrap">
-            <div className="space-y-1">
-              <div className="flex items-center gap-2 flex-wrap">
-                <h1 className="text-2xl font-bold">{application.company}</h1>
+            <div className="space-y-2 min-w-0">
+              <div className="flex items-center gap-2.5 flex-wrap">
+                <h1 className="text-2xl font-bold tracking-tight">{application.company}</h1>
                 <StatusBadge status={application.status} />
                 {isOverdue && (
-                  <span className="inline-flex items-center rounded-full bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300 px-2.5 py-0.5 text-xs font-medium">
+                  <span className="inline-flex items-center rounded-full bg-red-100 text-red-600 dark:bg-red-900/40 dark:text-red-400 px-2.5 py-0.5 text-xs font-medium">
                     Follow-up overdue
                   </span>
                 )}
               </div>
-              <p className="text-base text-muted-foreground">{application.role}</p>
+              <p className="text-lg text-muted-foreground font-normal">{application.role}</p>
+              {application.tags.length > 0 && (
+                <div className="flex gap-1.5 flex-wrap pt-1">
+                  {application.tags.map(({ tag }) => (
+                    <span
+                      key={tag.id}
+                      className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium text-white"
+                      style={{ backgroundColor: tag.color }}
+                    >
+                      {tag.name}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
             {application.jobUrl && (
               <a
                 href={application.jobUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex h-8 items-center gap-1.5 rounded-md border px-3 text-xs font-medium hover:bg-accent transition-colors shrink-0"
+                className="inline-flex h-8 items-center gap-1.5 rounded-lg border px-3 text-xs font-medium hover:bg-accent transition-colors shrink-0"
               >
                 Job Posting ↗
               </a>
             )}
           </div>
 
-          {/* Tags */}
-          {application.tags.length > 0 && (
-            <div className="flex gap-1.5 flex-wrap">
-              {application.tags.map(({ tag }) => (
-                <span
-                  key={tag.id}
-                  className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium text-white"
-                  style={{ backgroundColor: tag.color }}
-                >
-                  {tag.name}
-                </span>
-              ))}
-            </div>
-          )}
-
-          {/* Stats row */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2 border-t">
-            <div>
-              <p className="text-xs text-muted-foreground">Applied</p>
-              <p className="text-sm font-semibold mt-0.5">
+          {/* Stats strip */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-6 pt-5 border-t">
+            <div className="space-y-0.5">
+              <p className="text-xs text-muted-foreground uppercase tracking-wide">Applied</p>
+              <p className="text-sm font-semibold">
                 {application.appliedDate
-                  ? new Date(application.appliedDate).toLocaleDateString()
+                  ? new Date(application.appliedDate).toLocaleDateString([], { month: "short", day: "numeric", year: "numeric" })
                   : "—"}
               </p>
             </div>
-            <div>
-              <p className="text-xs text-muted-foreground">Follow-up</p>
-              <p className={`text-sm font-semibold mt-0.5 ${isOverdue ? "text-destructive" : ""}`}>
+            <div className="space-y-0.5">
+              <p className="text-xs text-muted-foreground uppercase tracking-wide">Follow-up</p>
+              <p className={`text-sm font-semibold ${isOverdue ? "text-destructive" : ""}`}>
                 {application.followUpDate
-                  ? new Date(application.followUpDate).toLocaleDateString()
+                  ? new Date(application.followUpDate).toLocaleDateString([], { month: "short", day: "numeric", year: "numeric" })
                   : "—"}
               </p>
             </div>
-            <div>
-              <p className="text-xs text-muted-foreground">Interviews</p>
-              <p className="text-sm font-semibold mt-0.5">
-                {interviews.length > 0
-                  ? `${interviews.length} round${interviews.length !== 1 ? "s" : ""} · ${passedRounds} passed`
-                  : "None yet"}
+            <div className="space-y-0.5">
+              <p className="text-xs text-muted-foreground uppercase tracking-wide">Interviews</p>
+              <p className="text-sm font-semibold">
+                {interviews.length === 0
+                  ? "None yet"
+                  : `${interviews.length} round${interviews.length !== 1 ? "s" : ""}`}
+                {passedRounds > 0 && (
+                  <span className="text-green-600 dark:text-green-400 font-normal text-xs ml-1">
+                    · {passedRounds} passed
+                  </span>
+                )}
                 {pendingRounds > 0 && (
-                  <span className="text-muted-foreground"> · {pendingRounds} pending</span>
+                  <span className="text-muted-foreground font-normal text-xs ml-1">
+                    · {pendingRounds} pending
+                  </span>
                 )}
               </p>
             </div>
-            <div>
-              <p className="text-xs text-muted-foreground">Last updated</p>
-              <p className="text-sm font-semibold mt-0.5">
-                {new Date(application.updatedAt).toLocaleDateString()}
+            <div className="space-y-0.5">
+              <p className="text-xs text-muted-foreground uppercase tracking-wide">Updated</p>
+              <p className="text-sm font-semibold">
+                {new Date(application.updatedAt).toLocaleDateString([], { month: "short", day: "numeric", year: "numeric" })}
               </p>
             </div>
           </div>
         </div>
 
-        {/* Two-column layout on large screens */}
+        {/* Body grid */}
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
 
-          {/* Left — main content */}
-          <div className="lg:col-span-3 space-y-6">
+          {/* Left col */}
+          <div className="lg:col-span-3 space-y-5">
 
             {/* Notes */}
             <div className="border rounded-xl p-5 space-y-3">
-              <h2 className="text-sm font-semibold">Notes</h2>
-              {application.notes ? (
-                <p className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">
-                  {application.notes}
-                </p>
-              ) : (
-                <p className="text-sm text-muted-foreground italic">No notes added yet.</p>
-              )}
+              <div className="flex items-center justify-between">
+                <h2 className="text-sm font-semibold tracking-tight">Notes</h2>
+              </div>
+              <InlineNoteEditor
+                applicationId={application.id}
+                currentNotes={application.notes}
+              />
             </div>
 
-            {/* Interview Tracker */}
+            {/* Interviews */}
             <div id="interviews" className="border rounded-xl p-5">
               <InterviewTracker
                 applicationId={application.id}
@@ -147,10 +153,10 @@ export default async function ApplicationDetailPage({ params }: Props) {
             </div>
           </div>
 
-          {/* Right — activity */}
+          {/* Right col — activity */}
           <div className="lg:col-span-2">
             <div className="border rounded-xl p-5 space-y-4 lg:sticky lg:top-6">
-              <h2 className="text-sm font-semibold">Activity</h2>
+              <h2 className="text-sm font-semibold tracking-tight">Activity</h2>
               <ActivityTimeline
                 activities={JSON.parse(JSON.stringify(application.activities))}
               />

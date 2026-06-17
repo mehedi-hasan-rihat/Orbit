@@ -2,6 +2,7 @@
 
 import { useState, useRef } from "react";
 import { createApplication, updateApplication, checkDuplicate } from "@/lib/actions/applications";
+import { DatePicker } from "./date-picker";
 import { useRouter } from "next/navigation";
 
 interface Tag {
@@ -193,23 +194,21 @@ export function ApplicationForm({ application, availableTags, onClose }: Applica
 
             <div className="space-y-2">
               <label htmlFor="appliedDate" className="text-sm font-medium">Applied Date</label>
-              <input
+              <DatePicker
                 id="appliedDate"
                 name="appliedDate"
-                type="date"
-                defaultValue={application?.appliedDate ? new Date(application.appliedDate).toISOString().split("T")[0] : ""}
-                className="flex h-10 w-full rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                placeholder="Pick applied date"
+                value={application?.appliedDate ? new Date(application.appliedDate).toISOString().split("T")[0] : ""}
               />
             </div>
 
             <div className="space-y-2">
               <label htmlFor="followUpDate" className="text-sm font-medium">Follow-up</label>
-              <input
+              <DatePicker
                 id="followUpDate"
                 name="followUpDate"
-                type="date"
-                defaultValue={application?.followUpDate ? new Date(application.followUpDate).toISOString().split("T")[0] : ""}
-                className="flex h-10 w-full rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                placeholder="Pick follow-up date"
+                value={application?.followUpDate ? new Date(application.followUpDate).toISOString().split("T")[0] : ""}
               />
             </div>
           </div>

@@ -78,9 +78,12 @@ export function QuickActions({ applicationId, currentStatus, company }: QuickAct
       </button>
 
       {open && (
-        <div className="absolute right-0 top-9 z-50 w-52 rounded-lg border bg-background shadow-lg py-1">
+        <div className="absolute right-0 top-9 z-50 w-52 rounded-lg border bg-background shadow-lg overflow-hidden"
+          style={{ maxHeight: "min(320px, calc(100vh - 120px))" }}
+        >
+          <div className="overflow-y-auto" style={{ maxHeight: "min(320px, calc(100vh - 120px))" }}>
           {/* Move Stage */}
-          <div className="px-2 py-1.5">
+          <div className="px-2 pt-2 pb-1">
             <p className="text-xs font-medium text-muted-foreground px-2 pb-1">Move to stage</p>
             {STAGES.filter((s) => s.value !== currentStatus).map((stage) => (
               <button
@@ -89,7 +92,7 @@ export function QuickActions({ applicationId, currentStatus, company }: QuickAct
                 disabled={loading}
                 className="flex w-full items-center gap-2 px-2 py-1.5 text-sm rounded-md hover:bg-accent transition-colors"
               >
-                <span className="text-xs">→</span>
+                <span className="text-xs text-muted-foreground">→</span>
                 {stage.label}
               </button>
             ))}
@@ -103,7 +106,7 @@ export function QuickActions({ applicationId, currentStatus, company }: QuickAct
               onClick={() => setShowNoteInput(true)}
               className="flex w-full items-center gap-2 px-4 py-2 text-sm hover:bg-accent transition-colors"
             >
-              📝 Add Note
+              <span>📝</span> Add Note
             </button>
           ) : (
             <form onSubmit={handleNoteSubmit} className="px-3 py-2 space-y-2">
@@ -140,7 +143,7 @@ export function QuickActions({ applicationId, currentStatus, company }: QuickAct
             onClick={() => setOpen(false)}
             className="flex w-full items-center gap-2 px-4 py-2 text-sm hover:bg-accent transition-colors"
           >
-            🗓️ Schedule Interview
+            <span>🗓️</span> Schedule Interview
           </Link>
 
           <div className="border-t my-1" />
@@ -151,8 +154,9 @@ export function QuickActions({ applicationId, currentStatus, company }: QuickAct
             disabled={loading}
             className="flex w-full items-center gap-2 px-4 py-2 text-sm text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
           >
-            📦 Archive
+            <span>📦</span> Archive
           </button>
+          </div>
         </div>
       )}
     </div>
