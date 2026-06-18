@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { logoutAction } from "@/lib/actions/auth";
-import { LogOut } from "lucide-react";
+import { ArrowRightFromLine } from "lucide-react";
 import clsx from "clsx";
 
 interface SidebarProps {
@@ -61,25 +61,31 @@ export function Sidebar({ user }: SidebarProps) {
         ))}
       </nav>
 
-      <div className="border-t p-4 space-y-3">
+      <div className="border-t p-3">
+        {/* Profile row */}
         <Link
           href="/dashboard/profile"
-          className="flex items-center gap-3 w-full"
+          className={clsx(
+            "flex items-center gap-3 w-full rounded-md px-3 py-2 transition-colors hover:bg-accent",
+            pathname === "/dashboard/profile" ? "bg-accent" : ""
+          )}
         >
           <div className="w-7 h-7 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold shrink-0">
             {user.name.charAt(0).toUpperCase()}
           </div>
-          <div className="text-sm min-w-0">
-            <p className="font-medium truncate leading-none">{user.name}</p>
-            <p className="text-muted-foreground truncate text-xs mt-0.5">{user.email}</p>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-medium truncate leading-none">{user.name}</p>
+            <p className="text-xs text-muted-foreground truncate mt-0.5">{user.email}</p>
           </div>
         </Link>
-        <form action={logoutAction}>
+
+        {/* Sign out */}
+        <form action={logoutAction} className="mt-1">
           <button
             type="submit"
-            className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+            className="flex items-center gap-2.5 w-full rounded-md px-3 py-2 text-sm text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
           >
-            <LogOut className="w-4 h-4" />
+            <ArrowRightFromLine className="w-4 h-4 shrink-0" />
             Sign Out
           </button>
         </form>
