@@ -285,23 +285,23 @@ export function ApplicationsList({
                   )}
                 </div>
 
-                {/* Actions — always visible */}
+                {/* Actions — always visible, vertically centered */}
                 <div className="flex items-center justify-end gap-1">
                   <Link
                     href={`/dashboard/applications/${app.id}`}
-                    className="h-7 px-2.5 rounded-md text-xs font-medium border hover:bg-accent transition-colors"
+                    className="inline-flex h-7 items-center px-2.5 rounded-md text-xs font-medium border hover:bg-accent transition-colors whitespace-nowrap"
                   >
                     View
                   </Link>
                   <button
                     onClick={() => setEditingApp(app)}
-                    className="h-7 px-2.5 rounded-md text-xs font-medium border hover:bg-accent transition-colors"
+                    className="inline-flex h-7 items-center px-2.5 rounded-md text-xs font-medium border hover:bg-accent transition-colors"
                   >
                     Edit
                   </button>
                   <button
                     onClick={() => handleDelete(app.id)}
-                    className="h-7 px-2.5 rounded-md text-xs font-medium text-destructive border border-destructive/20 hover:bg-destructive/10 transition-colors"
+                    className="inline-flex h-7 items-center px-2.5 rounded-md text-xs font-medium text-destructive border border-destructive/20 hover:bg-destructive/10 transition-colors"
                   >
                     Delete
                   </button>

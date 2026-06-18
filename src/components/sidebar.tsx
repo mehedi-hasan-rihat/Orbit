@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { logoutAction } from "@/lib/actions/auth";
+import { LogOut } from "lucide-react";
 import clsx from "clsx";
 
 interface SidebarProps {
@@ -61,15 +62,24 @@ export function Sidebar({ user }: SidebarProps) {
       </nav>
 
       <div className="border-t p-4 space-y-3">
-        <div className="text-sm truncate">
-          <p className="font-medium truncate">{user.name}</p>
-          <p className="text-muted-foreground truncate">{user.email}</p>
-        </div>
+        <Link
+          href="/dashboard/profile"
+          className="flex items-center gap-3 w-full"
+        >
+          <div className="w-7 h-7 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold shrink-0">
+            {user.name.charAt(0).toUpperCase()}
+          </div>
+          <div className="text-sm min-w-0">
+            <p className="font-medium truncate leading-none">{user.name}</p>
+            <p className="text-muted-foreground truncate text-xs mt-0.5">{user.email}</p>
+          </div>
+        </Link>
         <form action={logoutAction}>
           <button
             type="submit"
-            className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+            className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
+            <LogOut className="w-4 h-4" />
             Sign Out
           </button>
         </form>
