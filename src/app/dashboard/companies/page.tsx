@@ -1,5 +1,4 @@
 import { getCompanyStats } from "@/lib/actions/applications";
-import { MobileNav } from "@/components/mobile-nav";
 
 export default async function CompaniesPage() {
   const companies = await getCompanyStats();
@@ -54,7 +53,6 @@ export default async function CompaniesPage() {
           </div>
         )}
       </div>
-      <MobileNav />
     </>
   );
 }

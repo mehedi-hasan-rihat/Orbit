@@ -1,6 +1,5 @@
 import { getTags } from "@/lib/actions/tags";
 import { TagManager } from "@/components/tag-manager";
-import { MobileNav } from "@/components/mobile-nav";
 
 export default async function TagsPage() {
   const tags = await getTags();
@@ -64,7 +63,6 @@ export default async function TagsPage() {
           </div>
         </div>
       </div>
-      <MobileNav />
     </>
   );
 }

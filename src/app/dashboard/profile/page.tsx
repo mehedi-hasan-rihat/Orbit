@@ -1,6 +1,5 @@
 import { getProfileStats } from "@/lib/actions/profile";
 import { ProfileForm } from "@/components/profile-form";
-import { MobileNav } from "@/components/mobile-nav";
 import { redirect } from "next/navigation";
 
 export default async function ProfilePage() {
@@ -59,7 +58,6 @@ export default async function ProfilePage() {
         {/* Edit forms */}
         <ProfileForm user={{ name: user.name, email: user.email }} />
       </div>
-      <MobileNav />
     </>
   );
 }

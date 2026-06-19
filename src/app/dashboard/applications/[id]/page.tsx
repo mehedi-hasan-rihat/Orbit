@@ -4,7 +4,6 @@ import { ActivityTimeline } from "@/components/activity-timeline";
 import { InterviewTracker } from "@/components/interview-tracker";
 import { StatusBadge } from "@/components/status-badge";
 import { InlineNoteEditor } from "@/components/inline-note-editor";
-import { MobileNav } from "@/components/mobile-nav";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -165,7 +164,6 @@ export default async function ApplicationDetailPage({ params }: Props) {
 
         </div>
       </div>
-      <MobileNav />
     </>
   );
 }

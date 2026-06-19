@@ -3,8 +3,8 @@ import { AnalyticsCharts } from "@/components/analytics-charts";
 import { KanbanBoard } from "@/components/kanban-board";
 import { FollowUps } from "@/components/follow-ups";
 import { StatusBadge } from "@/components/status-badge";
-import { MobileNav } from "@/components/mobile-nav";
 import Link from "next/link";
+import { MobileNav } from "@/components/mobile-nav";
 
 export default async function DashboardPage() {
   const [applications, stats, followUps] = await Promise.all([
@@ -47,13 +47,25 @@ export default async function DashboardPage() {
 
         {/* Kanban Section */}
         <section>
-          <div className="mb-4">
-            <h2 className="text-xl font-bold">Pipeline</h2>
-            <p className="text-sm text-muted-foreground">
-              Drag and drop to update application status
-            </p>
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className="text-xl font-bold">Pipeline</h2>
+              <p className="text-sm text-muted-foreground">
+                {applications.length > 20
+                  ? "Showing 20 most recent — drag and drop to update status"
+                  : "Drag and drop to update application status"}
+              </p>
+            </div>
+            {applications.length > 20 && (
+              <Link
+                href="/dashboard/applications"
+                className="text-sm font-medium hover:underline"
+              >
+                View all →
+              </Link>
+            )}
           </div>
-          <KanbanBoard applications={JSON.parse(JSON.stringify(applications))} />
+          <KanbanBoard applications={JSON.parse(JSON.stringify(applications.slice(0, 20)))} />
         </section>
 
         {/* Recent Applications Section */}
@@ -125,7 +137,6 @@ export default async function DashboardPage() {
           )}
         </section>
       </div>
-      <MobileNav />
     </>
   );
 }

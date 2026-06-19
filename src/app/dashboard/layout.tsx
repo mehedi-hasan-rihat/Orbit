@@ -1,6 +1,7 @@
 import { getSession } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { Sidebar } from "@/components/sidebar";
+import { MobileNav } from "@/components/mobile-nav";
 import { SessionProvider } from "@/components/session-provider";
 
 export default async function DashboardLayout({
@@ -21,6 +22,7 @@ export default async function DashboardLayout({
         <main className="flex-1 overflow-y-auto">
           <div className="p-6 max-w-7xl mx-auto">{children}</div>
         </main>
+        <MobileNav />
       </div>
     </SessionProvider>
   );
