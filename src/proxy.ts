@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 
-const JWT_SECRET = process.env.BETTER_AUTH_SECRET || "default-secret-change-me";
+const JWT_SECRET = process.env.BETTER_AUTH_SECRET!;
+
+if (!JWT_SECRET) {
+  throw new Error("BETTER_AUTH_SECRET environment variable is not set");
+}
 
 function isValidSession(token: string): boolean {
   try {

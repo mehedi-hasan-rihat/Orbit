@@ -24,7 +24,7 @@ export function KanbanColumn({
     <div
       ref={setNodeRef}
       className={clsx(
-        "flex-1 min-w-0 flex flex-col rounded-lg border bg-muted/30 transition-colors",
+        "min-w-[200px] w-[200px] md:min-w-0 md:w-auto md:flex-1 flex flex-col rounded-lg border bg-muted/30 transition-colors snap-center shrink-0 md:shrink",
         isOver && "ring-2 ring-ring"
       )}
     >
