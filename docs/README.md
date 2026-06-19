@@ -19,6 +19,8 @@ Orbit is a full-stack web application that helps job seekers track their entire 
 | Charts | Recharts 3 |
 | Drag & Drop | DnD Kit |
 | Icons | Lucide React |
+| Email | Nodemailer (SMTP) |
+| Realtime | Server-Sent Events (SSE) |
 
 ## Architecture
 
@@ -38,22 +40,27 @@ Browser → Server Components (SSR) → Server Actions → Prisma → PostgreSQL
 ```
 orbit/
 ├── prisma/
-│   ├── schema.prisma          # Data models (6 tables)
+│   ├── schema.prisma          # Data models (7 tables)
 │   └── migrations/            # SQL migrations
 ├── src/
 │   ├── app/
 │   │   ├── (auth)/            # Login & Register pages
+│   │   ├── api/
+│   │   │   ├── notifications/stream/  # SSE endpoint
+│   │   │   └── cron/reminders/        # Vercel cron job
 │   │   ├── dashboard/         # Protected dashboard pages
 │   │   ├── layout.tsx         # Root layout
 │   │   ├── page.tsx           # Landing page
 │   │   └── globals.css        # Theme & base styles
-│   ├── components/            # React components (20 files)
+│   ├── components/            # React components
 │   ├── generated/prisma/      # Generated Prisma client
 │   └── lib/
-│       ├── actions/           # Server actions (6 modules)
+│       ├── actions/           # Server actions (7 modules)
 │       ├── auth.ts            # JWT session management
+│       ├── email.ts           # Nodemailer email utility
 │       ├── prisma.ts          # DB client singleton
 │       └── validations.ts     # Zod schemas
+├── vercel.json                # Vercel cron schedule
 ├── package.json
 └── tsconfig.json
 ```
@@ -68,6 +75,7 @@ orbit/
 | Interview | Per-round interview tracking |
 | Tag | User-defined color labels |
 | ApplicationTag | Many-to-many junction (Application ↔ Tag) |
+| Notification | In-app & email reminder records |
 
 ## Environment Variables
 
@@ -75,6 +83,14 @@ orbit/
 |----------|-------------|----------|
 | `DATABASE_URL` | PostgreSQL connection string | Yes |
 | `BETTER_AUTH_SECRET` | JWT signing secret (any strong random string) | Yes |
+| `CRON_SECRET` | Secret to authenticate cron job requests | Yes |
+| `NEXT_PUBLIC_APP_URL` | Public app URL (used in email links) | Yes |
+| `SMTP_HOST` | SMTP server host (e.g. `smtp.gmail.com`) | Yes |
+| `SMTP_PORT` | SMTP port (e.g. `587`) | Yes |
+| `SMTP_SECURE` | `true` for port 465, `false` for 587 | Yes |
+| `SMTP_USER` | SMTP username / email address | Yes |
+| `SMTP_PASS` | SMTP password / app password | Yes |
+| `SMTP_FROM` | From address shown in emails | Yes |
 | `NODE_ENV` | `development` or `production` | Auto |
 
 ## Quick Start
@@ -103,6 +119,7 @@ Each feature has its own folder with separate documents:
 | Search & Filtering | [`features/search-filtering/`](./features/search-filtering/) | requirements, system-design, api, client |
 | Activity Audit Trail | [`features/activity-audit-trail/`](./features/activity-audit-trail/) | requirements, system-design, api, client |
 | User Profile | [`features/user-profile/`](./features/user-profile/) | requirements, system-design, api, client |
+| Notifications & Email | [`features/notifications/`](./features/notifications/) | requirements, system-design, api, client |
 
 ### Per-Feature File Structure
 

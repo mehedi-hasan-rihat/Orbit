@@ -8,6 +8,7 @@ import { useSession } from "@/components/session-provider";
 import { Logo } from "@/components/landing/logo";
 import { Menu, X, ArrowRightFromLine } from "lucide-react";
 import clsx from "clsx";
+import { NotificationBell } from "@/components/notification-bell";
 
 const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: "" },
@@ -36,13 +37,16 @@ export function MobileNav() {
           <Logo className="w-5 h-5" />
           <span className="text-lg font-bold">Orbit</span>
         </Link>
-        <button
-          onClick={() => setOpen(true)}
-          className="p-2 -mr-2 rounded-lg hover:bg-accent"
-          aria-label="Open menu"
-        >
-          <Menu className="w-5 h-5" />
-        </button>
+        <div className="flex items-center gap-1">
+          <NotificationBell />
+          <button
+            onClick={() => setOpen(true)}
+            className="p-2 -mr-2 rounded-lg hover:bg-accent"
+            aria-label="Open menu"
+          >
+            <Menu className="w-5 h-5" />
+          </button>
+        </div>
       </header>
 
       {/* Backdrop */}
