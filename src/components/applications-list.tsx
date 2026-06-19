@@ -320,7 +320,7 @@ export function ApplicationsList({
             {applications.map((app) => (
               <div
                 key={`m-${app.id}`}
-                className="sm:hidden p-4 space-y-2 hover:bg-muted/30 transition-colors"
+                className="sm:hidden p-4 space-y-3 hover:bg-muted/30 transition-colors"
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
@@ -331,19 +331,32 @@ export function ApplicationsList({
                       {app.company}
                     </Link>
                     <p className="text-xs text-muted-foreground mt-0.5">{app.role}</p>
+                    {app.tags.length > 0 && (
+                      <div className="flex gap-1 mt-1.5 flex-wrap">
+                        {app.tags.map(({ tag }) => (
+                          <span
+                            key={tag.id}
+                            className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium text-white"
+                            style={{ backgroundColor: tag.color }}
+                          >
+                            {tag.name}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </div>
                   <StatusBadge status={app.status} />
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <Link
                     href={`/dashboard/applications/${app.id}`}
-                    className="h-7 px-2.5 rounded-md text-xs font-medium border hover:bg-accent transition-colors"
+                    className="inline-flex h-8 items-center px-3 rounded-md text-xs font-medium bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
                   >
                     View
                   </Link>
                   <button
                     onClick={() => setEditingApp(app)}
-                    className="h-7 px-2.5 rounded-md text-xs font-medium border hover:bg-accent transition-colors"
+                    className="inline-flex h-8 items-center px-3 rounded-md text-xs font-medium border hover:bg-accent transition-colors"
                   >
                     Edit
                   </button>
