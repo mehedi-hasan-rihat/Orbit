@@ -1,36 +1,107 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Orbit
+
+A job application tracker that helps you manage your entire job search — from wishlist to offer.
+
+## Features
+
+- **Pipeline Tracking** — Track applications through 6 stages (Wishlist → Applied → Interview → Offer → Rejected → Archived)
+- **Kanban Board** — Drag-and-drop cards between columns to update status
+- **Interview Management** — Track multiple rounds with type, schedule, notes, and outcomes
+- **Analytics Dashboard** — Charts, conversion rates, and weekly metrics
+- **Calendar View** — See all interviews and follow-ups on an interactive calendar
+- **Follow-up Reminders** — Overdue detection with dashboard alerts
+- **Tags** — Custom color-coded labels for organizing applications
+- **Activity Trail** — Every change logged automatically
+- **CSV Export** — Download all applications as a spreadsheet
+- **Search & Filters** — Full-text search, status/tag filters, multiple sort options
+
+## Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| Framework | Next.js 16 (App Router, Server Actions) |
+| Language | TypeScript |
+| Frontend | React 19 |
+| Database | PostgreSQL |
+| ORM | Prisma 7 |
+| Styling | Tailwind CSS 4 |
+| Auth | JWT + HTTP-only cookies |
+| Validation | Zod |
+| Charts | Recharts |
+| Drag & Drop | DnD Kit |
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+
+- Node.js 20+
+- PostgreSQL database
+
+### Setup
 
 ```bash
+# Install dependencies
+npm install
+
+# Copy environment file and fill in your values
+cp .env.example .env
+
+# Run database migrations
+npx prisma migrate deploy
+
+# Start development server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) to see the app.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Environment Variables
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Variable | Description |
+|----------|-------------|
+| `DATABASE_URL` | PostgreSQL connection string |
+| `BETTER_AUTH_SECRET` | JWT signing secret (any strong random string) |
 
-## Learn More
+## Scripts
 
-To learn more about Next.js, take a look at the following resources:
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start development server |
+| `npm run build` | Generate Prisma client + production build |
+| `npm start` | Start production server |
+| `npm run lint` | Run ESLint |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Project Structure
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```
+src/
+├── app/
+│   ├── (auth)/            # Login & Register pages
+│   ├── dashboard/         # Protected dashboard pages
+│   ├── layout.tsx         # Root layout
+│   └── page.tsx           # Landing page
+├── components/            # React components
+├── generated/prisma/      # Generated Prisma client
+└── lib/
+    ├── actions/           # Server actions
+    ├── auth.ts            # Session management
+    ├── prisma.ts          # DB client
+    └── validations.ts     # Zod schemas
+```
 
-## Deploy on Vercel
+## Documentation
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Full documentation is in the [`docs/`](./docs/) folder:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- [**Overview & Architecture**](./docs/README.md)
+- [**System Design**](./docs/system-design.md)
+- **Feature docs** — Each feature has its own folder in `docs/features/` with requirements, system-design, api, and client docs.
+
+## Deployment
+
+Requires a Node.js runtime and PostgreSQL database. Works with Vercel, Railway, Fly.io, or any platform supporting Next.js.
+
+```bash
+npm run build
+npm start
+```
