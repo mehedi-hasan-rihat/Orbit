@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { applicationSchema, updateStatusSchema } from "@/lib/validations";
 import { revalidatePath } from "next/cache";
-import { ApplicationStatus } from "@/generated/prisma/enums";
+import { ApplicationStatus, ActivityType } from "@/generated/prisma/enums";
 
 async function requireUser() {
   const session = await getSession();
@@ -46,7 +46,7 @@ export async function createApplication(formData: FormData) {
       notes: data.notes || null,
       activities: {
         create: {
-          type: "CREATED",
+          type: ActivityType.CREATED,
           description: `Application created for ${data.role} at ${data.company}`,
         },
       },
@@ -91,10 +91,10 @@ export async function updateApplication(id: string, formData: FormData) {
   }
 
   // Track status change
-  const activities: { type: string; description: string; metadata?: string }[] = [];
+  const activities: { type: ActivityType; description: string; metadata?: string }[] = [];
   if (existing.status !== data.status) {
     activities.push({
-      type: "STATUS_CHANGED",
+      type: ActivityType.STATUS_CHANGED,
       description: `Status changed from ${existing.status} to ${data.status}`,
       metadata: JSON.stringify({ from: existing.status, to: data.status }),
     });
@@ -102,14 +102,14 @@ export async function updateApplication(id: string, formData: FormData) {
 
   if (data.notes && data.notes !== existing.notes) {
     activities.push({
-      type: "NOTE_ADDED",
+      type: ActivityType.NOTE_ADDED,
       description: "Notes updated",
     });
   }
 
   if (data.followUpDate && data.followUpDate !== existing.followUpDate?.toISOString().split("T")[0]) {
     activities.push({
-      type: "FOLLOW_UP_SET",
+      type: ActivityType.FOLLOW_UP_SET,
       description: `Follow-up set for ${data.followUpDate}`,
     });
   }
@@ -162,7 +162,7 @@ export async function updateApplicationStatus(id: string, status: string) {
       status: parsed.data.status as ApplicationStatus,
       activities: {
         create: {
-          type: "STATUS_CHANGED",
+          type: ActivityType.STATUS_CHANGED,
           description: `Status changed from ${existing.status} to ${parsed.data.status}`,
           metadata: JSON.stringify({ from: existing.status, to: parsed.data.status }),
         },
@@ -191,7 +191,7 @@ export async function archiveApplication(id: string) {
       archived: true,
       activities: {
         create: {
-          type: "STATUS_CHANGED",
+          type: ActivityType.STATUS_CHANGED,
           description: "Application archived",
         },
       },
@@ -219,7 +219,7 @@ export async function unarchiveApplication(id: string) {
       archived: false,
       activities: {
         create: {
-          type: "STATUS_CHANGED",
+          type: ActivityType.STATUS_CHANGED,
           description: "Application unarchived",
         },
       },
@@ -321,9 +321,11 @@ export async function getApplicationStats() {
   const statusCounts = {
     WISHLIST: 0,
     APPLIED: 0,
+    SCREENING: 0,
     INTERVIEW: 0,
     OFFER: 0,
     REJECTED: 0,
+    WITHDRAWN: 0,
     ARCHIVED: 0,
   };
 
@@ -333,7 +335,7 @@ export async function getApplicationStats() {
 
   const interviewRate =
     total > 0
-      ? ((statusCounts.INTERVIEW + statusCounts.OFFER) / total) * 100
+      ? ((statusCounts.SCREENING + statusCounts.INTERVIEW + statusCounts.OFFER) / total) * 100
       : 0;
   const offerRate = total > 0 ? (statusCounts.OFFER / total) * 100 : 0;
 
@@ -353,7 +355,7 @@ export async function getFollowUps() {
       userId: session.userId,
       archived: false,
       followUpDate: { not: null },
-      status: { notIn: ["REJECTED", "ARCHIVED"] },
+      status: { notIn: [ApplicationStatus.REJECTED, ApplicationStatus.WITHDRAWN, ApplicationStatus.ARCHIVED] },
     },
     orderBy: { followUpDate: "asc" },
     include: { tags: { include: { tag: true } } },
@@ -419,7 +421,7 @@ export async function addQuickNote(id: string, note: string) {
       notes: newNotes,
       activities: {
         create: {
-          type: "NOTE_ADDED",
+          type: ActivityType.NOTE_ADDED,
           description: `Note added: ${note.slice(0, 60)}${note.length > 60 ? "..." : ""}`,
         },
       },

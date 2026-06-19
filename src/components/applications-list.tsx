@@ -157,9 +157,11 @@ export function ApplicationsList({
             <option value="ALL">All Statuses</option>
             <option value="WISHLIST">Wishlist</option>
             <option value="APPLIED">Applied</option>
+            <option value="SCREENING">Screening</option>
             <option value="INTERVIEW">Interview</option>
             <option value="OFFER">Offer</option>
             <option value="REJECTED">Rejected</option>
+            <option value="WITHDRAWN">Withdrawn</option>
           </select>
           <select
             value={sortBy}

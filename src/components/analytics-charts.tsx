@@ -20,9 +20,11 @@ interface StatsProps {
     statusCounts: {
       WISHLIST: number;
       APPLIED: number;
+      SCREENING: number;
       INTERVIEW: number;
       OFFER: number;
       REJECTED: number;
+      WITHDRAWN: number;
       ARCHIVED: number;
     };
     interviewRate: number;
@@ -34,9 +36,11 @@ interface StatsProps {
 const COLORS = {
   WISHLIST: "#6b7280",
   APPLIED: "#3b82f6",
+  SCREENING: "#a855f7",
   INTERVIEW: "#f59e0b",
   OFFER: "#22c55e",
   REJECTED: "#ef4444",
+  WITHDRAWN: "#f97316",
 };
 
 export function AnalyticsCharts({ stats }: StatsProps) {
@@ -49,6 +53,7 @@ export function AnalyticsCharts({ stats }: StatsProps) {
   const barData = [
     { name: "Wishlist", value: stats.statusCounts.WISHLIST, fill: COLORS.WISHLIST },
     { name: "Applied", value: stats.statusCounts.APPLIED, fill: COLORS.APPLIED },
+    { name: "Screening", value: stats.statusCounts.SCREENING, fill: COLORS.SCREENING },
     { name: "Interview", value: stats.statusCounts.INTERVIEW, fill: COLORS.INTERVIEW },
     { name: "Offer", value: stats.statusCounts.OFFER, fill: COLORS.OFFER },
     { name: "Rejected", value: stats.statusCounts.REJECTED, fill: COLORS.REJECTED },

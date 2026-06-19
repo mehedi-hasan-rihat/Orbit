@@ -4,7 +4,7 @@ export const applicationSchema = z.object({
   company: z.string().min(1, "Company is required").max(200),
   role: z.string().min(1, "Role is required").max(200),
   jobUrl: z.string().url("Must be a valid URL").optional().or(z.literal("")),
-  status: z.enum(["WISHLIST", "APPLIED", "INTERVIEW", "OFFER", "REJECTED", "ARCHIVED"]),
+  status: z.enum(["WISHLIST", "APPLIED", "SCREENING", "INTERVIEW", "OFFER", "REJECTED", "WITHDRAWN", "ARCHIVED"]),
   appliedDate: z.string().optional().or(z.literal("")),
   followUpDate: z.string().optional().or(z.literal("")),
   notes: z.string().max(5000).optional().or(z.literal("")),
@@ -13,7 +13,7 @@ export const applicationSchema = z.object({
 
 export const updateStatusSchema = z.object({
   id: z.string().min(1),
-  status: z.enum(["WISHLIST", "APPLIED", "INTERVIEW", "OFFER", "REJECTED", "ARCHIVED"]),
+  status: z.enum(["WISHLIST", "APPLIED", "SCREENING", "INTERVIEW", "OFFER", "REJECTED", "WITHDRAWN", "ARCHIVED"]),
 });
 
 export const tagSchema = z.object({

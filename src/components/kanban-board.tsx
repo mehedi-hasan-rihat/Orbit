@@ -32,6 +32,7 @@ interface Application {
 const columns = [
   { id: "WISHLIST", title: "Wishlist", color: "bg-gray-500" },
   { id: "APPLIED", title: "Applied", color: "bg-blue-500" },
+  { id: "SCREENING", title: "Screening", color: "bg-purple-500" },
   { id: "INTERVIEW", title: "Interview", color: "bg-amber-500" },
   { id: "OFFER", title: "Offer", color: "bg-green-500" },
   { id: "REJECTED", title: "Rejected", color: "bg-red-500" },

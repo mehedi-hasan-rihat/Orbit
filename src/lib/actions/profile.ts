@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { getSession, setSession } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
+import { ApplicationStatus } from "@/generated/prisma/enums";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
 
@@ -111,8 +112,8 @@ export async function getProfileStats() {
 
   const [total, offers, interviews] = await Promise.all([
     prisma.application.count({ where: { userId: session.userId } }),
-    prisma.application.count({ where: { userId: session.userId, status: "OFFER" } }),
-    prisma.application.count({ where: { userId: session.userId, status: "INTERVIEW" } }),
+    prisma.application.count({ where: { userId: session.userId, status: ApplicationStatus.OFFER } }),
+    prisma.application.count({ where: { userId: session.userId, status: ApplicationStatus.INTERVIEW } }),
   ]);
 
   return { user, total, offers, interviews };

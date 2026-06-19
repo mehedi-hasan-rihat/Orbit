@@ -9,6 +9,7 @@ import clsx from "clsx";
 interface Interview {
   id: string;
   type: string;
+  customType: string | null;
   round: number;
   scheduledAt: Date | null;
   notes: string | null;
@@ -16,12 +17,11 @@ interface Interview {
 }
 
 const typeLabels: Record<string, string> = {
-  HR: "HR Screen",
-  TECHNICAL: "Technical",
-  SYSTEM_DESIGN: "System Design",
-  BEHAVIORAL: "Behavioral",
-  CULTURE_FIT: "Culture Fit",
-  TAKE_HOME: "Take-Home",
+  PHONE_SCREEN: "Phone Screen",
+  ONSITE: "Onsite",
+  PANEL: "Panel",
+  ASSESSMENT: "Assessment",
+  TASK: "Task/Assignment",
   FINAL: "Final Round",
   OTHER: "Other",
 };
@@ -42,6 +42,7 @@ interface InterviewFormProps {
 function InterviewForm({ applicationId, interview, onClose }: InterviewFormProps) {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string[]>>({});
+  const [selectedType, setSelectedType] = useState(interview?.type || "PHONE_SCREEN");
   const router = useRouter();
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -79,13 +80,24 @@ function InterviewForm({ applicationId, interview, onClose }: InterviewFormProps
               <label className="text-sm font-medium">Type *</label>
               <select
                 name="type"
-                defaultValue={interview?.type || "HR"}
+                value={selectedType}
+                onChange={(e) => setSelectedType(e.target.value)}
                 className="flex h-9 w-full rounded-md border bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
               >
                 {Object.entries(typeLabels).map(([value, label]) => (
                   <option key={value} value={value}>{label}</option>
                 ))}
               </select>
+              {selectedType === "OTHER" && (
+                <input
+                  name="customType"
+                  type="text"
+                  defaultValue={interview?.customType || ""}
+                  placeholder="Enter interview type..."
+                  required
+                  className="flex h-9 w-full rounded-md border bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring mt-1"
+                />
+              )}
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium">Round *</label>
@@ -222,7 +234,11 @@ export function InterviewTracker({
                     {interview.round}
                   </div>
                   <div>
-                    <p className="text-sm font-medium">{typeLabels[interview.type]}</p>
+                    <p className="text-sm font-medium">
+                      {interview.type === "OTHER" && interview.customType
+                        ? interview.customType
+                        : typeLabels[interview.type]}
+                    </p>
                     {interview.scheduledAt && (
                       <p className="text-xs text-muted-foreground">
                         {new Date(interview.scheduledAt).toLocaleString([], {

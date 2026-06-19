@@ -9,6 +9,10 @@ const statusConfig: Record<string, { label: string; className: string }> = {
     label: "Applied",
     className: "bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300",
   },
+  SCREENING: {
+    label: "Screening",
+    className: "bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300",
+  },
   INTERVIEW: {
     label: "Interview",
     className: "bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300",
@@ -20,6 +24,10 @@ const statusConfig: Record<string, { label: string; className: string }> = {
   REJECTED: {
     label: "Rejected",
     className: "bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300",
+  },
+  WITHDRAWN: {
+    label: "Withdrawn",
+    className: "bg-orange-100 text-orange-700 dark:bg-orange-900/50 dark:text-orange-300",
   },
   ARCHIVED: {
     label: "Archived",

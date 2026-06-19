@@ -27,7 +27,7 @@ interface ApplicationFormProps {
   onClose: () => void;
 }
 
-const statuses = ["WISHLIST", "APPLIED", "INTERVIEW", "OFFER", "REJECTED"];
+const statuses = ["WISHLIST", "APPLIED", "SCREENING", "INTERVIEW", "OFFER", "REJECTED", "WITHDRAWN"];
 
 export function ApplicationForm({ application, availableTags, onClose }: ApplicationFormProps) {
   const [loading, setLoading] = useState(false);

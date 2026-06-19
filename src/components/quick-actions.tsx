@@ -8,9 +8,11 @@ import Link from "next/link";
 const STAGES = [
   { value: "WISHLIST", label: "Wishlist" },
   { value: "APPLIED", label: "Applied" },
+  { value: "SCREENING", label: "Screening" },
   { value: "INTERVIEW", label: "Interview" },
   { value: "OFFER", label: "Offer" },
   { value: "REJECTED", label: "Rejected" },
+  { value: "WITHDRAWN", label: "Withdrawn" },
 ];
 
 interface QuickActionsProps {

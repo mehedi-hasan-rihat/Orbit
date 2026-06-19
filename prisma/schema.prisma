@@ -23,9 +23,11 @@ model User {
 enum ApplicationStatus {
   WISHLIST
   APPLIED
+  SCREENING
   INTERVIEW
   OFFER
   REJECTED
+  WITHDRAWN
   ARCHIVED
 }
 
@@ -55,14 +57,24 @@ model Application {
   @@index([company])
 }
 
+enum ActivityType {
+  CREATED
+  STATUS_CHANGED
+  NOTE_ADDED
+  FOLLOW_UP_SET
+  INTERVIEW_SCHEDULED
+  INTERVIEW_OUTCOME
+  OTHER
+}
+
 model Activity {
-  id            String      @id @default(cuid())
+  id            String       @id @default(cuid())
   applicationId String
-  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
-  type          String      // CREATED, STATUS_CHANGED, NOTE_ADDED, FOLLOW_UP_SET, RESUME_UPLOADED
+  application   Application  @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  type          ActivityType
   description   String
-  metadata      String?     // JSON string for extra data (old status, new status, etc.)
-  createdAt     DateTime    @default(now())
+  metadata      String?      // JSON string for extra data
+  createdAt     DateTime     @default(now())
 
   @@index([applicationId])
 }
@@ -81,12 +93,11 @@ model Tag {
 }
 
 enum InterviewType {
-  HR
-  TECHNICAL
-  SYSTEM_DESIGN
-  BEHAVIORAL
-  CULTURE_FIT
-  TAKE_HOME
+  PHONE_SCREEN
+  ONSITE
+  PANEL
+  ASSESSMENT
+  TASK
   FINAL
   OTHER
 }
@@ -96,6 +107,7 @@ model Interview {
   applicationId String
   application   Application   @relation(fields: [applicationId], references: [id], onDelete: Cascade)
   type          InterviewType
+  customType    String?       // User-provided label when type is OTHER
   round         Int           @default(1)
   scheduledAt   DateTime?
   notes         String?
