@@ -18,6 +18,7 @@ model User {
   updatedAt    DateTime      @updatedAt
   applications Application[]
   tags         Tag[]
+  notifications Notification[]
 }
 
 enum ApplicationStatus {
@@ -116,6 +117,27 @@ model Interview {
   updatedAt     DateTime      @updatedAt
 
   @@index([applicationId])
+}
+
+enum NotificationType {
+  INTERVIEW_REMINDER
+  FOLLOW_UP_REMINDER
+}
+
+model Notification {
+  id            String           @id @default(cuid())
+  userId        String
+  user          User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type          NotificationType
+  title         String
+  body          String
+  applicationId String?
+  read          Boolean          @default(false)
+  emailSent     Boolean          @default(false)
+  createdAt     DateTime         @default(now())
+
+  @@index([userId, read])
+  @@index([userId, createdAt])
 }
 
 model ApplicationTag {

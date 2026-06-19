@@ -2,7 +2,7 @@
 
 ## 1. Architecture Overview
 
-Orbit follows a **monolithic full-stack architecture** built on Next.js App Router with Server Actions. There are no REST or GraphQL endpoints — all data mutations happen through server-side functions invoked directly from React components.
+Orbit follows a **monolithic full-stack architecture** built on Next.js App Router with Server Actions. There are no REST or GraphQL endpoints — all data mutations happen through server-side functions invoked directly from React components. API routes are used only for streaming (SSE) and cron job endpoints.
 
 ```
 ┌────────────────────────────────────────────────────────┐
@@ -11,6 +11,9 @@ Orbit follows a **monolithic full-stack architecture** built on Next.js App Rout
 │  │ Server Pages │  │ Client Comps │  │  DnD / Forms │ │
 │  │ (SSR + RSC)  │  │ (use client) │  │   (Events)   │ │
 │  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘ │
+│         │                 │                  │         │
+│         │           EventSource              │         │
+│         │        (SSE persistent)            │         │
 └─────────┼──────────────────┼──────────────────┼────────┘
           │                  │                  │
           │  Server Actions  │  Server Actions  │
@@ -21,8 +24,13 @@ Orbit follows a **monolithic full-stack architecture** built on Next.js App Rout
 │  │             Server Actions Layer                  │  │
 │  │   auth.ts | applications.ts | interviews.ts      │  │
 │  │   tags.ts | profile.ts | calendar.ts             │  │
+│  │   notifications.ts                               │  │
 │  └──────────────────────┬───────────────────────────┘  │
-│                         │                              │
+│  ┌──────────────────────▼───────────────────────────┐  │
+│  │              API Routes                           │  │
+│  │   /api/notifications/stream  (SSE)               │  │
+│  │   /api/cron/reminders        (Vercel cron)       │  │
+│  └──────────────────────┬───────────────────────────┘  │
 │  ┌──────────────────────▼───────────────────────────┐  │
 │  │              Prisma ORM                           │  │
 │  └──────────────────────┬───────────────────────────┘  │
@@ -31,16 +39,28 @@ Orbit follows a **monolithic full-stack architecture** built on Next.js App Rout
                           ▼
               ┌───────────────────────┐
               │     PostgreSQL        │
-              │  (6 tables, indexes)  │
+              │  (7 tables, indexes)  │
               └───────────────────────┘
+
+┌─────────────────────────────────────────────────────────┐
+│               Vercel Cron (daily 8am)                    │
+│   GET /api/cron/reminders                               │
+│   Authorization: Bearer CRON_SECRET                     │
+│       │                                                  │
+│       ├── creates Notification rows in DB               │
+│       └── sends emails via Nodemailer (SMTP)            │
+└─────────────────────────────────────────────────────────┘
 ```
 
 ### Design Decisions
 
-- **No API routes** — Server Actions handle all mutations and queries. This simplifies the architecture by eliminating HTTP endpoint boilerplate.
-- **Server Components by default** — Pages fetch data at the server level and pass it as props to client components where interactivity is needed.
-- **Optimistic UI** — The Kanban board updates locally before the server confirms, then reconciles via `router.refresh()`.
-- **Session via Context** — A `SessionProvider` wraps the dashboard layout, making user data available to all nested client components via `useSession()`.
+- **Server Actions for mutations** — all data mutations go through server actions, eliminating REST boilerplate
+- **API routes for streaming & cron** — `/api/notifications/stream` (SSE) and `/api/cron/reminders` (cron) are the only API routes
+- **SSE for real-time notifications** — one persistent connection per browser tab, server pushes updates every 30s; simpler than WebSockets, no extra infrastructure
+- **Cron job for reminders** — Vercel cron triggers daily at 8am, creates `Notification` rows and sends emails; deduplicated by `body` key so reminders are never sent twice
+- **Server Components by default** — pages fetch data at the server level and pass it as props to client components where interactivity is needed
+- **Optimistic UI** — the Kanban board updates locally before the server confirms, then reconciles via `router.refresh()`
+- **Session via Context** — a `SessionProvider` wraps the dashboard layout, making user data available to all nested client components via `useSession()`
 
 ---
 
@@ -76,11 +96,12 @@ Orbit follows a **monolithic full-stack architecture** built on Next.js App Rout
 | Interview | Per-round interview tracking | (applicationId) |
 | Tag | User-defined labels | (userId), (userId, name) unique |
 | ApplicationTag | Junction table (N:M) | (applicationId, tagId) unique |
+| Notification | In-app & email reminders | (userId, read), (userId, createdAt) |
 
 ### Cascade Rules
 
 All foreign keys use `onDelete: Cascade`:
-- Deleting a User removes all their Applications, Tags
+- Deleting a User removes all their Applications, Tags, Notifications
 - Deleting an Application removes all its Activities, Interviews, ApplicationTags
 - Deleting a Tag removes all ApplicationTag associations
 
@@ -207,6 +228,8 @@ DashboardLayout (Server)
 | `/dashboard/companies` | Server | Protected | Company statistics |
 | `/dashboard/tags` | Server | Protected | Tag management |
 | `/dashboard/profile` | Server | Protected | User profile settings |
+| `/api/notifications/stream` | API Route | Protected | SSE stream for real-time notifications |
+| `/api/cron/reminders` | API Route | CRON_SECRET | Daily cron — creates notifications & sends emails |
 
 ### Layout Hierarchy
 
@@ -287,6 +310,7 @@ RootLayout (font, metadata, globals.css)
 | Data Display | Client | `AnalyticsCharts`, `FollowUps`, `ActivityTimeline` |
 | Forms | Client | `ApplicationForm`, `ProfileForm`, `InterviewTracker` |
 | Interactive | Client | `KanbanBoard`, `KanbanColumn`, `KanbanCard` |
+| Notification | Client | `NotificationBell` (SSE-powered, mark-as-read) |
 | Utility | Client | `DatePicker`, `StatusBadge`, `ExportButton` |
 
 ### State Management
@@ -298,24 +322,82 @@ RootLayout (font, metadata, globals.css)
 
 ---
 
-## 9. Deployment Architecture
+## 9. Notification & Email System
+
+### Overview
+
+Reminders are delivered in two ways:
+1. **In-app bell** — real-time via SSE, reads `Notification` table
+2. **Email** — sent by cron job via Nodemailer SMTP
+
+### Cron Flow
 
 ```
-┌─────────────────┐     ┌─────────────────┐
-│   CDN / Edge    │     │   Application   │
-│  (Static Assets)│     │   (Next.js)     │
-└────────┬────────┘     └────────┬────────┘
+Vercel Cron (daily 8am UTC)
+  └── GET /api/cron/reminders
+        │  Authorization: Bearer CRON_SECRET
+        │
+        ├── query interviews WHERE scheduledAt = tomorrow OR day+2, outcome = PENDING
+        ├── query applications WHERE followUpDate = tomorrow OR day+2
+        │
+        ├── for each match:
+        │     ├── deduplicate via body key (e.g. "interview-<id>-1d")
+        │     ├── CREATE Notification row
+        │     ├── sendReminderEmail() via Nodemailer
+        │     └── UPDATE notification.emailSent = true
+        │
+        └── return { ok, created, emailed, skipped, logs }
+```
+
+### SSE Notification Flow
+
+```
+NotificationBell (client)
+  └── new EventSource("/api/notifications/stream")
+        │  persistent connection, auto-reconnects
+        │
+        ├── on connect: query unread Notification rows → push to client
+        ├── every 30s: re-query → push updated data
+        └── on client disconnect: clear interval, close stream
+```
+
+### Deduplication
+
+Each notification has a `body` field used as a dedupe key:
+- `interview-<interviewId>-1d` — 1-day reminder for that interview
+- `interview-<interviewId>-2d` — 2-day reminder for that interview
+- `followup-<applicationId>-1d` — 1-day reminder for that follow-up
+- `followup-<applicationId>-2d` — 2-day reminder for that follow-up
+
+Before creating, the cron checks if a notification with that `body` already exists — if so, it skips. This ensures running the cron multiple times in a day is safe.
+
+### Mark as Read
+
+- Opening the bell dropdown calls `markNotificationsRead()` server action
+- Sets `read = true` on all unread notifications for the user
+- SSE stream next poll returns `count: 0`
+
+---
+
+## 10. Deployment Architecture
+```
+┌─────────────────┐     ┌─────────────────┐     ┌──────────────────┐
+│   CDN / Edge    │     │   Application   │     │  Vercel Cron     │
+│  (Static Assets)│     │   (Next.js)     │◄────│  (daily 8am)     │
+└────────┬────────┘     └────────┬────────┘     └──────────────────┘
          │                       │
          └───────────┬───────────┘
                      │
-              ┌──────▼──────┐
-              │  PostgreSQL  │
-              │   Database   │
-              └─────────────┘
+              ┌──────▼──────┐     ┌──────────────┐
+              │  PostgreSQL  │     │  SMTP Server │
+              │   Database   │     │  (email out) │
+              └─────────────┘     └──────────────┘
 ```
 
 ### Requirements
 - Node.js runtime (for server-side rendering and server actions)
 - PostgreSQL database (managed service recommended)
-- Environment variables: `DATABASE_URL`, `BETTER_AUTH_SECRET`
+- SMTP credentials for email delivery (Gmail App Password recommended)
+- Environment variables: `DATABASE_URL`, `BETTER_AUTH_SECRET`, `CRON_SECRET`, `NEXT_PUBLIC_APP_URL`, `SMTP_*`
 - Secure cookie requires HTTPS in production (`secure: true`)
+- `vercel.json` configures the daily cron schedule
