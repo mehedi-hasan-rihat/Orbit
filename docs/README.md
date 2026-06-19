@@ -35,35 +35,6 @@ Browser → Server Components (SSR) → Server Actions → Prisma → PostgreSQL
        ← HTML + React hydration ←
 ```
 
-## Project Structure
-
-```
-orbit/
-├── prisma/
-│   ├── schema.prisma          # Data models (7 tables)
-│   └── migrations/            # SQL migrations
-├── src/
-│   ├── app/
-│   │   ├── (auth)/            # Login & Register pages
-│   │   ├── api/
-│   │   │   ├── notifications/stream/  # SSE endpoint
-│   │   │   └── cron/reminders/        # Vercel cron job
-│   │   ├── dashboard/         # Protected dashboard pages
-│   │   ├── layout.tsx         # Root layout
-│   │   ├── page.tsx           # Landing page
-│   │   └── globals.css        # Theme & base styles
-│   ├── components/            # React components
-│   ├── generated/prisma/      # Generated Prisma client
-│   └── lib/
-│       ├── actions/           # Server actions (7 modules)
-│       ├── auth.ts            # Session management
-│       ├── email.ts           # Nodemailer email utility
-│       ├── prisma.ts          # DB client singleton
-│       └── validations.ts     # Zod schemas
-├── package.json
-└── tsconfig.json
-```
-
 ## Data Model Summary
 
 | Model | Purpose |

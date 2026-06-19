@@ -10,6 +10,7 @@ import {
   CalendarDays,
   Tags,
   ShieldCheck,
+  BellRing,
 } from "lucide-react";
 
 gsap.registerPlugin(ScrollTrigger);
@@ -42,6 +43,13 @@ const features = [
     description: "All interviews and follow-ups on one calendar. Overdue reminders so nothing falls through.",
     gradient: "from-green-500/10 to-emerald-500/10",
     iconColor: "text-green-500",
+  },
+  {
+    icon: BellRing,
+    title: "Smart Notifications",
+    description: "Real-time bell alerts in your dashboard plus email reminders 2 days and 1 day before every interview, follow-up, and deadline. Never miss a thing.",
+    gradient: "from-rose-500/10 to-pink-500/10",
+    iconColor: "text-rose-500",
   },
   {
     icon: Tags,
@@ -97,7 +105,7 @@ export function FeaturesSection() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
           {features.map((f) => (
             <div
               key={f.title}

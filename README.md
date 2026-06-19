@@ -6,11 +6,12 @@ A job application tracker that helps you manage your entire job search — from 
 
 ## Features
 
-- **Pipeline Tracking** — Track applications through 6 stages (Wishlist → Applied → Interview → Offer → Rejected → Archived)
+- **Pipeline Tracking** — Track applications through 8 stages (Wishlist → Applied → Screening → Interview → Offer → Rejected → Withdrawn → Archived)
 - **Kanban Board** — Drag-and-drop cards between columns to update status
 - **Interview Management** — Track multiple rounds with type, schedule, notes, and outcomes
 - **Analytics Dashboard** — Charts, conversion rates, and weekly metrics
 - **Calendar View** — See all interviews and follow-ups on an interactive calendar
+- **Smart Notifications** — Real-time bell alerts in the dashboard via SSE, plus email reminders 2 days and 1 day before every interview, follow-up, and deadline
 - **Follow-up Reminders** — Overdue detection with dashboard alerts
 - **Tags** — Custom color-coded labels for organizing applications
 - **Activity Trail** — Every change logged automatically
@@ -27,10 +28,12 @@ A job application tracker that helps you manage your entire job search — from 
 | Database | PostgreSQL |
 | ORM | Prisma 7 |
 | Styling | Tailwind CSS 4 |
-| Auth | JWT + HTTP-only cookies |
+| Auth | HTTP-only cookies, bcryptjs |
 | Validation | Zod |
 | Charts | Recharts |
 | Drag & Drop | DnD Kit |
+| Email | Nodemailer (SMTP) |
+| Realtime | Server-Sent Events (SSE) |
 
 ## Getting Started
 
@@ -62,7 +65,15 @@ Open [http://localhost:3000](http://localhost:3000) to see the app.
 | Variable | Description |
 |----------|-------------|
 | `DATABASE_URL` | PostgreSQL connection string |
-| `JWT_SECRET` | JWT signing secret (any strong random string) |
+| `BETTER_AUTH_SECRET` | Session signing secret (any strong random string) |
+| `CRON_SECRET` | Secret to authenticate cron job requests |
+| `NEXT_PUBLIC_APP_URL` | Public app URL (used in email links) |
+| `SMTP_HOST` | SMTP server host |
+| `SMTP_PORT` | SMTP port |
+| `SMTP_SECURE` | `true` for SSL, `false` for STARTTLS |
+| `SMTP_USER` | SMTP username / email |
+| `SMTP_PASS` | SMTP password / app password |
+| `SMTP_FROM` | From address shown in emails |
 
 ## Scripts
 
@@ -79,6 +90,9 @@ Open [http://localhost:3000](http://localhost:3000) to see the app.
 src/
 ├── app/
 │   ├── (auth)/            # Login & Register pages
+│   ├── api/
+│   │   ├── notifications/stream/  # SSE endpoint
+│   │   └── cron/reminders/        # Cron job endpoint
 │   ├── dashboard/         # Protected dashboard pages
 │   ├── layout.tsx         # Root layout
 │   └── page.tsx           # Landing page
@@ -87,6 +101,7 @@ src/
 └── lib/
     ├── actions/           # Server actions
     ├── auth.ts            # Session management
+    ├── email.ts           # Nodemailer email utility
     ├── prisma.ts          # DB client
     └── validations.ts     # Zod schemas
 ```

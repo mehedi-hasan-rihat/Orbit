@@ -29,7 +29,7 @@ export default function Home() {
               href="/register"
               className="inline-flex h-10 items-center rounded-full px-6 text-sm font-semibold text-white bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 transition-all duration-200 shadow-md shadow-indigo-500/20 hover:shadow-lg hover:shadow-indigo-500/30 hover:scale-[1.02] active:scale-[0.98]"
             >
-              Get Started Free
+              Get Started
             </Link>
           </div>
         </div>
