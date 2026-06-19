@@ -29,14 +29,19 @@ export function MobileNav() {
 
   return (
     <>
-      {/* Hamburger button — fixed top-right on mobile */}
-      <button
-        onClick={() => setOpen(true)}
-        className="md:hidden fixed top-4 right-4 z-50 p-2 rounded-lg border bg-background shadow-sm"
-        aria-label="Open menu"
-      >
-        <Menu className="w-5 h-5" />
-      </button>
+      {/* Top bar — visible only on mobile */}
+      <header className="md:hidden flex items-center justify-between px-4 py-3 border-b bg-background shrink-0">
+        <Link href="/dashboard" className="text-lg font-bold">
+          Orbit
+        </Link>
+        <button
+          onClick={() => setOpen(true)}
+          className="p-2 -mr-2 rounded-lg hover:bg-accent"
+          aria-label="Open menu"
+        >
+          <Menu className="w-5 h-5" />
+        </button>
+      </header>
 
       {/* Backdrop */}
       {open && (
@@ -46,14 +51,14 @@ export function MobileNav() {
         />
       )}
 
-      {/* Slide-out panel */}
+      {/* Slide-out panel from right */}
       <div
         className={clsx(
           "md:hidden fixed top-0 right-0 z-50 h-full w-64 bg-background border-l shadow-xl transition-transform duration-200 ease-in-out flex flex-col",
           open ? "translate-x-0" : "translate-x-full"
         )}
       >
-        {/* Header */}
+        {/* Panel header */}
         <div className="flex items-center justify-between p-4 border-b">
           <span className="text-lg font-bold">Orbit</span>
           <button

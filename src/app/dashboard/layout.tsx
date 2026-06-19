@@ -19,10 +19,13 @@ export default async function DashboardLayout({
     <SessionProvider user={{ userId: session.userId, name: session.name, email: session.email }}>
       <div className="flex h-screen overflow-hidden">
         <Sidebar user={{ name: session.name, email: session.email }} />
-        <main className="flex-1 overflow-y-auto">
-          <div className="p-6 max-w-7xl mx-auto">{children}</div>
-        </main>
-        <MobileNav />
+        <div className="flex-1 flex flex-col overflow-hidden">
+          {/* Mobile top bar */}
+          <MobileNav />
+          <main className="flex-1 overflow-y-auto">
+            <div className="p-6 max-w-7xl mx-auto">{children}</div>
+          </main>
+        </div>
       </div>
     </SessionProvider>
   );
