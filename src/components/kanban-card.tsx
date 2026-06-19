@@ -47,7 +47,10 @@ export function KanbanCard({ application, isOverlay }: KanbanCardProps) {
       </p>
       {application.appliedDate && (
         <p className="text-xs text-muted-foreground mt-2">
-          {new Date(application.appliedDate).toLocaleDateString()}
+          {new Date(application.appliedDate).toLocaleDateString("en-US", {
+            month: "short",
+            day: "numeric",
+          })}
         </p>
       )}
     </div>

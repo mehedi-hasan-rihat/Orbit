@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import {
   BarChart,
   Bar,
@@ -39,6 +40,12 @@ const COLORS = {
 };
 
 export function AnalyticsCharts({ stats }: StatsProps) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const barData = [
     { name: "Wishlist", value: stats.statusCounts.WISHLIST, fill: COLORS.WISHLIST },
     { name: "Applied", value: stats.statusCounts.APPLIED, fill: COLORS.APPLIED },
@@ -76,13 +83,13 @@ export function AnalyticsCharts({ stats }: StatsProps) {
       </div>
 
       {/* Charts */}
-      {stats.total > 0 ? (
+      {stats.total > 0 && mounted ? (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Bar Chart */}
           <div className="rounded-lg border p-4 space-y-4">
             <h3 className="text-sm font-medium">Applications by Status</h3>
-            <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
+            <div className="h-64 min-h-[16rem] w-full min-w-0">
+              <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                 <BarChart data={barData}>
                   <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
                   <XAxis dataKey="name" fontSize={12} />
@@ -101,8 +108,8 @@ export function AnalyticsCharts({ stats }: StatsProps) {
           {/* Pie Chart */}
           <div className="rounded-lg border p-4 space-y-4">
             <h3 className="text-sm font-medium">Status Distribution</h3>
-            <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
+            <div className="h-64 min-h-[16rem] w-full min-w-0">
+              <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                 <PieChart>
                   <Pie
                     data={pieData}

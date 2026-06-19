@@ -1,20 +1,41 @@
 import { NextRequest, NextResponse } from "next/server";
+import jwt from "jsonwebtoken";
+
+const JWT_SECRET = process.env.BETTER_AUTH_SECRET || "default-secret-change-me";
+
+function isValidSession(token: string): boolean {
+  try {
+    jwt.verify(token, JWT_SECRET);
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  const method = request.method;
 
-  // Protected routes
+  // Log all route hits
+  console.log(`[${method}] ${pathname}`);
+
+  // Protected routes — validate JWT, not just cookie existence
   if (pathname.startsWith("/dashboard")) {
     const sessionCookie = request.cookies.get("orbit-session");
-    if (!sessionCookie) {
-      return NextResponse.redirect(new URL("/login", request.url));
+    if (!sessionCookie || !isValidSession(sessionCookie.value)) {
+      // Clear invalid cookie and redirect
+      const response = NextResponse.redirect(new URL("/login", request.url));
+      if (sessionCookie) {
+        response.cookies.delete("orbit-session");
+      }
+      return response;
     }
   }
 
   // Redirect authenticated users away from auth pages
   if (pathname === "/login" || pathname === "/register") {
     const sessionCookie = request.cookies.get("orbit-session");
-    if (sessionCookie) {
+    if (sessionCookie && isValidSession(sessionCookie.value)) {
       return NextResponse.redirect(new URL("/dashboard", request.url));
     }
   }

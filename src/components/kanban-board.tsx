@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   DndContext,
   DragOverlay,
@@ -44,7 +44,12 @@ export function KanbanBoard({
 }) {
   const [items, setItems] = useState(applications);
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
   const router = useRouter();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -93,6 +98,37 @@ export function KanbanBoard({
     // Update DB
     await updateApplicationStatus(active.id as string, targetStatus);
     router.refresh();
+  }
+
+  if (!mounted) {
+    return (
+      <div className="flex gap-4 pb-4">
+        {columns.map((column) => {
+          const columnItems = items.filter((item) => item.status === column.id);
+          return (
+            <KanbanColumn
+              key={column.id}
+              id={column.id}
+              title={column.title}
+              color={column.color}
+              count={columnItems.length}
+            >
+              {columnItems.map((item) => (
+                <div
+                  key={item.id}
+                  className="rounded-md border bg-background p-3 shadow-sm"
+                >
+                  <p className="text-sm font-medium truncate">{item.company}</p>
+                  <p className="text-xs text-muted-foreground truncate mt-0.5">
+                    {item.role}
+                  </p>
+                </div>
+              ))}
+            </KanbanColumn>
+          );
+        })}
+      </div>
+    );
   }
 
   return (
