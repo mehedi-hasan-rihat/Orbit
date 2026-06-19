@@ -1,6 +1,7 @@
 import { getSession } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { Sidebar } from "@/components/sidebar";
+import { SessionProvider } from "@/components/session-provider";
 
 export default async function DashboardLayout({
   children,
@@ -14,11 +15,13 @@ export default async function DashboardLayout({
   }
 
   return (
-    <div className="flex h-screen overflow-hidden">
-      <Sidebar user={{ name: session.name, email: session.email }} />
-      <main className="flex-1 overflow-y-auto">
-        <div className="p-6 max-w-7xl mx-auto">{children}</div>
-      </main>
-    </div>
+    <SessionProvider user={{ userId: session.userId, name: session.name, email: session.email }}>
+      <div className="flex h-screen overflow-hidden">
+        <Sidebar user={{ name: session.name, email: session.email }} />
+        <main className="flex-1 overflow-y-auto">
+          <div className="p-6 max-w-7xl mx-auto">{children}</div>
+        </main>
+      </div>
+    </SessionProvider>
   );
 }
