@@ -2,6 +2,8 @@
 
 A job application tracker that helps you manage your entire job search — from wishlist to offer.
 
+🔗 **Live:** [startorbit.vercel.app](https://startorbit.vercel.app/)
+
 ## Features
 
 - **Pipeline Tracking** — Track applications through 6 stages (Wishlist → Applied → Interview → Offer → Rejected → Archived)
