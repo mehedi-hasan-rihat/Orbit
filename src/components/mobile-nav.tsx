@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { logoutAction } from "@/lib/actions/auth";
 import { useSession } from "@/components/session-provider";
+import { Logo } from "@/components/landing/logo";
 import { Menu, X, ArrowRightFromLine } from "lucide-react";
 import clsx from "clsx";
 
@@ -31,8 +32,9 @@ export function MobileNav() {
     <>
       {/* Top bar — visible only on mobile */}
       <header className="md:hidden flex items-center justify-between px-4 py-3 border-b bg-background shrink-0">
-        <Link href="/dashboard" className="text-lg font-bold">
-          Orbit
+        <Link href="/dashboard" className="flex items-center gap-2">
+          <Logo className="w-5 h-5" />
+          <span className="text-lg font-bold">Orbit</span>
         </Link>
         <button
           onClick={() => setOpen(true)}
@@ -60,7 +62,10 @@ export function MobileNav() {
       >
         {/* Panel header */}
         <div className="flex items-center justify-between p-4 border-b">
-          <span className="text-lg font-bold">Orbit</span>
+          <div className="flex items-center gap-2">
+            <Logo className="w-5 h-5" />
+            <span className="text-lg font-bold">Orbit</span>
+          </div>
           <button
             onClick={() => setOpen(false)}
             className="p-1.5 rounded-md hover:bg-accent"
