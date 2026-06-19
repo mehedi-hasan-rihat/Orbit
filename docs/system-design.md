@@ -29,7 +29,7 @@ Orbit follows a **monolithic full-stack architecture** built on Next.js App Rout
 │  ┌──────────────────────▼───────────────────────────┐  │
 │  │              API Routes                           │  │
 │  │   /api/notifications/stream  (SSE)               │  │
-│  │   /api/cron/reminders        (Vercel cron)       │  │
+│  │   /api/cron/reminders        (scheduled)         │  │
 │  └──────────────────────┬───────────────────────────┘  │
 │  ┌──────────────────────▼───────────────────────────┐  │
 │  │              Prisma ORM                           │  │
@@ -43,7 +43,7 @@ Orbit follows a **monolithic full-stack architecture** built on Next.js App Rout
               └───────────────────────┘
 
 ┌─────────────────────────────────────────────────────────┐
-│               Vercel Cron (daily 8am)                    │
+│               Scheduled Cron (daily 8am)                 │
 │   GET /api/cron/reminders                               │
 │   Authorization: Bearer CRON_SECRET                     │
 │       │                                                  │
@@ -57,7 +57,7 @@ Orbit follows a **monolithic full-stack architecture** built on Next.js App Rout
 - **Server Actions for mutations** — all data mutations go through server actions, eliminating REST boilerplate
 - **API routes for streaming & cron** — `/api/notifications/stream` (SSE) and `/api/cron/reminders` (cron) are the only API routes
 - **SSE for real-time notifications** — one persistent connection per browser tab, server pushes updates every 30s; simpler than WebSockets, no extra infrastructure
-- **Cron job for reminders** — Vercel cron triggers daily at 8am, creates `Notification` rows and sends emails; deduplicated by `body` key so reminders are never sent twice
+- **Scheduled cron for reminders** — an external scheduler (cron-job.org or any HTTP scheduler) triggers the cron endpoint daily, creates `Notification` rows and sends emails; deduplicated by `body` key so reminders are never sent twice
 - **Server Components by default** — pages fetch data at the server level and pass it as props to client components where interactivity is needed
 - **Optimistic UI** — the Kanban board updates locally before the server confirms, then reconciles via `router.refresh()`
 - **Session via Context** — a `SessionProvider` wraps the dashboard layout, making user data available to all nested client components via `useSession()`
@@ -111,7 +111,7 @@ All foreign keys use `onDelete: Cascade`:
 
 ### Technology
 
-- **JWT** (jsonwebtoken) — stateless session tokens
+- **Signed session tokens** — stateless, stored in HTTP-only cookie
 - **HTTP-only cookie** — `orbit-session`, not accessible via JavaScript
 - **bcryptjs** — password hashing (12 salt rounds)
 
@@ -127,7 +127,7 @@ Client                Server Action              Database
   │                        │── hash password ───────│
   │                        │── create user ─────────►│
   │                        │◄── user record ────────│
-  │                        │── sign JWT ────────────│
+  │                        │── sign session token ──│
   │                        │── set cookie ──────────│
   │◄── redirect /dashboard─│                        │
 ```
@@ -142,7 +142,7 @@ Client                Server Action              Database
   │                        │── find user by email ──►│
   │                        │◄── user record ────────│
   │                        │── bcrypt.compare ──────│
-  │                        │── sign JWT ────────────│
+  │                        │── sign session token ──│
   │                        │── set cookie ──────────│
   │◄── redirect /dashboard─│                        │
 ```
@@ -155,7 +155,7 @@ Server Component          Auth Library             Cookie Store
        │── getSession() ──────►│                        │
        │                       │── read cookie ─────────►│
        │                       │◄── token string ───────│
-       │                       │── jwt.verify() ────────│
+       │                       │── verify token ────────│
        │◄── SessionPayload ───│                        │
        │    or null            │                        │
 ```
@@ -229,7 +229,7 @@ DashboardLayout (Server)
 | `/dashboard/tags` | Server | Protected | Tag management |
 | `/dashboard/profile` | Server | Protected | User profile settings |
 | `/api/notifications/stream` | API Route | Protected | SSE stream for real-time notifications |
-| `/api/cron/reminders` | API Route | CRON_SECRET | Daily cron — creates notifications & sends emails |
+| `/api/cron/reminders` | API Route | CRON_SECRET | Scheduled cron — creates notifications & sends emails |
 
 ### Layout Hierarchy
 
@@ -254,7 +254,7 @@ RootLayout (font, metadata, globals.css)
 
 ### Authentication Security
 - Passwords never stored in plaintext (bcrypt, 12 rounds)
-- JWT stored in HTTP-only cookie (immune to XSS token theft)
+- Session token stored in HTTP-only cookie (immune to XSS token theft)
 - Generic error messages prevent user enumeration
 - Session validated on every protected page load
 
@@ -333,7 +333,7 @@ Reminders are delivered in two ways:
 ### Cron Flow
 
 ```
-Vercel Cron (daily 8am UTC)
+Scheduled Cron (daily 8am)
   └── GET /api/cron/reminders
         │  Authorization: Bearer CRON_SECRET
         │
@@ -382,8 +382,8 @@ Before creating, the cron checks if a notification with that `body` already exis
 ## 10. Deployment Architecture
 ```
 ┌─────────────────┐     ┌─────────────────┐     ┌──────────────────┐
-│   CDN / Edge    │     │   Application   │     │  Vercel Cron     │
-│  (Static Assets)│     │   (Next.js)     │◄────│  (daily 8am)     │
+│   CDN / Edge    │     │   Application   │     │  Cron Scheduler  │
+│  (Static Assets)│     │   (Next.js)     │◄────│  (any HTTP cron) │
 └────────┬────────┘     └────────┬────────┘     └──────────────────┘
          │                       │
          └───────────┬───────────┘
@@ -400,4 +400,4 @@ Before creating, the cron checks if a notification with that `body` already exis
 - SMTP credentials for email delivery (Gmail App Password recommended)
 - Environment variables: `DATABASE_URL`, `BETTER_AUTH_SECRET`, `CRON_SECRET`, `NEXT_PUBLIC_APP_URL`, `SMTP_*`
 - Secure cookie requires HTTPS in production (`secure: true`)
-- `vercel.json` configures the daily cron schedule
+- Use any HTTP scheduler (cron-job.org, EasyCron, Vercel Cron, etc.) to trigger the cron endpoint daily

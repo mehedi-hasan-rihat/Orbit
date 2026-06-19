@@ -14,7 +14,7 @@ Orbit is a full-stack web application that helps job seekers track their entire 
 | Database | PostgreSQL |
 | ORM | Prisma 7.8.0 |
 | Styling | Tailwind CSS 4.3.1 |
-| Auth | JWT + HTTP-only cookies, bcryptjs |
+| Auth | HTTP-only cookies, bcryptjs |
 | Validation | Zod 4 |
 | Charts | Recharts 3 |
 | Drag & Drop | DnD Kit |
@@ -56,11 +56,10 @@ orbit/
 │   ├── generated/prisma/      # Generated Prisma client
 │   └── lib/
 │       ├── actions/           # Server actions (7 modules)
-│       ├── auth.ts            # JWT session management
+│       ├── auth.ts            # Session management
 │       ├── email.ts           # Nodemailer email utility
 │       ├── prisma.ts          # DB client singleton
 │       └── validations.ts     # Zod schemas
-├── vercel.json                # Vercel cron schedule
 ├── package.json
 └── tsconfig.json
 ```
@@ -82,7 +81,7 @@ orbit/
 | Variable | Description | Required |
 |----------|-------------|----------|
 | `DATABASE_URL` | PostgreSQL connection string | Yes |
-| `BETTER_AUTH_SECRET` | JWT signing secret (any strong random string) | Yes |
+| `JWT_SECRET` | Session signing secret (any strong random string) | Yes |
 | `CRON_SECRET` | Secret to authenticate cron job requests | Yes |
 | `NEXT_PUBLIC_APP_URL` | Public app URL (used in email links) | Yes |
 | `SMTP_HOST` | SMTP server host (e.g. `smtp.gmail.com`) | Yes |
@@ -97,7 +96,7 @@ orbit/
 
 ```bash
 npm install
-cp .env.example .env   # fill in DATABASE_URL and BETTER_AUTH_SECRET
+cp .env.example .env   # fill in DATABASE_URL and JWT_SECRET
 npx prisma migrate deploy
 npm run dev
 ```

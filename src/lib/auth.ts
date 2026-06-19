@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken";
 import { cookies } from "next/headers";
 
-const JWT_SECRET = process.env.BETTER_AUTH_SECRET || "default-secret-change-me";
+const JWT_SECRET = process.env.JWT_SECRET || "default-secret-change-me";
 const COOKIE_NAME = "orbit-session";
 
 export interface SessionPayload {

@@ -62,7 +62,7 @@ Open [http://localhost:3000](http://localhost:3000) to see the app.
 | Variable | Description |
 |----------|-------------|
 | `DATABASE_URL` | PostgreSQL connection string |
-| `BETTER_AUTH_SECRET` | JWT signing secret (any strong random string) |
+| `JWT_SECRET` | JWT signing secret (any strong random string) |
 
 ## Scripts
 

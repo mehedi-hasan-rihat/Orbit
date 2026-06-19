@@ -26,7 +26,7 @@ Authentication is fully server-side. There are no API routes — everything goes
 function createToken(payload: SessionPayload): string
 ```
 
-- Signs a JWT with `{ userId, email, name }` using `BETTER_AUTH_SECRET`.
+- Signs a JWT with `{ userId, email, name }` using `JWT_SECRET`.
 - Expiry: 7 days.
 
 ### Token Verification
@@ -151,5 +151,5 @@ model User {
 
 | Variable | Purpose |
 |----------|---------|
-| `BETTER_AUTH_SECRET` | JWT signing key. Must be a strong random string in production. |
+| `JWT_SECRET` | JWT signing key. Must be a strong random string in production. |
 | `NODE_ENV` | Controls `secure` flag on cookie |

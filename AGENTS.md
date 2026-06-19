@@ -86,7 +86,7 @@ src/
 | Variable | Purpose |
 |----------|---------|
 | `DATABASE_URL` | PostgreSQL connection string |
-| `BETTER_AUTH_SECRET` | JWT signing secret |
+| `JWT_SECRET` | JWT signing secret |
 
 ## Do NOT
 
