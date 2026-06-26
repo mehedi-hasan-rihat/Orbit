@@ -8,17 +8,22 @@ datasource db {
 }
 
 model User {
-  id           String        @id @default(cuid())
-  name         String
-  email        String        @unique
-  password     String
-  theme        String        @default("system")
-  pipelineStages String?     // JSON array of custom stage labels
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-  applications Application[]
-  tags         Tag[]
-  notifications Notification[]
+  id                  String        @id @default(cuid())
+  name                String
+  email               String        @unique
+  password            String
+  emailVerified       Boolean       @default(false)
+  verificationToken   String?       @unique
+  verificationExpiry  DateTime?
+  passwordResetToken  String?       @unique
+  passwordResetExpiry DateTime?
+  theme               String        @default("system")
+  pipelineStages      String?
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+  applications        Application[]
+  tags                Tag[]
+  notifications       Notification[]
 }
 
 enum ApplicationStatus {

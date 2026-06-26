@@ -398,6 +398,6 @@ Before creating, the cron checks if a notification with that `body` already exis
 - Node.js runtime (for server-side rendering and server actions)
 - PostgreSQL database (managed service recommended)
 - SMTP credentials for email delivery (Gmail App Password recommended)
-- Environment variables: `DATABASE_URL`, `BETTER_AUTH_SECRET`, `CRON_SECRET`, `NEXT_PUBLIC_APP_URL`, `SMTP_*`
+- Environment variables: `DATABASE_URL`, `JWT_SECRET`, `CRON_SECRET`, `NEXT_PUBLIC_APP_URL`, `SMTP_*`
 - Secure cookie requires HTTPS in production (`secure: true`)
 - Use any HTTP scheduler (cron-job.org, EasyCron, Vercel Cron, etc.) to trigger the cron endpoint daily

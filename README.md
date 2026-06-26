@@ -65,7 +65,7 @@ Open [http://localhost:3000](http://localhost:3000) to see the app.
 | Variable | Description |
 |----------|-------------|
 | `DATABASE_URL` | PostgreSQL connection string |
-| `BETTER_AUTH_SECRET` | Session signing secret (any strong random string) |
+| `JWT_SECRET` | Session signing secret (any strong random string) |
 | `CRON_SECRET` | Secret to authenticate cron job requests |
 | `NEXT_PUBLIC_APP_URL` | Public app URL (used in email links) |
 | `SMTP_HOST` | SMTP server host |
