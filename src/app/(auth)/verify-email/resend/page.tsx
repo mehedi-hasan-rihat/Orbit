@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { resendVerificationAction } from "@/lib/actions/auth";
 import Link from "next/link";
 import { Mail, CheckCircle2 } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 
-export default function ResendVerificationPage() {
+function ResendForm() {
   const searchParams = useSearchParams();
   const prefill = searchParams.get("email") ?? "";
   const [email, setEmail] = useState(prefill);
@@ -80,5 +80,19 @@ export default function ResendVerificationPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function ResendVerificationPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex flex-1 items-center justify-center px-4">
+        <div className="w-full max-w-sm text-center">
+          <p className="text-sm text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    }>
+      <ResendForm />
+    </Suspense>
   );
 }

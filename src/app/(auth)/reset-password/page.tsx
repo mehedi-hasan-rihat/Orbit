@@ -1,16 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { resetPasswordAction } from "@/lib/actions/auth";
 import Link from "next/link";
-import { CheckCircle2 } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 
-export default function ResetPasswordPage() {
+function ResetPasswordForm() {
   const searchParams = useSearchParams();
   const token = searchParams.get("token") ?? "";
   const [loading, setLoading] = useState(false);
-  const [done, setDone] = useState(false);
   const [error, setError] = useState("");
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -21,7 +19,7 @@ export default function ResetPasswordPage() {
       const formData = new FormData(e.currentTarget);
       formData.set("token", token);
       const result = await resetPasswordAction(formData);
-      // If we get a result back it's an error — success redirects to /dashboard
+      // success redirects to /dashboard — result only comes back on error
       if (result && !result.ok) {
         if (result.fields) setError(Object.values(result.fields).flat()[0] ?? result.message);
         else setError(result.message);
@@ -39,21 +37,9 @@ export default function ResetPasswordPage() {
       <div className="flex flex-1 items-center justify-center px-4">
         <div className="w-full max-w-sm text-center space-y-4">
           <h1 className="text-xl font-bold">Invalid reset link</h1>
-          <Link href="/forgot-password" className="text-sm font-medium hover:underline">Request a new one</Link>
-        </div>
-      </div>
-    );
-  }
-
-  if (done) {
-    return (
-      <div className="flex flex-1 items-center justify-center px-4">
-        <div className="w-full max-w-sm text-center space-y-4">
-          <CheckCircle2 className="w-12 h-12 text-green-500 mx-auto" />
-          <h1 className="text-xl font-bold">Password updated</h1>
-          <p className="text-sm text-muted-foreground">Your password has been reset successfully.</p>
-          <Link href="/login" className="inline-flex h-10 items-center justify-center rounded-md bg-primary px-6 text-sm font-medium text-primary-foreground hover:opacity-90">
-            Sign in
+          <p className="text-sm text-muted-foreground">This link is missing a token.</p>
+          <Link href="/forgot-password" className="text-sm font-medium hover:underline">
+            Request a new one
           </Link>
         </div>
       </div>
@@ -89,5 +75,19 @@ export default function ResetPasswordPage() {
         </form>
       </div>
     </div>
+  );
+}
+
+export default function ResetPasswordPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex flex-1 items-center justify-center px-4">
+        <div className="w-full max-w-sm text-center">
+          <p className="text-sm text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    }>
+      <ResetPasswordForm />
+    </Suspense>
   );
 }
