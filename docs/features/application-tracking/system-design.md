@@ -1,14 +1,15 @@
-# Application Tracking — Backend System Design
+# Application Tracking — System Design
 
 ## Architecture
 
-Application CRUD is handled by server actions in `src/lib/actions/applications.ts`. Every mutation:
-1. Verifies user session
-2. Validates input with Zod
-3. Checks resource ownership
-4. Mutates the database
-5. Creates activity records for auditing
-6. Calls `revalidatePath()` to invalidate cached pages
+Application CRUD operations are handled by server actions in the applications module. Every mutation follows a consistent pattern:
+
+1. Verify the user session.
+2. Validate input with Zod.
+3. Check resource ownership via `findFirst({ where: { id, userId } })`.
+4. Mutate the database.
+5. Create activity records for auditing.
+6. Call `revalidatePath()` to invalidate cached pages.
 
 ---
 
@@ -36,12 +37,7 @@ model Application {
 }
 
 enum ApplicationStatus {
-  WISHLIST
-  APPLIED
-  INTERVIEW
-  OFFER
-  REJECTED
-  ARCHIVED
+  WISHLIST | APPLIED | SCREENING | INTERVIEW | OFFER | REJECTED | WITHDRAWN | ARCHIVED
 }
 ```
 
@@ -49,32 +45,31 @@ enum ApplicationStatus {
 
 | Index | Purpose |
 |-------|---------|
-| `(userId)` | All apps for a user |
+| `(userId)` | Fetch all applications for a user |
 | `(userId, status)` | Status-filtered queries |
 | `(userId, archived)` | Active vs archived split |
-| `(company)` | Company search/group |
+| `(company)` | Company search and grouping |
 
 ---
 
-## Validation
+## Validation Schema
 
 ```typescript
-// src/lib/validations.ts
 applicationSchema = z.object({
-  company: z.string().min(1).max(200),
-  role: z.string().min(1).max(200),
-  jobUrl: z.string().url().optional().or(z.literal("")),
-  status: z.enum(["WISHLIST","APPLIED","INTERVIEW","OFFER","REJECTED","ARCHIVED"]),
-  appliedDate: z.string().optional().or(z.literal("")),
+  company:      z.string().min(1).max(200),
+  role:         z.string().min(1).max(200),
+  jobUrl:       z.string().url().optional().or(z.literal("")),
+  status:       z.enum([...8 statuses]),
+  appliedDate:  z.string().optional().or(z.literal("")),
   followUpDate: z.string().optional().or(z.literal("")),
-  notes: z.string().max(5000).optional().or(z.literal("")),
-  tags: z.string().optional().or(z.literal("")), // comma-separated IDs
+  notes:        z.string().max(5000).optional().or(z.literal("")),
+  tags:         z.string().optional().or(z.literal("")), // comma-separated IDs
 })
 ```
 
 ---
 
-## Key Flows
+## Key Processing Flows
 
 ### Create Application
 
@@ -82,12 +77,9 @@ applicationSchema = z.object({
 1. requireUser() → verify session
 2. Zod validate formData
 3. Parse tag IDs from comma-separated string
-4. prisma.application.create({
-     data: { userId, company, role, ..., 
-       activities: { create: { type: "CREATED", ... } },
-       tags: { create: tagIds.map(id => ({ tagId: id })) }
-     }
-   })
+4. prisma.application.create with nested:
+   - activities: { create: { type: CREATED, description: ... } }
+   - tags: { create: tagIds.map(id => ({ tagId: id })) }
 5. revalidatePath("/dashboard")
 6. Return { success: true, id }
 ```
@@ -98,84 +90,73 @@ applicationSchema = z.object({
 1. requireUser() → verify session
 2. Zod validate formData
 3. prisma.application.findFirst({ id, userId }) → ownership check
-4. Compare old vs new: track status changes, note changes, follow-up changes
-5. Delete all existing ApplicationTag records for this app
-6. prisma.application.update({ data, activities: { create: [...changes] }, tags: { create: newTags } })
+4. Compare old vs new values:
+   - status changed → push STATUS_CHANGED activity
+   - notes changed → push NOTE_ADDED activity
+   - followUpDate changed → push FOLLOW_UP_SET activity
+5. Delete all existing ApplicationTag records for this application
+6. prisma.application.update with new data, activities, and tags
 7. revalidatePath("/dashboard")
 ```
 
-### Archive / Unarchive
+The tag update uses a delete-and-recreate strategy rather than diffing, which is simpler and efficient for the typical number of tags per application.
 
-```
-1. Verify ownership
-2. Set archived = true/false
-3. Create activity: "Application archived" or "Application unarchived"
-4. revalidatePath("/dashboard")
-```
+### Archive and Unarchive
+
+Sets `archived = true` or `false` and creates a STATUS_CHANGED activity with the description "Application archived" or "Application unarchived".
 
 ### Delete
 
-```
-1. Verify ownership
-2. prisma.application.delete({ where: { id } })
-   → Cascades: Activities, Interviews, ApplicationTags all deleted
-3. revalidatePath("/dashboard")
-```
+Calls `prisma.application.delete()`. Cascade rules automatically remove all related Activities, Interviews, and ApplicationTags.
 
 ---
 
 ## Query Patterns
 
-### Filtered List (`getApplications`)
+### Filtered List
 
-Supports:
-- **search**: case-insensitive `contains` on company OR role
-- **status**: exact match (or skip if "ALL")
-- **tag**: `where.tags = { some: { tagId } }`
-- **archived**: boolean flag
-- **sort**: maps to Prisma `orderBy`
+The `getApplications(params)` action constructs a dynamic Prisma `where` clause:
 
-Includes `tags: { include: { tag: true } }` for display.
+- **search**: `{ OR: [{ company: { contains, mode: "insensitive" } }, { role: { contains, mode: "insensitive" } }] }` — maps to PostgreSQL `ILIKE %term%`
+- **status**: exact enum match (skipped if value is "ALL")
+- **tag**: `{ tags: { some: { tagId } } }` — relation filter
+- **archived**: boolean flag (defaults to `false`)
+- **sort**: maps to Prisma `orderBy` (createdAt, updatedAt, company, appliedDate, followUpDate)
 
-### Application Detail (`getApplication`)
+### Application Detail
 
-Returns single app with:
-- `activities` (ordered by createdAt desc)
-- `tags` with tag details
+Returns a single application with `activities` (ordered by `createdAt` desc) and `tags` with tag details included.
 
-### Stats (`getApplicationStats`)
+### Statistics
 
-Aggregates all non-archived apps:
-- Counts per status
-- Interview rate = (INTERVIEW + OFFER) / total
-- Offer rate = OFFER / total
-- This week = apps with createdAt >= 7 days ago
+Fetches all non-archived applications selecting only `status` and `createdAt`. Computes totals, status counts, interview rate, offer rate, and this-week count in-memory. No complex SQL aggregation is required.
 
-### Duplicate Check (`checkDuplicate`)
+### Duplicate Check
 
 ```typescript
 prisma.application.findFirst({
   where: {
     userId, archived: false,
     company: { equals: company, mode: "insensitive" },
-    role: { equals: role, mode: "insensitive" },
-  }
+    role:    { equals: role,    mode: "insensitive" },
+  },
+  select: { id: true, company: true, role: true, status: true },
 })
 ```
 
-Debounced on the client (500ms) to avoid excessive queries.
+Called with a 500ms debounce on the client to avoid excessive queries while the user is typing.
 
 ---
 
 ## CSV Export
 
-`exportApplicationsCsv()` fetches all user applications (including archived), formats as CSV string with headers. Client creates a Blob and triggers download.
+The `exportApplicationsCsv()` action fetches all user applications including archived ones, with tags. It generates a CSV string with headers: Company, Role, Status, Applied Date, Follow-up Date, Job URL, Tags, Notes, Created. Tags are joined with semicolons. Commas in notes are replaced with semicolons. All values are wrapped in double quotes. The client receives the string, creates a Blob, and triggers a file download.
 
 ---
 
-## Authorization Pattern
+## Authorisation Pattern
 
-Every action uses the same pattern:
+Every action uses the same ownership verification pattern:
 
 ```typescript
 const session = await requireUser(); // throws if no session
@@ -185,4 +166,4 @@ const existing = await prisma.application.findFirst({
 if (!existing) return { error: "Application not found" };
 ```
 
-No user can access another user's applications.
+This ensures no user can access or modify another user's applications, even with a known application ID.

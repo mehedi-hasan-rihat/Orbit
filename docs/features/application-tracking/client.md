@@ -1,161 +1,86 @@
-# Application Tracking — Frontend Documentation
+# Application Tracking — Frontend
 
 ## Pages
 
-### Applications List (`src/app/dashboard/applications/page.tsx`)
+### Applications List Page
 
 **Type:** Server component
 
-**Behavior:**
-1. Reads URL search params: `search`, `status`, `sort`, `tag`, `archived`.
-2. Calls `getApplications(params)` and `getTags()` in parallel.
-3. Serializes data and passes to `ApplicationsList` client component.
+Reads URL search parameters (`search`, `status`, `sort`, `tag`, `archived`) and passes them to `getApplications()` and `getTags()` in parallel. Serialises the results and passes them to the `ApplicationsList` client component.
 
 ---
 
-### Application Detail (`src/app/dashboard/applications/[id]/page.tsx`)
+### Application Detail Page
 
 **Type:** Server component
 
-**Behavior:**
-1. Reads `id` from route params.
-2. Calls `getApplication(id)` and `getInterviews(id)` in parallel.
-3. Returns `notFound()` if application doesn't exist.
-4. Renders: breadcrumb, hero section, stats strip, notes editor, interview tracker, activity timeline.
+Reads the application ID from the route parameters. Calls `getApplication(id)` and `getInterviews(id)` in parallel. Returns a 404 response if the application does not exist or does not belong to the current user.
 
-**Sections:**
-- **Hero** — Company name, status badge, overdue indicator, tags, job URL link.
-- **Stats Strip** — Applied date, follow-up date, interview count (passed/pending), last updated.
-- **Left Column (3/5)** — Notes editor + Interview tracker.
-- **Right Column (2/5)** — Activity timeline (sticky on scroll).
+**Page sections:**
+- **Hero** — Company name, role, status badge, overdue follow-up indicator, tags, and job URL link.
+- **Stats strip** — Applied date, follow-up date, interview count (passed and pending), and last updated timestamp.
+- **Left column** — Notes editor and interview tracker.
+- **Right column** — Activity timeline (sticky on desktop scroll).
 
 ---
 
 ## Components
 
-### `ApplicationsList` (`src/components/applications-list.tsx`)
+### ApplicationsList
 
 **Type:** Client component
 
-**Props:**
-```typescript
-{
-  applications: Application[];
-  availableTags: Tag[];
-  search: string;
-  status: string;
-  sort: string;
-  showArchived: boolean;
-}
-```
+Renders the filter bar and application list. The filter bar contains a search input, status dropdown, sort dropdown, and active/archived tab toggle. Changing any filter updates the URL query string, which triggers a server re-render with fresh data.
 
-**Features:**
-- Search input (updates URL param on change)
-- Status dropdown filter
-- Sort dropdown
-- Active/Archived tab toggle
-- New Application button (opens modal)
-- Desktop: table layout (Company, Role, Status, Applied Date, Actions)
-- Mobile: card layout
-- Per-row actions: Edit, View, Delete, Quick Actions dropdown
+On desktop, applications are displayed in a table layout (Company, Role, Status, Applied Date, Actions). On mobile, a card layout is used. Each row provides Edit, View, Delete, and Quick Actions options.
 
 ---
 
-### `ApplicationForm` (`src/components/application-form.tsx`)
+### ApplicationForm
 
 **Type:** Client component (modal overlay)
 
-**Props:**
-```typescript
-{
-  application?: ExistingApp;  // if editing
-  availableTags: Tag[];
-  onClose: () => void;
-}
-```
-
-**Features:**
-- Create or Edit mode (determined by presence of `application` prop)
-- Fields: company, role, jobUrl, status (dropdown), appliedDate (DatePicker), followUpDate (DatePicker), notes (textarea)
-- Tag multiselect (pill buttons)
-- Duplicate warning with debounced check (500ms)
-- Loading state on submit
-- Field-level error display
-
-**Flow:**
-1. User fills form
-2. On company/role change (create mode): debounced `checkDuplicate()` call
-3. On submit: calls `createApplication()` or `updateApplication()`
-4. On success: `router.refresh()` + `onClose()`
-5. On error: displays field errors
+Used for both creating and editing applications. In create mode, performs a debounced duplicate check (500ms) as the user types the company and role. Renders fields for all application properties including a tag multiselect and custom date pickers. Calls `createApplication()` or `updateApplication()` on submission and refreshes the page on success.
 
 ---
 
-### `InlineNoteEditor` (`src/components/inline-note-editor.tsx`)
+### InlineNoteEditor
 
 **Type:** Client component
 
-**Props:** `{ applicationId: string, currentNotes: string | null }`
-
-**Features:**
-- Displays current notes or "No notes yet"
-- "Add Note" button toggles a textarea
-- Calls `addQuickNote(id, text)` on submit
-- Refreshes page data after save
+Displays the current notes for an application. An "Add Note" button reveals a textarea. On submission, calls `addQuickNote(id, text)` and refreshes the page.
 
 ---
 
-### `ExportButton` (`src/components/export-button.tsx`)
+### ExportButton
 
 **Type:** Client component
 
-**Behavior:**
-1. Calls `exportApplicationsCsv()` server action
-2. Creates a Blob from the CSV string
-3. Generates download URL
-4. Triggers file download: `orbit-applications-YYYY-MM-DD.csv`
+Calls `exportApplicationsCsv()`, creates a Blob from the returned CSV string, and programmatically triggers a file download named `orbit-applications-YYYY-MM-DD.csv`.
 
 ---
 
-### `StatusBadge` (`src/components/status-badge.tsx`)
+### StatusBadge
 
 **Type:** Client component
 
-**Props:** `{ status: string }`
-
-Renders a colored pill badge. Color mapping:
-- WISHLIST → gray
-- APPLIED → blue
-- INTERVIEW → amber
-- OFFER → green
-- REJECTED → red
+Renders a colour-coded pill badge for a given application status. Colour mapping: Wishlist → grey, Applied → blue, Screening → purple, Interview → amber, Offer → green, Rejected → red.
 
 ---
 
-### `QuickActions` (`src/components/quick-actions.tsx`)
+### QuickActions
 
 **Type:** Client component (dropdown menu)
 
-**Actions:**
-- Move to stage (5 status options)
-- Add note (inline input)
-- Schedule interview (link to detail page)
-- Archive/Unarchive
+Provides quick access to: move to a different stage, add a note, archive or unarchive the application. Rendered via a React portal into `document.body` with dynamic positioning to prevent clipping in overflow containers.
 
 ---
 
-### `DatePicker` (`src/components/date-picker.tsx`)
+### DatePicker
 
 **Type:** Client component
 
-**Props:** `{ id, name, placeholder, value? }`
-
-Custom calendar widget with:
-- Month/year navigation
-- Day grid
-- "Today" button
-- "Clear" button
-- Returns ISO date string via hidden input
+A custom calendar widget with month navigation, a day grid, a "Today" shortcut, and a "Clear" option. Returns an ISO date string via a hidden input field.
 
 ---
 
@@ -166,13 +91,12 @@ Server Page
   ├── getApplications(urlParams) → Application[]
   ├── getTags() → Tag[]
   └── Renders ApplicationsList(props)
-        ├── User interacts (filter, search, sort)
-        │   └── Updates URL params → page re-renders server-side
-        ├── User clicks "New" or "Edit"
-        │   └── ApplicationForm modal opens
-        │         └── Calls createApplication / updateApplication
-        │               └── router.refresh() → server re-fetches
-        └── User clicks Delete / Archive
-              └── Calls deleteApplication / archiveApplication
-                    └── router.refresh()
+        ├── User changes filter or sort
+        │   └── URL params updated → server re-renders with new data
+        ├── User opens create or edit form
+        │   └── ApplicationForm modal → createApplication / updateApplication
+        │         └── router.refresh() on success
+        └── User deletes or archives
+              └── deleteApplication / archiveApplication
+                    └── router.refresh() on success
 ```

@@ -1,8 +1,8 @@
-# Authentication — Backend System Design
+# Authentication — System Design
 
 ## Architecture
 
-Authentication is fully server-side. There are no API routes — everything goes through Next.js Server Actions.
+Authentication is entirely server-side. All auth operations are handled by Next.js Server Actions. No API routes are involved in the authentication flow.
 
 ```
 ┌─────────────┐     ┌──────────────────┐     ┌────────────┐
@@ -18,41 +18,27 @@ Authentication is fully server-side. There are no API routes — everything goes
 
 ---
 
-## Session Management (`src/lib/auth.ts`)
+## Session Management
 
 ### Token Creation
 
-```typescript
-function createToken(payload: SessionPayload): string
-```
-
-- Signs a JWT with `{ userId, email, name }` using `JWT_SECRET`.
-- Expiry: 7 days.
+Signs a JWT containing `{ userId, email, name }` using the `JWT_SECRET` environment variable. Token expiry is set to 7 days.
 
 ### Token Verification
 
-```typescript
-function verifyToken(token: string): SessionPayload | null
-```
+Verifies the JWT signature and expiry. Returns the decoded `SessionPayload` on success, or `null` if the token is expired or invalid.
 
-- Returns decoded payload or `null` if expired/invalid.
-
-### Get Session
+### Session Payload Type
 
 ```typescript
-async function getSession(): Promise<SessionPayload | null>
+interface SessionPayload {
+  userId: string;
+  email: string;
+  name: string;
+}
 ```
 
-- Reads `orbit-session` cookie from the request.
-- Verifies JWT. Returns user payload or `null`.
-
-### Set Session
-
-```typescript
-async function setSession(payload: SessionPayload): Promise<void>
-```
-
-- Creates JWT, writes HTTP-only cookie with these properties:
+### Cookie Configuration
 
 | Property | Value |
 |----------|-------|
@@ -60,15 +46,7 @@ async function setSession(payload: SessionPayload): Promise<void>
 | secure | `true` in production |
 | sameSite | `lax` |
 | path | `/` |
-| maxAge | 604800s (7 days) |
-
-### Clear Session
-
-```typescript
-async function clearSession(): Promise<void>
-```
-
-- Deletes the `orbit-session` cookie.
+| maxAge | 604,800 seconds (7 days) |
 
 ---
 
@@ -76,46 +54,81 @@ async function clearSession(): Promise<void>
 
 ```
 1. Client submits FormData { name, email, password }
-2. Zod validates: name (1-100), email (valid format), password (min 8)
-3. Check prisma.user.findUnique({ email }) → if exists, return error
-4. Hash password with bcrypt (12 rounds)
-5. prisma.user.create({ name, email, hashedPassword })
+2. Zod validates: name (1–100 chars), email (valid format), password (min 8 chars)
+3. Check if a verified account exists for this email → return conflict error if so
+4. If an unverified account exists, update it with a new token; otherwise create a new user
+5. Hash password with bcrypt (12 rounds)
+6. Generate UUID verification token with 24-hour expiry
+7. Store token and expiry on the user record
+8. Send verification email asynchronously (non-blocking)
+9. Return { ok: true, data: { email } }
+```
+
+---
+
+## Email Verification Flow
+
+```
+1. User clicks link: GET /api/auth/verify-email?token=<uuid>
+2. Look up user by verificationToken
+3. If not found → return "Invalid or expired verification link"
+4. If verificationExpiry < now → return "This verification link has expired"
+5. Set emailVerified = true, clear token and expiry
 6. setSession({ userId, email, name }) → JWT in cookie
 7. redirect("/dashboard")
 ```
+
+---
 
 ## Login Flow
 
 ```
 1. Client submits FormData { email, password }
-2. Zod validates: email (valid format), password (min 1)
-3. prisma.user.findUnique({ email }) → if not found, return generic error
+2. Zod validates: email (valid format), password (min 1 char)
+3. Find user by email → if not found, return generic error
 4. bcrypt.compare(password, user.password) → if false, return generic error
-5. setSession({ userId, email, name }) → JWT in cookie
-6. redirect("/dashboard")
+5. If emailVerified = false → re-issue verification token, send email, return field error
+6. setSession({ userId, email, name }) → JWT in cookie
+7. redirect("/dashboard")
 ```
+
+---
+
+## Password Reset Flow
+
+```
+1. User submits email address
+2. Find user by email; if not found or not verified → return ok (prevents enumeration)
+3. Generate UUID reset token with 1-hour expiry
+4. Store token and expiry on user record
+5. Send password reset email asynchronously
+6. Return { ok: true }
+
+On reset form submission:
+1. Validate token, password (min 8), and confirm match
+2. Find user by passwordResetToken
+3. If not found or expiry < now → return error
+4. Hash new password with bcrypt (12 rounds)
+5. Clear reset token and expiry
+6. setSession → auto-login
+7. redirect("/dashboard")
+```
+
+---
 
 ## Logout Flow
 
 ```
 1. logoutAction() called from sidebar form
-2. clearSession() → deletes cookie
+2. clearSession() → deletes orbit-session cookie
 3. redirect("/login")
 ```
 
+---
+
 ## Route Protection
 
-The dashboard layout (`src/app/dashboard/layout.tsx`) acts as the auth gate:
-
-```typescript
-export default async function DashboardLayout({ children }) {
-  const session = await getSession();
-  if (!session) redirect("/login");
-  // ... render layout
-}
-```
-
-Every nested page under `/dashboard/*` is automatically protected.
+The dashboard layout calls `getSession()` on every request. If the session is absent or invalid, the user is redirected to `/login` before any page content is rendered. Every nested route under `/dashboard/*` is automatically protected by this single check.
 
 ---
 
@@ -123,33 +136,11 @@ Every nested page under `/dashboard/*` is automatically protected.
 
 | Decision | Rationale |
 |----------|-----------|
-| HTTP-only cookie | Token not accessible via JS → prevents XSS token theft |
-| bcrypt 12 rounds | Strong hashing, resistant to brute force |
-| Generic login error | Prevents user enumeration attacks |
-| SameSite=lax | Prevents CSRF on state-changing requests |
-| Secure in production | Cookie only sent over HTTPS |
-| 7-day expiry | Balance between UX and security |
-
----
-
-## Data Model
-
-```prisma
-model User {
-  id        String   @id @default(cuid())
-  name      String
-  email     String   @unique
-  password  String   // bcrypt hash
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-```
-
----
-
-## Environment Variables
-
-| Variable | Purpose |
-|----------|---------|
-| `JWT_SECRET` | JWT signing key. Must be a strong random string in production. |
-| `NODE_ENV` | Controls `secure` flag on cookie |
+| HTTP-only cookie | Token is inaccessible to JavaScript; prevents XSS-based token theft |
+| bcrypt with 12 rounds | Computationally expensive; resistant to brute-force attacks |
+| Generic login error | Returns the same message for unknown email and wrong password; prevents user enumeration |
+| SameSite=Lax | Prevents CSRF on state-changing requests |
+| Secure flag in production | Cookie only transmitted over HTTPS |
+| Email verification required | Prevents account creation with unowned email addresses |
+| Non-blocking email sending | Email failures do not degrade the registration or login experience |
+| Always-ok forgot-password response | Prevents enumeration of registered email addresses |

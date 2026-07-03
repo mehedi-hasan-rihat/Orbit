@@ -1,6 +1,6 @@
-# Application Tracking — API Documentation
+# Application Tracking — API Reference
 
-## Server Actions (`src/lib/actions/applications.ts`)
+## Server Actions
 
 ---
 
@@ -10,30 +10,30 @@ Creates a new job application.
 
 **Input:**
 
-| Field | Type | Required | Validation |
-|-------|------|----------|-----------|
-| company | string | Yes | 1–200 chars |
-| role | string | Yes | 1–200 chars |
-| jobUrl | string | No | Valid URL or empty |
-| status | string | No | Enum (defaults to WISHLIST) |
-| appliedDate | string | No | ISO date (YYYY-MM-DD) or empty |
-| followUpDate | string | No | ISO date (YYYY-MM-DD) or empty |
-| notes | string | No | Max 5000 chars |
-| tags | string | No | Comma-separated tag IDs |
+| Field | Required | Validation |
+|-------|----------|-----------|
+| company | Yes | 1–200 characters |
+| role | Yes | 1–200 characters |
+| jobUrl | No | Valid URL or empty |
+| status | No | Enum value (defaults to WISHLIST) |
+| appliedDate | No | ISO date string (YYYY-MM-DD) or empty |
+| followUpDate | No | ISO date string (YYYY-MM-DD) or empty |
+| notes | No | Maximum 5,000 characters |
+| tags | No | Comma-separated tag IDs |
 
 **Returns:**
 ```typescript
-{ success: true, id: string }  // on success
-{ error: { [field]: string[] } }  // on validation failure
+{ success: true; id: string }
+{ error: { [field]: string[] } }
 ```
 
-**Side Effects:** Creates CREATED activity.
+**Side Effects:** Creates a CREATED activity record.
 
 ---
 
 ### `updateApplication(id: string, formData: FormData)`
 
-Updates an existing application. Same input fields as create.
+Updates an existing application. Accepts the same fields as `createApplication`.
 
 **Returns:**
 ```typescript
@@ -42,33 +42,35 @@ Updates an existing application. Same input fields as create.
 { error: { _form: ["Application not found"] } }
 ```
 
-**Side Effects:** Creates activity records for status, notes, and follow-up changes.
+**Side Effects:** Creates STATUS_CHANGED, NOTE_ADDED, and/or FOLLOW_UP_SET activity records as appropriate.
 
 ---
 
 ### `updateApplicationStatus(id: string, status: string)`
 
-Quick status update (used by Kanban board).
+Quick status update used by the Kanban board on drag-and-drop.
 
 **Input:**
-| Param | Validation |
-|-------|-----------|
+
+| Parameter | Validation |
+|-----------|-----------|
 | id | Non-empty string |
-| status | One of: WISHLIST, APPLIED, INTERVIEW, OFFER, REJECTED, ARCHIVED |
+| status | One of the 8 ApplicationStatus enum values |
 
 **Returns:**
 ```typescript
 { success: true }
-{ error: "Invalid data" | "Application not found" }
+{ error: "Invalid data" }
+{ error: "Application not found" }
 ```
 
-**Side Effects:** Creates STATUS_CHANGED activity with `{ from, to }` metadata.
+**Side Effects:** Creates a STATUS_CHANGED activity with `{ from, to }` metadata.
 
 ---
 
 ### `archiveApplication(id: string)`
 
-Sets `archived = true`.
+Sets `archived = true` on the application.
 
 **Returns:** `{ success: true }` or `{ error: "Application not found" }`
 
@@ -76,7 +78,7 @@ Sets `archived = true`.
 
 ### `unarchiveApplication(id: string)`
 
-Sets `archived = false`.
+Sets `archived = false` on the application.
 
 **Returns:** `{ success: true }` or `{ error: "Application not found" }`
 
@@ -84,29 +86,27 @@ Sets `archived = false`.
 
 ### `deleteApplication(id: string)`
 
-Permanently deletes the application and all related data.
+Permanently deletes the application and all related data via cascade.
 
 **Returns:** `{ success: true }` or `{ error: "Application not found" }`
-
-**Cascade:** Activities, Interviews, ApplicationTags all deleted.
 
 ---
 
 ### `getApplications(params?)`
 
-Fetches filtered application list.
+Fetches a filtered and sorted list of applications.
 
-**Params:**
+**Parameters:**
 
 | Param | Type | Default | Description |
 |-------|------|---------|-------------|
-| search | string | — | Text search on company/role |
-| status | string | — | Filter by status ("ALL" = no filter) |
-| sort | string | "createdAt" | Sort field |
+| search | string | — | Case-insensitive partial match on company or role |
+| status | string | — | Filter by status ("ALL" disables the filter) |
+| sort | string | `createdAt` | Sort field |
 | tag | string | — | Filter by tag ID |
-| archived | boolean | false | Show archived instead of active |
+| archived | boolean | `false` | Show archived applications |
 
-**Sort values:** `createdAt`, `updatedAt`, `company`, `appliedDate`, `followUpDate`
+**Sort options:** `createdAt` (newest first), `updatedAt` (recently updated), `company` (A–Z), `appliedDate` (newest first), `followUpDate` (soonest first).
 
 **Returns:** `Application[]` with tags included.
 
@@ -114,7 +114,7 @@ Fetches filtered application list.
 
 ### `getApplication(id: string)`
 
-Fetches single application with activities and tags.
+Fetches a single application with its activities and tags.
 
 **Returns:** `Application | null`
 
@@ -122,11 +122,13 @@ Fetches single application with activities and tags.
 
 ### `getApplicationStats()`
 
+Returns aggregate metrics for the analytics dashboard.
+
 **Returns:**
 ```typescript
 {
   total: number;
-  statusCounts: { WISHLIST, APPLIED, INTERVIEW, OFFER, REJECTED, ARCHIVED: number };
+  statusCounts: { WISHLIST, APPLIED, SCREENING, INTERVIEW, OFFER, REJECTED, WITHDRAWN, ARCHIVED: number };
   interviewRate: number;  // percentage
   offerRate: number;      // percentage
   thisWeek: number;
@@ -137,17 +139,23 @@ Fetches single application with activities and tags.
 
 ### `getFollowUps()`
 
-Returns non-archived applications with follow-up dates in active stages (excludes REJECTED, ARCHIVED). Sorted by followUpDate ascending.
+Returns non-archived applications with follow-up dates set, excluding REJECTED and WITHDRAWN statuses. Sorted by `followUpDate` ascending.
+
+**Returns:** `Application[]` with tags included.
 
 ---
 
 ### `getCompanyStats()`
 
-**Returns:** `Array<{ company: string, total: number, interviews: number, offers: number }>` sorted by total desc.
+Returns per-company aggregated counts.
+
+**Returns:** `Array<{ company: string; total: number; interviews: number; offers: number }>` sorted by total descending.
 
 ---
 
 ### `checkDuplicate(company: string, role: string)`
+
+Checks whether an active application already exists for the given company and role (case-insensitive).
 
 **Returns:** `{ id, company, role, status } | null`
 
@@ -155,14 +163,18 @@ Returns non-archived applications with follow-up dates in active stages (exclude
 
 ### `addQuickNote(id: string, note: string)`
 
-Appends `[date] note` to existing notes field.
+Appends a timestamped note to the application's existing notes field.
 
 **Returns:** `{ success: true }` or `{ error: "Not found" }`
 
-**Side Effects:** Creates NOTE_ADDED activity.
+**Side Effects:** Creates a NOTE_ADDED activity.
 
 ---
 
 ### `exportApplicationsCsv()`
 
-**Returns:** CSV string with headers: Company, Role, Status, Applied Date, Follow-up Date, Job URL, Tags, Notes, Created.
+Generates a CSV export of all applications including archived ones.
+
+**Returns:** `string` — complete CSV content with headers.
+
+**Columns:** Company, Role, Status, Applied Date, Follow-up Date, Job URL, Tags, Notes, Created.
