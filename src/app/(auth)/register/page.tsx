@@ -70,9 +70,9 @@ export default function RegisterPage() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {(errors.email || errors.name || errors.password) && (
+          {(errors._form || errors.email || errors.name || errors.password) && (
             <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
-              {(errors.name?.[0] || errors.email?.[0] || errors.password?.[0])}
+              {(errors._form?.[0] || errors.name?.[0] || errors.email?.[0] || errors.password?.[0])}
             </div>
           )}
 
