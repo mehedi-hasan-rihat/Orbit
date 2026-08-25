@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
+import { resolveStageLabel } from "@/lib/stage-label";
 
 export async function getCalendarEvents() {
   const session = await getSession();
@@ -14,6 +15,7 @@ export async function getCalendarEvents() {
       application: { userId: session.userId, archived: false },
     },
     include: {
+      stageType: { select: { name: true } },
       application: { select: { id: true, company: true, role: true, status: true } },
     },
     orderBy: { scheduledAt: "asc" },
@@ -35,7 +37,7 @@ export async function getCalendarEvents() {
       id: i.id,
       applicationId: i.application.id,
       type: "INTERVIEW" as const,
-      title: `${i.application.company} — Round ${i.round} ${i.type.replace("_", " ")}`,
+      title: `${i.application.company} — Round ${i.round} ${resolveStageLabel(i)}`,
       company: i.application.company,
       role: i.application.role,
       date: i.scheduledAt!,

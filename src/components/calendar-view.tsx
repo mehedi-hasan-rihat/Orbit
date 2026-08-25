@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import clsx from "clsx";
+import { outcomeDisplay } from "@/lib/outcome-display";
 
 interface CalendarEvent {
   id: string;
@@ -219,10 +220,10 @@ export function CalendarView({ events }: CalendarViewProps) {
                       </span>
                       {e.outcome && e.outcome !== "PENDING" && (
                         <span className={clsx(
-                          "text-xs font-medium",
-                          e.outcome === "PASSED" ? "text-green-600" : "text-red-500"
+                          "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium",
+                          outcomeDisplay(e.outcome).className
                         )}>
-                          {e.outcome}
+                          {outcomeDisplay(e.outcome).label}
                         </span>
                       )}
                     </div>

@@ -1,5 +1,7 @@
 import { getApplication } from "@/lib/actions/applications";
 import { getInterviews } from "@/lib/actions/interviews";
+import { getStageTypes } from "@/lib/actions/pipeline";
+import { OPEN_OUTCOMES } from "@/lib/validations";
 import { ActivityTimeline } from "@/components/activity-timeline";
 import { InterviewTracker } from "@/components/interview-tracker";
 import { StatusBadge } from "@/components/status-badge";
@@ -14,9 +16,10 @@ interface Props {
 export default async function ApplicationDetailPage({ params }: Props) {
   const { id } = await params;
 
-  const [application, interviews] = await Promise.all([
+  const [application, interviews, stageTypes] = await Promise.all([
     getApplication(id),
     getInterviews(id),
+    getStageTypes(),
   ]);
 
   if (!application) notFound();
@@ -26,7 +29,9 @@ export default async function ApplicationDetailPage({ params }: Props) {
     new Date(application.followUpDate) < new Date();
 
   const passedRounds = interviews.filter((i) => i.outcome === "PASSED").length;
-  const pendingRounds = interviews.filter((i) => i.outcome === "PENDING").length;
+  const pendingRounds = interviews.filter((i) =>
+    OPEN_OUTCOMES.includes((i.outcome ?? "PENDING") as (typeof OPEN_OUTCOMES)[number]),
+  ).length;
 
   return (
     <>
@@ -148,6 +153,7 @@ export default async function ApplicationDetailPage({ params }: Props) {
               <InterviewTracker
                 applicationId={application.id}
                 interviews={JSON.parse(JSON.stringify(interviews))}
+                stageTypes={JSON.parse(JSON.stringify(stageTypes))}
               />
             </div>
           </div>

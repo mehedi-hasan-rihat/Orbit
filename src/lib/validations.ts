@@ -24,3 +24,48 @@ export const tagSchema = z.object({
 export type ApplicationFormData = z.infer<typeof applicationSchema>;
 export type UpdateStatusData = z.infer<typeof updateStatusSchema>;
 export type TagFormData = z.infer<typeof tagSchema>;
+
+// ─── Interview pipeline ──────────────────────────────────────────────────────
+
+// Outcomes are a fixed vocabulary — only the stage *types* are user-editable.
+export const INTERVIEW_OUTCOMES = [
+  "PENDING",
+  "SCHEDULED",
+  "PASSED",
+  "FAILED",
+  "REJECTED",
+  "CANCELLED",
+  "WITHDRAWN",
+  "COMPLETED",
+] as const;
+
+export type InterviewOutcome = (typeof INTERVIEW_OUTCOMES)[number];
+
+// Outcomes that mean "this round has not happened yet" — these are the ones the
+// reminder cron still chases, and the ones that are not worth an activity entry.
+export const OPEN_OUTCOMES: InterviewOutcome[] = ["PENDING", "SCHEDULED"];
+
+// Seeded for every user on first read of their pipeline.
+export const DEFAULT_STAGE_TYPES = [
+  "Screening",
+  "Interview",
+  "Technical Interview",
+  "HR",
+  "Assessment",
+  "Offer",
+] as const;
+
+export const stageTypeSchema = z.object({
+  name: z.string().min(1, "Name is required").max(100),
+});
+
+export const interviewSchema = z.object({
+  stageTypeId: z.string().min(1, "Type is required"),
+  round: z.coerce.number().min(1).max(20),
+  scheduledAt: z.string().optional().or(z.literal("")),
+  notes: z.string().max(5000).optional().or(z.literal("")),
+  outcome: z.enum(INTERVIEW_OUTCOMES).optional(),
+});
+
+export type StageTypeFormData = z.infer<typeof stageTypeSchema>;
+export type InterviewFormData = z.infer<typeof interviewSchema>;

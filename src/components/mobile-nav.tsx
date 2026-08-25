@@ -15,6 +15,7 @@ const navigation = [
   { name: "Applications", href: "/dashboard/applications", icon: "" },
   { name: "Calendar", href: "/dashboard/calendar", icon: "" },
   { name: "Companies", href: "/dashboard/companies", icon: "" },
+  { name: "Pipeline", href: "/dashboard/pipeline", icon: "" },
   { name: "Tags", href: "/dashboard/tags", icon: "" },
   { name: "Profile", href: "/dashboard/profile", icon: "" },
 ];

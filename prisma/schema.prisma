@@ -18,12 +18,12 @@ model User {
   passwordResetToken  String?       @unique
   passwordResetExpiry DateTime?
   theme               String        @default("system")
-  pipelineStages      String?
   createdAt           DateTime      @default(now())
   updatedAt           DateTime      @updatedAt
   applications        Application[]
   tags                Tag[]
   notifications       Notification[]
+  stageTypes          PipelineStageType[]
 }
 
 enum ApplicationStatus {
@@ -98,6 +98,25 @@ model Tag {
   @@index([userId])
 }
 
+// User-owned catalogue of interview stage types. Seeded with defaults on first
+// read (see src/lib/actions/pipeline.ts) so existing users get a pipeline too.
+model PipelineStageType {
+  id         String      @id @default(cuid())
+  userId     String
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name       String
+  order      Int         @default(0)
+  enabled    Boolean     @default(true)
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+  interviews Interview[]
+
+  @@unique([userId, name])
+  @@index([userId])
+}
+
+// Legacy stage type. Superseded by PipelineStageType; kept nullable so rows
+// written before the pipeline rework still render their original label.
 enum InterviewType {
   PHONE_SCREEN
   ONSITE
@@ -112,16 +131,20 @@ model Interview {
   id            String        @id @default(cuid())
   applicationId String
   application   Application   @relation(fields: [applicationId], references: [id], onDelete: Cascade)
-  type          InterviewType
-  customType    String?       // User-provided label when type is OTHER
+  stageTypeId   String?
+  stageType     PipelineStageType? @relation(fields: [stageTypeId], references: [id], onDelete: SetNull)
+  type          InterviewType?     // Legacy — pre-rework rows only
+  customType    String?            // Free-form label: legacy OTHER rows, and the
+                                   // snapshot taken when a stage type is deleted
   round         Int           @default(1)
   scheduledAt   DateTime?
   notes         String?
-  outcome       String?       // PASSED, FAILED, PENDING, CANCELLED
+  outcome       String?       // One of INTERVIEW_OUTCOMES in src/lib/validations.ts
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
 
   @@index([applicationId])
+  @@index([stageTypeId])
 }
 
 enum NotificationType {
