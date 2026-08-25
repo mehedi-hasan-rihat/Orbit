@@ -5,24 +5,56 @@ argument-hint: <module> <actionName> — e.g. tags archiveTag
 
 Add the server action described by: **$ARGUMENTS**
 
-Server actions live in `src/lib/actions/<module>.ts`. Read the target file first and match the conventions already in it — this codebase is not internally consistent, and the file you are editing wins over any general rule below.
+## 1. Objective
 
-Required in every action:
+Add one server action matching the conventions of the module it lands in — not a general idea of good practice.
 
-1. `"use server"` at the top of the module (once, not per function).
-2. Auth: `const session = await requireUser();` — `requireUser` is a small local helper defined per-module (see `src/lib/actions/tags.ts:8`), not a shared import. If the module you are editing doesn't have one, copy it in rather than inventing a shared abstraction.
-3. Validate input with a Zod schema from `src/lib/validations.ts`. Add the schema there, not inline.
-4. **Ownership check before every mutation** — `findFirst({ where: { id, userId: session.userId } })` and bail if missing. Never trust an id from the client. This is the single most important rule here.
-5. Mutate via `prisma` from `@/lib/prisma`.
-6. `revalidatePath()` for every path whose UI reflects the change.
+## 2. Input / Scope
 
-Return shape — pick by module, do not mix:
+Module and action name above. Actions live in `src/lib/actions/<module>.ts`. Scope is that action plus its Zod schema; nothing else in the module changes.
 
-- `src/lib/actions/auth.ts` uses the typed helpers in `src/lib/response.ts` (`ok`, `fieldError`, `serverError`, …).
-- **Every other module** returns ad-hoc `{ error }` / `{ success: true }` objects. Match the neighbours; don't migrate a file to `response.ts` as a drive-by.
+## 3. Context
 
-If the action sends email, it must not float the promise — wrap it in `after()` from `next/server`. See `src/lib/actions/auth.ts:76` and the reasoning in `docs/issue-faced.md` (#6).
+`AGENTS.md` has the five-step action pattern. What it can't tell you: this codebase is **not internally consistent**, and **the file you are editing wins over any general rule**.
 
-Import Prisma types from `@/generated/prisma/client`, never `@prisma/client`.
+## 4. Investigation
 
-When done, run `/check`.
+Read the target module top to bottom first. Note its `requireUser` helper, Zod imports, return shape, and `revalidatePath()` calls. Copy those; don't invent alternatives.
+
+## 5. Pattern / Constraints
+
+Beyond the `AGENTS.md` steps, the three that actually go wrong here:
+
+- **Ownership check before every mutation** — `findFirst({ where: { id, userId: session.userId } })`, bail if missing. Never trust a client id. Single most important rule in this repo; nothing in the toolchain catches its absence.
+- **`requireUser` is a per-module local helper** (`src/lib/actions/tags.ts:8`), not a shared import. If the module lacks one, copy it in rather than inventing a shared abstraction.
+- **Zod schema goes in `src/lib/validations.ts`**, never inline.
+
+Return shape by module, no mixing: `auth.ts` uses `src/lib/response.ts` helpers; every other module returns ad-hoc `{ error }` / `{ success: true }`. Match the neighbours — no drive-by migration.
+
+## 6. Analysis
+
+State which module the action belongs in, that module's return convention, and which paths need revalidating. If it doesn't obviously belong to an existing module, say so before creating a new one.
+
+## 7. Decision
+
+Note any judgement call: new Zod schema vs. reusing one, which paths to revalidate, whether a new module is warranted.
+
+## 8. Execution
+
+Write the action and its schema. Nothing else.
+
+## 9. Verification
+
+Run `/check`, then re-read the action against the rules above — especially the ownership check.
+
+## 10. Limitations
+
+`/check` proves types and lint only. It does not prove the ownership check is correct, that `revalidatePath()` covers the right paths, or that any email sends.
+
+## 11. Report
+
+**Added** — action and schema, with `file:line`
+**Conventions followed** — return shape, `requireUser` source, revalidated paths
+**Verification** — `/check` against the baseline
+**Not verified** — ownership behaviour, revalidation, email delivery
+**Remaining concerns** — or "None"
