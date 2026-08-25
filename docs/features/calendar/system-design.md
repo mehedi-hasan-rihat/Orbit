@@ -13,7 +13,10 @@ prisma.interview.findMany({
     scheduledAt: { not: null },
     application: { userId, archived: false },
   },
-  include: { application: { select: { id, company, role, status } } },
+  include: {
+    stageType: { select: { name: true } },
+    application: { select: { id, company, role } },
+  },
   orderBy: { scheduledAt: "asc" },
 })
 ```
@@ -25,7 +28,7 @@ prisma.application.findMany({
     userId, archived: false,
     followUpDate: { not: null },
   },
-  select: { id, company, role, status, followUpDate },
+  select: { id, company, role, followUpDate },
   orderBy: { followUpDate: "asc" },
 })
 ```
@@ -42,12 +45,17 @@ interface CalendarEvent {
   company: string;
   role: string;
   date: Date;
-  status: ApplicationStatus;
   outcome: string | null;
 }
 ```
 
-Interview titles: `"Google — Round 2 TECHNICAL"`
+`status` was dropped from this shape during the pipeline rework: the calendar
+declared it but never rendered it, and after the rework it would have carried `null`
+for every new row.
+
+Interview titles: `"Google — Round 2 Technical Interview"` — the label comes from
+`resolveStageLabel()`, which reads the stage type name and falls back to the legacy
+`InterviewType` enum for pre-pipeline rounds.
 Follow-up titles: `"Follow-up: Google"`
 
 ---

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { createInterview, updateInterview, deleteInterview } from "@/lib/actions/interviews";
 import { createStageType } from "@/lib/actions/pipeline";
-import { INTERVIEW_OUTCOMES } from "@/lib/validations";
+import { INTERVIEW_OUTCOMES, ROUND_CATEGORIES } from "@/lib/validations";
 import { outcomeDisplay } from "@/lib/outcome-display";
 import { resolveStageLabel } from "@/lib/stage-label";
 import { DatePicker } from "./date-picker";
@@ -14,6 +14,7 @@ import clsx from "clsx";
 export interface StageTypeOption {
   id: string;
   name: string;
+  category: string;
   enabled: boolean;
 }
 
@@ -44,9 +45,15 @@ function InterviewForm({ applicationId, stageTypes, interview, onClose }: Interv
   const [formError, setFormError] = useState<string | null>(null);
   const router = useRouter();
 
-  // A disabled type stays selectable while it is the one this stage already
-  // uses — editing the notes on an old round should not silently retype it.
-  const options = stageTypes.filter((t) => t.enabled || t.id === interview?.stageTypeId);
+  // Only stages you actually sit an interview for. OPEN and CLOSED stages
+  // (Wishlist, Applied, Rejected…) are application lifecycle states, not round
+  // types. A hidden or out-of-category stage stays selectable while it is the one
+  // this round already uses — editing the notes should not silently retype it.
+  const options = stageTypes.filter(
+    (t) =>
+      (t.enabled && ROUND_CATEGORIES.includes(t.category as (typeof ROUND_CATEGORIES)[number])) ||
+      t.id === interview?.stageTypeId,
+  );
 
   const [selectedType, setSelectedType] = useState(
     interview?.stageTypeId ?? options[0]?.id ?? NEW_TYPE,

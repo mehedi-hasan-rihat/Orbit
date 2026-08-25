@@ -15,7 +15,7 @@ Creates a new job application.
 | company | Yes | 1–200 characters |
 | role | Yes | 1–200 characters |
 | jobUrl | No | Valid URL or empty |
-| status | No | Enum value (defaults to WISHLIST) |
+| stageId | Yes | Id of a stage owned by the caller |
 | appliedDate | No | ISO date string (YYYY-MM-DD) or empty |
 | followUpDate | No | ISO date string (YYYY-MM-DD) or empty |
 | notes | No | Maximum 5,000 characters |
@@ -46,23 +46,26 @@ Updates an existing application. Accepts the same fields as `createApplication`.
 
 ---
 
-### `updateApplicationStatus(id: string, status: string)`
+### `updateApplicationStage(id: string, stageId: string)`
 
-Quick status update used by the Kanban board on drag-and-drop.
+Quick stage update used by the Kanban board on drag-and-drop and by the quick-actions menu.
 
 **Input:**
 
 | Parameter | Validation |
 |-----------|-----------|
-| id | Non-empty string |
-| status | One of the 8 ApplicationStatus enum values |
+| id | Non-empty string, must be owned by the caller |
+| stageId | Non-empty string, must be a stage owned by the caller |
 
 **Returns:**
 ```typescript
 { success: true }
 { error: "Invalid data" }
 { error: "Application not found" }
+{ error: "Stage not found" }
 ```
+
+A no-op (already in that stage) returns `{ success: true }` without writing an activity.
 
 **Side Effects:** Creates a STATUS_CHANGED activity with `{ from, to }` metadata.
 
@@ -101,7 +104,7 @@ Fetches a filtered and sorted list of applications.
 | Param | Type | Default | Description |
 |-------|------|---------|-------------|
 | search | string | — | Case-insensitive partial match on company or role |
-| status | string | — | Filter by status ("ALL" disables the filter) |
+| stageId | string | — | Filter by stage id ("ALL" disables the filter) |
 | sort | string | `createdAt` | Sort field |
 | tag | string | — | Filter by tag ID |
 | archived | boolean | `false` | Show archived applications |
@@ -128,7 +131,9 @@ Returns aggregate metrics for the analytics dashboard.
 ```typescript
 {
   total: number;
-  statusCounts: { WISHLIST, APPLIED, SCREENING, INTERVIEW, OFFER, REJECTED, WITHDRAWN, ARCHIVED: number };
+  stageCounts: Array<{ id, name, color, category, value: number }>;
+  interviewing: number;
+  offers: number;
   interviewRate: number;  // percentage
   offerRate: number;      // percentage
   thisWeek: number;
@@ -139,9 +144,9 @@ Returns aggregate metrics for the analytics dashboard.
 
 ### `getFollowUps()`
 
-Returns non-archived applications with follow-up dates set, excluding REJECTED and WITHDRAWN statuses. Sorted by `followUpDate` ascending.
+Returns non-archived applications with follow-up dates set, excluding any application sitting in a `CLOSED` stage. Sorted by `followUpDate` ascending.
 
-**Returns:** `Application[]` with tags included.
+**Returns:** `Application[]` with tags and the `stage` relation included.
 
 ---
 
@@ -157,7 +162,7 @@ Returns per-company aggregated counts.
 
 Checks whether an active application already exists for the given company and role (case-insensitive).
 
-**Returns:** `{ id, company, role, status } | null`
+**Returns:** `{ id, company, role, status, stage } | null` — the warning renders `stage.name`, falling back to the legacy `status`.
 
 ---
 

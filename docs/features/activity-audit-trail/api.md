@@ -42,7 +42,7 @@ Activities are created automatically as side effects of other actions:
 |--------|-----------------|
 | `createApplication()` | CREATED |
 | `updateApplication()` | STATUS_CHANGED, NOTE_ADDED, FOLLOW_UP_SET (conditionally) |
-| `updateApplicationStatus()` | STATUS_CHANGED |
+| `updateApplicationStage()` | STATUS_CHANGED |
 | `archiveApplication()` | STATUS_CHANGED ("Application archived") |
 | `unarchiveApplication()` | STATUS_CHANGED ("Application unarchived") |
 | `addQuickNote()` | NOTE_ADDED |

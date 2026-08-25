@@ -12,11 +12,11 @@ Adds a new interview round to an application.
 
 | Field | Type | Required | Validation |
 |-------|------|----------|-----------|
-| type | string | Yes | One of 8 InterviewType values |
+| stageTypeId | string | Yes | Id of a stage type owned by the caller |
 | round | string/number | Yes | 1–20 |
 | scheduledAt | string | No | ISO datetime or empty |
 | notes | string | No | Max 5000 chars |
-| outcome | string | No | PENDING, PASSED, FAILED, CANCELLED (defaults to PENDING) |
+| outcome | string | No | One of the 8 `INTERVIEW_OUTCOMES` (defaults to PENDING) |
 
 **Returns:**
 ```typescript
@@ -46,7 +46,7 @@ Updates an existing interview round.
 
 **Side Effects:**
 - Updates interview record
-- If outcome changed from previous value AND new outcome ≠ PENDING: creates INTERVIEW_OUTCOME activity
+- If outcome changed AND the new outcome is not open (`PENDING`/`SCHEDULED`): creates INTERVIEW_OUTCOME activity
 
 ---
 
@@ -66,6 +66,6 @@ Permanently removes an interview round.
 
 Fetches all interview rounds for an application.
 
-**Returns:** `Interview[]` sorted by round ASC, then createdAt ASC.
+**Returns:** `Interview[]` with the `stageType` relation included, sorted by round ASC, then createdAt ASC.
 
 Returns empty array if application not found or not owned by user.

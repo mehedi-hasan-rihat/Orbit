@@ -230,7 +230,7 @@ export async function getInterviews(applicationId: string) {
 
   return prisma.interview.findMany({
     where: { applicationId },
-    include: { stageType: { select: { id: true, name: true, enabled: true } } },
+    include: { stageType: { select: { id: true, name: true, category: true, enabled: true } } },
     orderBy: [{ round: "asc" }, { createdAt: "asc" }],
   });
 }

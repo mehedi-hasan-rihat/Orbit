@@ -8,13 +8,16 @@
 
 **Props:**
 ```typescript
-{ applications: Application[] }
+{ applications: Application[], stages: BoardStage[] }
 ```
+
+`stages` are the column definitions — `{ id, name, color }` — supplied by the
+dashboard page from the user's pipeline. The board renders no columns of its own.
 
 **Libraries:** `@dnd-kit/core`, `@dnd-kit/sortable`
 
 **Configuration:**
-- Sensor: `PointerSensor` with 8px activation distance (prevents accidental drags on click)
+- Sensor: `PointerSensor` with a 200ms delay and 5px tolerance (lets touch scroll and tap still work)
 - Collision: `closestCorners` algorithm
 - Strategy: `verticalListSortingStrategy` per column
 
@@ -28,10 +31,10 @@
 - Sets `activeId` for overlay rendering
 
 `onDragEnd`:
-- Finds the target column (either dropped on a column or on a card within a column)
+- Finds the target column by matching `over.id` against `stages`, or against the `stageId` of the card it was dropped on
 - If same column as source: no-op
 - Otherwise: optimistically updates local `items` state
-- Calls `updateApplicationStatus(id, newStatus)`
+- Calls `updateApplicationStage(id, targetStageId)`
 - Calls `router.refresh()` to sync with server
 
 ---
@@ -46,7 +49,8 @@
 ```
 
 - Droppable container
-- Shows column header with title, color indicator dot, and item count
+- `color` is a **hex value** from the user's stage, applied as an inline style — not a Tailwind class name as it was when columns were fixed
+- Shows column header with title, colour indicator dot, and item count
 - Visual ring highlight when a card is dragged over
 
 ---
@@ -83,6 +87,8 @@
 └──────────┘ └──────────┘ └──────────┘ └──────────┘ └──────────┘
 ```
 
+Illustrative only — the column set, their names, their order, and their colours all come from the user's pipeline.
+
 Horizontal scrollable on mobile.
 
 ---
@@ -94,4 +100,5 @@ Horizontal scrollable on mobile.
 | `src/components/kanban-board.tsx` | DnD context, state, handlers |
 | `src/components/kanban-column.tsx` | Droppable column |
 | `src/components/kanban-card.tsx` | Draggable card |
-| `src/app/dashboard/page.tsx` | Fetches data, renders board |
+| `src/app/dashboard/page.tsx` | Fetches applications and stages, filters to enabled, renders board |
+| `src/lib/actions/pipeline.ts` | Supplies the stage catalogue |

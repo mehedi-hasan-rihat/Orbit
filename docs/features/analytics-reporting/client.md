@@ -11,7 +11,9 @@
 {
   stats: {
     total: number;
-    statusCounts: { WISHLIST, APPLIED, INTERVIEW, OFFER, REJECTED, ARCHIVED: number };
+    stageCounts: Array<{ id, name, color, category: string, value: number }>;
+    interviewing: number;
+    offers: number;
     interviewRate: number;
     offerRate: number;
     thisWeek: number;
@@ -28,30 +30,26 @@
    - Interview Rate (%)
    - Offer Rate (%)
 
-2. **Bar Chart** (if total > 0):
+2. **Bar Chart — "Applications by Stage"** (if total > 0):
    - Library: Recharts `BarChart`
-   - X-axis: status names
+   - X-axis: stage names, in the user's pipeline order
    - Y-axis: count
-   - Each bar colored by status
+   - Each bar filled with the stage's own colour
    - Tooltip on hover
+   - Empty stages are filtered out — with a fully custom pipeline the axis would otherwise fill with zero-height columns
 
-3. **Pie Chart** (if total > 0):
+3. **Pie Chart — "Stage Distribution"** (if total > 0):
    - Library: Recharts `PieChart`
    - Donut style (innerRadius=60, outerRadius=100)
    - Legend below chart
-   - Only shows statuses with count > 0
+   - Shares the same filtered dataset as the bar chart
 
 4. **Empty State** (if total = 0):
    - "No data yet" message with guidance
 
-**Color Map:**
-```
-WISHLIST  → #6b7280 (gray)
-APPLIED   → #3b82f6 (blue)
-INTERVIEW → #f59e0b (amber)
-OFFER     → #22c55e (green)
-REJECTED  → #ef4444 (red)
-```
+**Colours:** none are defined in this component. Each bar and slice uses the hex
+colour stored on the stage, so the charts, the board columns, and the status badges
+all stay in agreement without a shared constant.
 
 ---
 
