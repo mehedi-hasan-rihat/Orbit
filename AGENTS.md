@@ -1,98 +1,91 @@
-<!-- BEGIN:nextjs-agent-rules -->
 # This is NOT the Next.js you know
 
 This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
-<!-- END:nextjs-agent-rules -->
 
 # Orbit — Agent Guidelines
 
-## Project Overview
-
-Orbit is a job application tracker built with Next.js 16 (App Router), React 19, TypeScript, Prisma 7, PostgreSQL, and Tailwind CSS 4. It uses Server Actions exclusively — no REST/GraphQL endpoints.
+Job application tracker: Next.js 16 (App Router), React 19, TypeScript, Prisma 7, PostgreSQL, Tailwind CSS 4. Deployed on Vercel.
 
 ## Architecture Rules
 
-- **No API routes** for data mutations. Use Server Actions (`"use server"` functions in `src/lib/actions/`).
-- The only API route is `/api/auth/refresh` for token rotation.
+- **No API routes for mutations.** Use Server Actions (`"use server"` in `src/lib/actions/`).
+- The three API routes that exist are not CRUD and should stay that way:
+  - `/api/auth/verify-email` — GET link target from verification emails
+  - `/api/cron/reminders` — GET, Vercel Cron, guarded by `Bearer ${CRON_SECRET}`
+  - `/api/notifications/stream` — SSE for the notification bell
 - **Server Components** fetch data. **Client Components** handle interactivity.
-- Middleware lives in `src/proxy.ts` (Next.js 16 convention).
+- Middleware lives in `src/proxy.ts` (Next.js 16 convention — not `middleware.ts`).
 
 ## Authentication
 
-- Short-lived access tokens (15min JWT) in HTTP-only cookie `orbit-session`.
-- Long-lived refresh tokens (7 days) stored in DB + HTTP-only cookie `orbit-refresh`.
-- Middleware validates access token; if expired, redirects to `/api/auth/refresh` for transparent rotation.
-- Force logout = delete refresh tokens from `RefreshToken` table.
+- Single JWT in HTTP-only cookie `orbit-session`, **7-day expiry**. Signed/verified in `src/lib/auth.ts`.
+- `src/proxy.ts` verifies the JWT on `/dashboard/*`, redirects to `/login` on failure, and bounces logged-in users away from `/login` and `/register`.
+- There is **no refresh-token rotation** — no `orbit-refresh` cookie, no `RefreshToken` table, no `/api/auth/refresh`. Don't write code that assumes any of them exist.
+- Logout clears the cookie. There is currently no server-side force-logout.
 - Never store tokens in localStorage or expose them to client JS.
 
 ## Database
 
-- ORM: Prisma 7 with `@prisma/adapter-pg` (PostgreSQL driver adapter).
-- Schema: `prisma/schema.prisma`
-- Generated client: `src/generated/prisma/`
-- Singleton: `src/lib/prisma.ts`
+- Prisma 7 with `@prisma/adapter-pg`. Schema: `prisma/schema.prisma`.
+- Client is generated to `src/generated/prisma/` — import from `@/generated/prisma/client`, **never** `@prisma/client`.
+- Singleton: `src/lib/prisma.ts`. Don't construct `PrismaClient` elsewhere.
 - After schema changes: `npx prisma migrate dev --name <name>` then `npx prisma generate`.
+- Models: `User`, `Application`, `Activity`, `Tag`, `ApplicationTag`, `Interview`, `Notification`.
 
 ## Key Patterns
 
 ### Server Actions
-Every action in `src/lib/actions/`:
-1. Calls `requireUser()` to verify session.
-2. Validates input with Zod (`src/lib/validations.ts`).
-3. Checks resource ownership (`findFirst({ where: { id, userId } })`).
-4. Mutates DB.
-5. Calls `revalidatePath()` to invalidate cache.
+Every action in `src/lib/actions/` (`applications`, `auth`, `calendar`, `interviews`, `notifications`, `profile`, `tags`):
+
+1. `await requireUser()` — a **per-module local helper**, not a shared import. Copy it if the module lacks one.
+2. Validate with a Zod schema from `src/lib/validations.ts`.
+3. **Check ownership**: `findFirst({ where: { id, userId } })`. Never trust a client-supplied id.
+4. Mutate.
+5. `revalidatePath()`.
+
+Return shapes are inconsistent by design-drift, so **match the file you're editing**: `auth.ts` uses the typed helpers in `src/lib/response.ts` (`ok`/`fieldError`/`serverError`); every other module returns ad-hoc `{ error }` / `{ success: true }`. Don't migrate a file as a drive-by.
+
+### Email
+`src/lib/email.ts` (Nodemailer/SMTP). **Never float the send promise** — Vercel freezes the function instance when the response returns and the SMTP handshake dies mid-flight, intermittently and silently. Wrap sends in `after()` from `next/server` (`src/lib/actions/auth.ts:76`). Full writeup: `docs/issue-faced.md` #6.
 
 ### Component Conventions
-- Client components: `"use client"` at top.
-- Use `useSession()` hook (from `src/components/session-provider.tsx`) for client-side user access.
-- Serialize dates with `JSON.parse(JSON.stringify(data))` before passing from server to client.
-- For DnD/charts that cause hydration issues, use `mounted` state pattern (render static on server, interactive after hydration).
+- `"use client"` at top of client components.
+- `useSession()` from `src/components/session-provider.tsx` for client-side user access.
+- Serialize dates with `JSON.parse(JSON.stringify(data))` before passing server → client.
+- For DnD/charts with hydration issues, gate on **`useSyncExternalStore`** (see `src/components/kanban-board.tsx:48`), not `useEffect` + `setState` — the ESLint config errors on `react-hooks/set-state-in-effect`.
 
 ### Styling
-- Tailwind CSS 4 with CSS variables for theming (see `src/app/globals.css`).
-- Dark mode via `prefers-color-scheme`.
-- No component library — all custom components.
-
-## File Structure
-
-```
-src/
-├── app/                    # Routes (App Router)
-│   ├── (auth)/             # Public auth pages
-│   ├── api/auth/refresh/   # Token refresh endpoint
-│   └── dashboard/          # Protected pages
-├── components/             # React components
-├── generated/prisma/       # Prisma generated client (don't edit)
-└── lib/
-    ├── actions/            # Server actions (auth, applications, interviews, tags, profile, calendar, admin)
-    ├── auth.ts             # JWT + refresh token management
-    ├── prisma.ts           # DB client singleton
-    └── validations.ts      # Zod schemas
-```
+Tailwind CSS 4, CSS variables in `src/app/globals.css`, dark mode via `prefers-color-scheme`. No component library — all custom.
 
 ## Commands
 
 | Command | Purpose |
 |---------|---------|
-| `npm run dev` | Start dev server |
+| `npm run dev` | Dev server |
 | `npm run build` | `prisma generate && next build` |
-| `npm run lint` | ESLint |
-| `npx prisma migrate dev --name <name>` | Create migration |
-| `npx prisma generate` | Regenerate client after schema change |
+| `npm run lint` | ESLint — **not clean on main**, see `/check` for the baseline |
+| `npx tsc --noEmit` | Typecheck — must be silent |
+
+There is **no test suite**. `/check` (typecheck + lint vs. baseline) is the pre-commit gate.
 
 ## Environment Variables
 
 | Variable | Purpose |
 |----------|---------|
 | `DATABASE_URL` | PostgreSQL connection string |
-| `JWT_SECRET` | JWT signing secret |
+| `JWT_SECRET` | JWT signing secret (`src/proxy.ts` throws if unset) |
+| `NEXT_PUBLIC_APP_URL` | Base URL for links in emails |
+| `SMTP_HOST` / `SMTP_PORT` / `SMTP_SECURE` / `SMTP_USER` / `SMTP_PASS` / `SMTP_FROM` | Nodemailer transport |
+| `CRON_SECRET` | Bearer token for `/api/cron/reminders` |
+
+Note: `.env.example` still lists `BETTER_AUTH_SECRET` / `BETTER_AUTH_URL` from an abandoned auth library and omits `JWT_SECRET` — it is stale, trust this table.
 
 ## Do NOT
 
 - Use localStorage or sessionStorage for auth.
 - Create REST API routes for CRUD (use Server Actions).
-- Import from `@prisma/client` directly (use `@/generated/prisma/client`).
+- Import from `@prisma/client` (use `@/generated/prisma/client`).
 - Skip ownership checks in server actions.
-- Use `Date.now()` or locale-dependent formatting in SSR without a `mounted` guard.
-- Edit files in `src/generated/` — they are auto-generated.
+- Call an async side effect without `await` or `after()` in a server action.
+- Use `Date.now()` or locale-dependent formatting in SSR without a hydration guard.
+- Edit files in `src/generated/` — auto-generated.
