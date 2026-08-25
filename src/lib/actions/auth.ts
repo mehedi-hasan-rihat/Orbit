@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { setSession, clearSession, type SessionPayload } from "@/lib/auth";
 import { sendVerificationEmail, sendPasswordResetEmail } from "@/lib/email";
 import { redirect } from "next/navigation";
+import { after } from "next/server";
 import { z } from "zod";
 import { randomUUID } from "crypto";
 import {
@@ -72,9 +73,13 @@ export async function registerAction(formData: FormData) {
     }
 
     // Fire email without blocking — user gets fast response regardless
-    sendVerificationEmail({ to: email, name, token }).catch((err) =>
-      console.error("[register] failed to send verification email:", err),
-    );
+    after(async () => {
+      try {
+        await sendVerificationEmail({ to: email, name, token });
+      } catch (err) {
+        console.error("[register] failed to send verification email:", err);
+      }
+    });
     return ok({ email });
   } catch (err) {
     return serverError(err);
@@ -129,9 +134,13 @@ export async function resendVerificationAction(email: string) {
       data: { verificationToken: token, verificationExpiry: expiry },
     });
 
-    sendVerificationEmail({ to: email, name: user.name, token }).catch((err) =>
-      console.error("[resend] failed to send verification email:", err),
-    );
+    after(async () => {
+      try {
+        await sendVerificationEmail({ to: email, name: user.name, token });
+      } catch (err) {
+        console.error("[resend] failed to send verification email:", err);
+      }
+    });
     return ok();
   } catch (err) {
     return serverError(err);
@@ -178,9 +187,13 @@ export async function loginAction(formData: FormData) {
         where: { id: user.id },
         data: { verificationToken: token, verificationExpiry: expiry },
       });
-      sendVerificationEmail({ to: email, name: user.name, token }).catch((err) =>
-        console.error("[login] failed to resend verification email:", err),
-      );
+      after(async () => {
+        try {
+          await sendVerificationEmail({ to: email, name: user.name, token });
+        } catch (err) {
+          console.error("[login] failed to resend verification email:", err);
+        }
+      });
       console.log("[login] blocked — email not verified, resent verification to:", email);
       return fieldError("email", "Please verify your email before signing in.");
     }
@@ -234,9 +247,13 @@ export async function forgotPasswordAction(formData: FormData) {
       data: { passwordResetToken: token, passwordResetExpiry: expiry },
     });
 
-    sendPasswordResetEmail({ to: email, name: user.name, token }).catch((err) =>
-      console.error("[forgot-password] failed to send reset email:", err),
-    );
+    after(async () => {
+      try {
+        await sendPasswordResetEmail({ to: email, name: user.name, token });
+      } catch (err) {
+        console.error("[forgot-password] failed to send reset email:", err);
+      }
+    });
     return ok();
   } catch (err) {
     return serverError(err);
