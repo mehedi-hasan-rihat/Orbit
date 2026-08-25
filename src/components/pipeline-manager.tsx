@@ -4,26 +4,36 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   createStageType,
-  renameStageType,
+  updateStageType,
   setStageTypeEnabled,
   deleteStageType,
 } from "@/lib/actions/pipeline";
+import { STAGE_CATEGORIES, CATEGORY_LABELS, type StageCategoryValue } from "@/lib/validations";
 import clsx from "clsx";
 
 interface StageType {
   id: string;
   name: string;
+  color: string;
+  category: StageCategoryValue;
   order: number;
   enabled: boolean;
   usageCount: number;
+  applicationCount: number;
 }
+
+const DEFAULT_NEW_COLOR = "#6b7280";
 
 export function PipelineManager({ stageTypes }: { stageTypes: StageType[] }) {
   const [name, setName] = useState("");
+  const [newColor, setNewColor] = useState(DEFAULT_NEW_COLOR);
+  const [newCategory, setNewCategory] = useState<StageCategoryValue>("INTERVIEWING");
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState("");
+  const [editingColor, setEditingColor] = useState(DEFAULT_NEW_COLOR);
+  const [editingCategory, setEditingCategory] = useState<StageCategoryValue>("INTERVIEWING");
   const router = useRouter();
 
   function readError(result: { error?: unknown }) {
@@ -42,24 +52,30 @@ export function PipelineManager({ stageTypes }: { stageTypes: StageType[] }) {
 
     const formData = new FormData();
     formData.set("name", name);
+    formData.set("color", newColor);
+    formData.set("category", newCategory);
     const result = await createStageType(formData);
 
     const message = readError(result);
     if (message) setError(message);
     else {
       setName("");
+      setNewColor(DEFAULT_NEW_COLOR);
+      setNewCategory("INTERVIEWING");
       router.refresh();
     }
     setPending(null);
   }
 
-  async function handleRename(id: string) {
+  async function handleSaveEdit(id: string) {
     setError(null);
     setPending(id);
 
     const formData = new FormData();
     formData.set("name", editingName);
-    const result = await renameStageType(id, formData);
+    formData.set("color", editingColor);
+    formData.set("category", editingCategory);
+    const result = await updateStageType(id, formData);
 
     const message = readError(result);
     if (message) setError(message);
@@ -81,6 +97,13 @@ export function PipelineManager({ stageTypes }: { stageTypes: StageType[] }) {
   }
 
   async function handleDelete(type: StageType) {
+    if (type.applicationCount > 0) {
+      setError(
+        `${type.name} still holds ${type.applicationCount} application${type.applicationCount === 1 ? "" : "s"}. Move them to another stage, or disable this one instead.`,
+      );
+      return;
+    }
+
     const warning =
       type.usageCount > 0
         ? `Delete "${type.name}"? ${type.usageCount} interview round${type.usageCount === 1 ? "" : "s"} using it will keep the name as a plain label.`
@@ -106,20 +129,37 @@ export function PipelineManager({ stageTypes }: { stageTypes: StageType[] }) {
         </p>
       </div>
 
-      <form onSubmit={handleAdd} className="flex gap-2">
+      <form onSubmit={handleAdd} className="flex flex-wrap gap-2">
+        <input
+          type="color"
+          value={newColor}
+          onChange={(e) => setNewColor(e.target.value)}
+          aria-label="Stage colour"
+          className="h-9 w-10 shrink-0 rounded-md border bg-background p-1 cursor-pointer"
+        />
         <input
           type="text"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="Add a stage type…"
+          placeholder="Add a stage…"
           maxLength={100}
           required
-          className="flex h-9 flex-1 rounded-md border bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+          className="flex h-9 flex-1 min-w-[8rem] rounded-md border bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
         />
+        <select
+          value={newCategory}
+          onChange={(e) => setNewCategory(e.target.value as StageCategoryValue)}
+          aria-label="Stage category"
+          className="h-9 shrink-0 rounded-md border bg-background px-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+        >
+          {STAGE_CATEGORIES.map((c) => (
+            <option key={c} value={c}>{CATEGORY_LABELS[c]}</option>
+          ))}
+        </select>
         <button
           type="submit"
           disabled={pending === "new"}
-          className="h-9 px-4 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 disabled:opacity-50 transition-colors"
+          className="h-9 px-4 shrink-0 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 disabled:opacity-50 transition-colors"
         >
           {pending === "new" ? "Adding…" : "Add"}
         </button>
@@ -133,15 +173,32 @@ export function PipelineManager({ stageTypes }: { stageTypes: StageType[] }) {
             {editingId === type.id ? (
               <>
                 <input
+                  type="color"
+                  value={editingColor}
+                  onChange={(e) => setEditingColor(e.target.value)}
+                  aria-label="Stage colour"
+                  className="h-8 w-9 shrink-0 rounded-md border bg-background p-1 cursor-pointer"
+                />
+                <input
                   type="text"
                   value={editingName}
                   onChange={(e) => setEditingName(e.target.value)}
                   maxLength={100}
                   autoFocus
-                  className="flex h-8 flex-1 rounded-md border bg-background px-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                  className="flex h-8 flex-1 min-w-0 rounded-md border bg-background px-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                 />
+                <select
+                  value={editingCategory}
+                  onChange={(e) => setEditingCategory(e.target.value as StageCategoryValue)}
+                  aria-label="Stage category"
+                  className="h-8 shrink-0 rounded-md border bg-background px-1 text-xs focus:outline-none focus:ring-2 focus:ring-ring"
+                >
+                  {STAGE_CATEGORIES.map((c) => (
+                    <option key={c} value={c}>{CATEGORY_LABELS[c]}</option>
+                  ))}
+                </select>
                 <button
-                  onClick={() => handleRename(type.id)}
+                  onClick={() => handleSaveEdit(type.id)}
                   disabled={pending === type.id}
                   className="text-xs font-medium hover:text-foreground disabled:opacity-50"
                 >
@@ -156,6 +213,10 @@ export function PipelineManager({ stageTypes }: { stageTypes: StageType[] }) {
               </>
             ) : (
               <>
+                <span
+                  className="w-3 h-3 rounded-full shrink-0"
+                  style={{ backgroundColor: type.color }}
+                />
                 <div className="flex-1 min-w-0">
                   <p
                     className={clsx(
@@ -166,27 +227,29 @@ export function PipelineManager({ stageTypes }: { stageTypes: StageType[] }) {
                     {type.name}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    {type.usageCount === 0
-                      ? "Not used yet"
-                      : `Used by ${type.usageCount} round${type.usageCount === 1 ? "" : "s"}`}
-                    {type.enabled ? "" : " · disabled"}
+                    {CATEGORY_LABELS[type.category]}
+                    {` · ${type.applicationCount} application${type.applicationCount === 1 ? "" : "s"}`}
+                    {type.usageCount > 0 && ` · ${type.usageCount} round${type.usageCount === 1 ? "" : "s"}`}
+                    {type.enabled ? "" : " · hidden from board"}
                   </p>
                 </div>
                 <button
                   onClick={() => {
                     setEditingId(type.id);
                     setEditingName(type.name);
+                    setEditingColor(type.color);
+                    setEditingCategory(type.category);
                   }}
                   className="text-xs text-muted-foreground hover:text-foreground"
                 >
-                  Rename
+                  Edit
                 </button>
                 <button
                   onClick={() => handleToggle(type.id, !type.enabled)}
                   disabled={pending === type.id}
                   className="text-xs text-muted-foreground hover:text-foreground disabled:opacity-50"
                 >
-                  {type.enabled ? "Disable" : "Enable"}
+                  {type.enabled ? "Hide" : "Show"}
                 </button>
                 <button
                   onClick={() => handleDelete(type)}

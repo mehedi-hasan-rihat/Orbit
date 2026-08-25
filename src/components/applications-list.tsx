@@ -6,7 +6,7 @@ import { StatusBadge } from "./status-badge";
 import { ApplicationForm } from "./application-form";
 import { deleteApplication } from "@/lib/actions/applications";
 import { ExportButton } from "./export-button";
-import { QuickActions } from "./quick-actions";
+import { QuickActions, type StageOption } from "./quick-actions";
 import { useRouter } from "next/navigation";
 import clsx from "clsx";
 
@@ -21,7 +21,9 @@ interface Application {
   company: string;
   role: string;
   jobUrl: string | null;
-  status: string;
+  stageId: string | null;
+  status: string | null;
+  stage: { name: string; color: string } | null;
   appliedDate: Date | null;
   followUpDate: Date | null;
   notes: string | null;
@@ -34,8 +36,9 @@ interface Application {
 interface ApplicationsListProps {
   applications: Application[];
   availableTags: Tag[];
+  stages: StageOption[];
   search: string;
-  status: string;
+  stageId: string;
   sort: string;
   showArchived?: boolean;
 }
@@ -43,25 +46,26 @@ interface ApplicationsListProps {
 export function ApplicationsList({
   applications,
   availableTags,
+  stages,
   search,
-  status,
+  stageId,
   sort,
   showArchived,
 }: ApplicationsListProps) {
   const [showForm, setShowForm] = useState(false);
   const [editingApp, setEditingApp] = useState<Application | null>(null);
   const [searchInput, setSearchInput] = useState(search);
-  const [statusFilter, setStatusFilter] = useState(status);
+  const [stageFilter, setStageFilter] = useState(stageId);
   const [sortBy, setSortBy] = useState(sort);
   const router = useRouter();
 
-  function applyFilters(newSearch?: string, newStatus?: string, newSort?: string) {
+  function applyFilters(newSearch?: string, newStage?: string, newSort?: string) {
     const s = newSearch ?? searchInput;
-    const st = newStatus ?? statusFilter;
+    const st = newStage ?? stageFilter;
     const so = newSort ?? sortBy;
     const params = new URLSearchParams();
     if (s) params.set("search", s);
-    if (st && st !== "ALL") params.set("status", st);
+    if (st && st !== "ALL") params.set("stage", st);
     if (so) params.set("sort", so);
     if (showArchived) params.set("archived", "true");
     router.push(`/dashboard/applications?${params.toString()}`);
@@ -109,7 +113,7 @@ export function ApplicationsList({
             onClick={() => {
               const params = new URLSearchParams();
               if (searchInput) params.set("search", searchInput);
-              if (statusFilter && statusFilter !== "ALL") params.set("status", statusFilter);
+              if (stageFilter && stageFilter !== "ALL") params.set("stage", stageFilter);
               if (sortBy) params.set("sort", sortBy);
               router.push(`/dashboard/applications?${params.toString()}`);
             }}
@@ -150,18 +154,14 @@ export function ApplicationsList({
             />
           </div>
           <select
-            value={statusFilter}
-            onChange={(e) => { setStatusFilter(e.target.value); applyFilters(undefined, e.target.value); }}
+            value={stageFilter}
+            onChange={(e) => { setStageFilter(e.target.value); applyFilters(undefined, e.target.value); }}
             className="flex h-8 rounded-md border bg-background px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
           >
-            <option value="ALL">All Statuses</option>
-            <option value="WISHLIST">Wishlist</option>
-            <option value="APPLIED">Applied</option>
-            <option value="SCREENING">Screening</option>
-            <option value="INTERVIEW">Interview</option>
-            <option value="OFFER">Offer</option>
-            <option value="REJECTED">Rejected</option>
-            <option value="WITHDRAWN">Withdrawn</option>
+            <option value="ALL">All Stages</option>
+            {stages.map((stage) => (
+              <option key={stage.id} value={stage.id}>{stage.name}</option>
+            ))}
           </select>
           <select
             value={sortBy}
@@ -187,13 +187,13 @@ export function ApplicationsList({
             {showArchived ? "No archived applications" : "No applications yet"}
           </p>
           <p className="text-sm text-muted-foreground mt-1 max-w-xs">
-            {search || (status && status !== "ALL")
+            {search || (stageId && stageId !== "ALL")
               ? "No results match your filters. Try adjusting them."
               : showArchived
               ? "Applications you archive will appear here."
               : "Track your first job application to get started."}
           </p>
-          {!search && (!status || status === "ALL") && !showArchived && (
+          {!search && (!stageId || stageId === "ALL") && !showArchived && (
             <button
               onClick={() => setShowForm(true)}
               className="mt-5 h-8 px-4 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity"
@@ -270,7 +270,7 @@ export function ApplicationsList({
 
                 {/* Status */}
                 <div>
-                  <StatusBadge status={app.status} />
+                  <StatusBadge application={app} />
                 </div>
 
                 {/* Date */}
@@ -310,7 +310,8 @@ export function ApplicationsList({
                   {!showArchived && (
                     <QuickActions
                       applicationId={app.id}
-                      currentStatus={app.status}
+                      currentStageId={app.stageId}
+                      stages={stages}
                       company={app.company}
                     />
                   )}
@@ -347,7 +348,7 @@ export function ApplicationsList({
                       </div>
                     )}
                   </div>
-                  <StatusBadge status={app.status} />
+                  <StatusBadge application={app} />
                 </div>
                 <div className="flex items-center gap-2 flex-wrap">
                   <Link
@@ -365,7 +366,8 @@ export function ApplicationsList({
                   {!showArchived && (
                     <QuickActions
                       applicationId={app.id}
-                      currentStatus={app.status}
+                      currentStageId={app.stageId}
+                      stages={stages}
                       company={app.company}
                     />
                   )}
@@ -378,12 +380,13 @@ export function ApplicationsList({
 
       {/* Modals */}
       {showForm && (
-        <ApplicationForm availableTags={availableTags} onClose={() => setShowForm(false)} />
+        <ApplicationForm availableTags={availableTags} stages={stages} onClose={() => setShowForm(false)} />
       )}
       {editingApp && (
         <ApplicationForm
           application={editingApp}
           availableTags={availableTags}
+          stages={stages}
           onClose={() => setEditingApp(null)}
         />
       )}

@@ -16,7 +16,7 @@ export async function getCalendarEvents() {
     },
     include: {
       stageType: { select: { name: true } },
-      application: { select: { id: true, company: true, role: true, status: true } },
+      application: { select: { id: true, company: true, role: true } },
     },
     orderBy: { scheduledAt: "asc" },
   });
@@ -28,7 +28,7 @@ export async function getCalendarEvents() {
       archived: false,
       followUpDate: { not: null },
     },
-    select: { id: true, company: true, role: true, status: true, followUpDate: true },
+    select: { id: true, company: true, role: true, followUpDate: true },
     orderBy: { followUpDate: "asc" },
   });
 
@@ -41,7 +41,6 @@ export async function getCalendarEvents() {
       company: i.application.company,
       role: i.application.role,
       date: i.scheduledAt!,
-      status: i.application.status,
       outcome: i.outcome,
     })),
     ...followUps.map((f) => ({
@@ -52,7 +51,6 @@ export async function getCalendarEvents() {
       company: f.company,
       role: f.role,
       date: f.followUpDate!,
-      status: f.status,
       outcome: null,
     })),
   ].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());

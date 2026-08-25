@@ -17,22 +17,27 @@ interface ApplicationFormProps {
     company: string;
     role: string;
     jobUrl: string | null;
-    status: string;
+    stageId: string | null;
     appliedDate: Date | null;
     followUpDate: Date | null;
     notes: string | null;
     tags?: { tag: Tag }[];
   };
   availableTags: Tag[];
+  stages: { id: string; name: string; color: string }[];
   onClose: () => void;
 }
 
-const statuses = ["WISHLIST", "APPLIED", "SCREENING", "INTERVIEW", "OFFER", "REJECTED", "WITHDRAWN"];
-
-export function ApplicationForm({ application, availableTags, onClose }: ApplicationFormProps) {
+export function ApplicationForm({ application, availableTags, stages, onClose }: ApplicationFormProps) {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string[]>>({});
-  const [duplicate, setDuplicate] = useState<{ id: string; company: string; role: string; status: string } | null>(null);
+  const [duplicate, setDuplicate] = useState<{
+    id: string;
+    company: string;
+    role: string;
+    status: string | null;
+    stage: { name: string; color: string } | null;
+  } | null>(null);
   const [selectedTags, setSelectedTags] = useState<string[]>(
     application?.tags?.map((t) => t.tag.id) || []
   );
@@ -107,7 +112,7 @@ export function ApplicationForm({ application, availableTags, onClose }: Applica
           <div className="mb-4 rounded-md border border-amber-300 bg-amber-50 dark:bg-amber-900/20 dark:border-amber-700 p-3 text-sm">
             <p className="font-medium text-amber-800 dark:text-amber-300">Possible duplicate</p>
             <p className="text-amber-700 dark:text-amber-400 text-xs mt-0.5">
-              You already have an application for <strong>{duplicate.company}</strong> — <strong>{duplicate.role}</strong> with status <strong>{duplicate.status}</strong>.
+              You already have an application for <strong>{duplicate.company}</strong> — <strong>{duplicate.role}</strong> at stage <strong>{duplicate.stage?.name ?? duplicate.status ?? "Unassigned"}</strong>.
             </p>
             <button
               type="button"
@@ -177,16 +182,16 @@ export function ApplicationForm({ application, availableTags, onClose }: Applica
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="space-y-2">
-              <label htmlFor="status" className="text-sm font-medium">Status</label>
+              <label htmlFor="stageId" className="text-sm font-medium">Stage</label>
               <select
-                id="status"
-                name="status"
-                defaultValue={application?.status || "WISHLIST"}
+                id="stageId"
+                name="stageId"
+                defaultValue={application?.stageId ?? stages[0]?.id ?? ""}
                 className="flex h-10 w-full rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
               >
-                {statuses.map((s) => (
-                  <option key={s} value={s}>
-                    {s.charAt(0) + s.slice(1).toLowerCase()}
+                {stages.map((stage) => (
+                  <option key={stage.id} value={stage.id}>
+                    {stage.name}
                   </option>
                 ))}
               </select>

@@ -6,7 +6,8 @@ interface Application {
   id: string;
   company: string;
   role: string;
-  status: string;
+  status: string | null;
+  stage: { name: string; color: string } | null;
   followUpDate: Date | null;
 }
 
@@ -48,7 +49,7 @@ export function FollowUps({ applications }: { applications: Application[] }) {
                   <p className="text-xs text-muted-foreground">{app.role}</p>
                 </div>
                 <div className="text-right">
-                  <StatusBadge status={app.status} />
+                  <StatusBadge application={app} />
                   <p className="text-xs text-destructive mt-1">
                     {app.followUpDate && new Date(app.followUpDate).toLocaleDateString()}
                   </p>
@@ -73,7 +74,7 @@ export function FollowUps({ applications }: { applications: Application[] }) {
                   <p className="text-xs text-muted-foreground">{app.role}</p>
                 </div>
                 <div className="text-right">
-                  <StatusBadge status={app.status} />
+                  <StatusBadge application={app} />
                   <p className="text-xs text-muted-foreground mt-1">
                     {app.followUpDate && new Date(app.followUpDate).toLocaleDateString()}
                   </p>

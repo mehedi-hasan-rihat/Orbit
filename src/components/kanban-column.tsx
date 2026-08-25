@@ -6,6 +6,7 @@ import clsx from "clsx";
 interface KanbanColumnProps {
   id: string;
   title: string;
+  /** Hex colour from the user's pipeline stage, not a Tailwind class. */
   color: string;
   count: number;
   children: React.ReactNode;
@@ -29,8 +30,8 @@ export function KanbanColumn({
       )}
     >
       <div className="flex items-center gap-2 p-3 border-b">
-        <div className={clsx("w-2.5 h-2.5 rounded-full", color)} />
-        <h3 className="text-sm font-medium">{title}</h3>
+        <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: color }} />
+        <h3 className="text-sm font-medium truncate">{title}</h3>
         <span className="text-xs text-muted-foreground ml-auto">{count}</span>
       </div>
       <div className="flex-1 p-2 space-y-2 min-h-[200px]">{children}</div>

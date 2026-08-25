@@ -26,6 +26,7 @@ model User {
   stageTypes          PipelineStageType[]
 }
 
+// Legacy application stage. Superseded by PipelineStageType.
 enum ApplicationStatus {
   WISHLIST
   APPLIED
@@ -44,7 +45,9 @@ model Application {
   company       String
   role          String
   jobUrl        String?
-  status        ApplicationStatus @default(WISHLIST)
+  stageId       String?
+  stage         PipelineStageType? @relation(fields: [stageId], references: [id], onDelete: Restrict)
+  status        ApplicationStatus? // Legacy — pre-pipeline rows only
   appliedDate   DateTime?
   notes         String?
   followUpDate  DateTime?
@@ -58,7 +61,7 @@ model Application {
   tags          ApplicationTag[]
 
   @@index([userId])
-  @@index([userId, status])
+  @@index([userId, stageId])
   @@index([userId, archived])
   @@index([company])
 }
@@ -98,18 +101,28 @@ model Tag {
   @@index([userId])
 }
 
+enum StageCategory {
+  OPEN          // not yet in process — Wishlist, Applied
+  INTERVIEWING  // actively progressing through rounds
+  SUCCESS       // Offer
+  CLOSED        // Rejected, Withdrawn, Archived
+}
+
 // User-owned catalogue of interview stage types. Seeded with defaults on first
 // read (see src/lib/actions/pipeline.ts) so existing users get a pipeline too.
 model PipelineStageType {
   id         String      @id @default(cuid())
   userId     String
   user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  name       String
-  order      Int         @default(0)
-  enabled    Boolean     @default(true)
-  createdAt  DateTime    @default(now())
-  updatedAt  DateTime    @updatedAt
-  interviews Interview[]
+  name         String
+  color        String        @default("#6b7280")
+  category     StageCategory @default(INTERVIEWING)
+  order        Int           @default(0)
+  enabled      Boolean       @default(true)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  interviews   Interview[]
+  applications Application[]
 
   @@unique([userId, name])
   @@index([userId])

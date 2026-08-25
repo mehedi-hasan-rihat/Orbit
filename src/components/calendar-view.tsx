@@ -13,7 +13,6 @@ interface CalendarEvent {
   company: string;
   role: string;
   date: Date;
-  status: string;
   outcome: string | null;
 }
 

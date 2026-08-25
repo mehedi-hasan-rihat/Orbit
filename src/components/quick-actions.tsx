@@ -1,28 +1,25 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import { updateApplicationStatus, archiveApplication, addQuickNote } from "@/lib/actions/applications";
+import { updateApplicationStage, archiveApplication, addQuickNote } from "@/lib/actions/applications";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createPortal } from "react-dom";
 
-const STAGES = [
-  { value: "WISHLIST", label: "Wishlist" },
-  { value: "APPLIED", label: "Applied" },
-  { value: "SCREENING", label: "Screening" },
-  { value: "INTERVIEW", label: "Interview" },
-  { value: "OFFER", label: "Offer" },
-  { value: "REJECTED", label: "Rejected" },
-  { value: "WITHDRAWN", label: "Withdrawn" },
-];
+export interface StageOption {
+  id: string;
+  name: string;
+  color: string;
+}
 
 interface QuickActionsProps {
   applicationId: string;
-  currentStatus: string;
+  currentStageId: string | null;
+  stages: StageOption[];
   company: string;
 }
 
-export function QuickActions({ applicationId, currentStatus, company }: QuickActionsProps) {
+export function QuickActions({ applicationId, currentStageId, stages, company }: QuickActionsProps) {
   const [open, setOpen] = useState(false);
   const [showNoteInput, setShowNoteInput] = useState(false);
   const [note, setNote] = useState("");
@@ -74,9 +71,9 @@ export function QuickActions({ applicationId, currentStatus, company }: QuickAct
     };
   }, [open, updatePosition]);
 
-  async function handleStageChange(status: string) {
+  async function handleStageChange(stageId: string) {
     setLoading(true);
-    await updateApplicationStatus(applicationId, status);
+    await updateApplicationStage(applicationId, stageId);
     setOpen(false);
     setLoading(false);
     router.refresh();
@@ -127,15 +124,18 @@ export function QuickActions({ applicationId, currentStatus, company }: QuickAct
             {/* Move Stage */}
             <div className="px-2 pt-2 pb-1">
               <p className="text-xs font-medium text-muted-foreground px-2 pb-1">Move to stage</p>
-              {STAGES.filter((s) => s.value !== currentStatus).map((stage) => (
+              {stages.filter((s) => s.id !== currentStageId).map((stage) => (
                 <button
-                  key={stage.value}
-                  onClick={() => handleStageChange(stage.value)}
+                  key={stage.id}
+                  onClick={() => handleStageChange(stage.id)}
                   disabled={loading}
                   className="flex w-full items-center gap-2 px-2 py-1.5 text-sm rounded-md hover:bg-accent transition-colors"
                 >
-                  <span className="text-xs text-muted-foreground">→</span>
-                  {stage.label}
+                  <span
+                    className="w-2 h-2 rounded-full shrink-0"
+                    style={{ backgroundColor: stage.color }}
+                  />
+                  {stage.name}
                 </button>
               ))}
             </div>

@@ -3,7 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
-import { ActivityType } from "@/generated/prisma/enums";
+import { ActivityType, StageCategory } from "@/generated/prisma/enums";
 import { interviewSchema, OPEN_OUTCOMES, type InterviewOutcome } from "@/lib/validations";
 
 async function requireUser() {
@@ -32,25 +32,38 @@ async function findOwnedStageType(id: string, userId: string) {
   return prisma.pipelineStageType.findFirst({ where: { id, userId } });
 }
 
-// Unchanged from before the rework: a passed round pulls an application that is
-// still sitting in an early stage forward to INTERVIEW, and logs why.
+// Still the same rule — a passed round pulls an application that has not yet
+// reached the interviewing part of the pipeline forward, and logs why. What
+// changed is how "forward" is found: the first INTERVIEWING stage in the user's
+// own pipeline order, rather than the hard-coded INTERVIEW enum value.
 async function advanceOnPass(
   applicationId: string,
-  currentStatus: string,
+  userId: string,
+  current: { stageId: string | null; stageName: string | null; category: StageCategory | null },
   outcome: InterviewOutcome,
 ) {
-  const earlyStages = ["WISHLIST", "APPLIED", "SCREENING"];
-  if (outcome !== "PASSED" || !earlyStages.includes(currentStatus)) return;
+  if (outcome !== "PASSED") return;
+
+  // Only stages that come before the interviewing part of the funnel advance.
+  if (current.category !== null && current.category !== StageCategory.OPEN) return;
+
+  const target = await prisma.pipelineStageType.findFirst({
+    where: { userId, category: StageCategory.INTERVIEWING, enabled: true },
+    orderBy: [{ order: "asc" }, { name: "asc" }],
+  });
+  if (!target || target.id === current.stageId) return;
+
+  const fromLabel = current.stageName ?? "Unassigned";
 
   await prisma.application.update({
     where: { id: applicationId },
     data: {
-      status: "INTERVIEW",
+      stageId: target.id,
       activities: {
         create: {
           type: ActivityType.STATUS_CHANGED,
-          description: `Status changed from ${currentStatus} to INTERVIEW (interview passed)`,
-          metadata: JSON.stringify({ from: currentStatus, to: "INTERVIEW" }),
+          description: `Status changed from ${fromLabel} to ${target.name} (interview passed)`,
+          metadata: JSON.stringify({ from: fromLabel, to: target.name, toStageId: target.id }),
         },
       },
     },
@@ -63,6 +76,7 @@ export async function createInterview(applicationId: string, formData: FormData)
   // Verify the application belongs to the user
   const application = await prisma.application.findFirst({
     where: { id: applicationId, userId: session.userId },
+    include: { stage: { select: { name: true, category: true } } },
   });
   if (!application) return { error: "Application not found" };
 
@@ -86,7 +100,16 @@ export async function createInterview(applicationId: string, formData: FormData)
     },
   });
 
-  await advanceOnPass(applicationId, application.status, outcome);
+  await advanceOnPass(
+    applicationId,
+    session.userId,
+    {
+      stageId: application.stageId,
+      stageName: application.stage?.name ?? application.status,
+      category: application.stage?.category ?? null,
+    },
+    outcome,
+  );
 
   // Log activity
   await prisma.activity.create({
@@ -111,6 +134,7 @@ export async function updateInterview(id: string, applicationId: string, formDat
 
   const application = await prisma.application.findFirst({
     where: { id: applicationId, userId: session.userId },
+    include: { stage: { select: { name: true, category: true } } },
   });
   if (!application) return { error: "Application not found" };
 
@@ -160,7 +184,16 @@ export async function updateInterview(id: string, applicationId: string, formDat
       },
     });
 
-    await advanceOnPass(applicationId, application.status, outcome);
+    await advanceOnPass(
+    applicationId,
+    session.userId,
+    {
+      stageId: application.stageId,
+      stageName: application.stage?.name ?? application.status,
+      category: application.stage?.category ?? null,
+    },
+    outcome,
+  );
   }
 
   revalidatePath(`/dashboard/applications/${applicationId}`);
@@ -172,6 +205,7 @@ export async function deleteInterview(id: string, applicationId: string) {
 
   const application = await prisma.application.findFirst({
     where: { id: applicationId, userId: session.userId },
+    include: { stage: { select: { name: true, category: true } } },
   });
   if (!application) return { error: "Application not found" };
 

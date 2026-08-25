@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-Orbit is a full-stack web application designed to help job seekers manage their entire job search lifecycle. It provides a unified platform for tracking applications through a multi-stage pipeline, scheduling and reviewing interview rounds, setting follow-up reminders, and analysing search performance through visual dashboards.
+Orbit is a full-stack web application designed to help job seekers manage their entire job search lifecycle. It provides a unified platform for tracking applications through a pipeline the user defines themselves, scheduling and reviewing interview rounds, setting follow-up reminders, and analysing search performance through visual dashboards.
 
 The application is live at [startorbit.vercel.app](https://startorbit.vercel.app).
 
@@ -57,6 +57,7 @@ Browser → Server Components (SSR/RSC) → Server Actions → Prisma ORM → Po
 |-------|---------|
 | User | Account credentials, email verification, password reset |
 | Application | Core tracked job application entity |
+| PipelineStageType | User-defined pipeline stage — board column, filter option, and interview round type |
 | Activity | Immutable audit log entry per application |
 | Interview | Per-round interview tracking |
 | Tag | User-defined colour-coded label |
@@ -71,6 +72,7 @@ Browser → Server Components (SSR/RSC) → Server Actions → Prisma ORM → Po
 |---------|--------------|
 | Authentication | [features/authentication/](./features/authentication/) |
 | Application Tracking | [features/application-tracking/](./features/application-tracking/) |
+| Pipeline | [features/pipeline/](./features/pipeline/) |
 | Kanban Board | [features/kanban-board/](./features/kanban-board/) |
 | Interview Management | [features/interview-management/](./features/interview-management/) |
 | Analytics & Reporting | [features/analytics-reporting/](./features/analytics-reporting/) |

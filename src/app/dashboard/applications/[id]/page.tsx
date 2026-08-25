@@ -52,7 +52,7 @@ export default async function ApplicationDetailPage({ params }: Props) {
             <div className="space-y-2 min-w-0">
               <div className="flex items-center gap-2.5 flex-wrap">
                 <h1 className="text-2xl font-bold tracking-tight">{application.company}</h1>
-                <StatusBadge status={application.status} />
+                <StatusBadge application={application} />
                 {isOverdue && (
                   <span className="inline-flex items-center rounded-full bg-red-100 text-red-600 dark:bg-red-900/40 dark:text-red-400 px-2.5 py-0.5 text-xs font-medium">
                     Follow-up overdue

@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { stageTypeSchema, DEFAULT_STAGE_TYPES } from "@/lib/validations";
+import type { StageCategory } from "@/generated/prisma/enums";
 import { revalidatePath } from "next/cache";
 
 async function requireUser() {
@@ -17,7 +18,14 @@ async function requireUser() {
 // concurrent first-reads cannot double-seed.
 async function seedDefaults(userId: string) {
   await prisma.pipelineStageType.createMany({
-    data: DEFAULT_STAGE_TYPES.map((name, i) => ({ userId, name, order: i })),
+    data: DEFAULT_STAGE_TYPES.map((d, i) => ({
+      userId,
+      name: d.name,
+      color: d.color,
+      category: d.category as StageCategory,
+      enabled: d.enabled,
+      order: i,
+    })),
     skipDuplicates: true,
   });
 }
@@ -50,22 +58,29 @@ export async function getStageTypesWithUsage() {
   const types = await prisma.pipelineStageType.findMany({
     where: { userId: session.userId },
     orderBy: [{ order: "asc" }, { name: "asc" }],
-    include: { _count: { select: { interviews: true } } },
+    include: { _count: { select: { interviews: true, applications: true } } },
   });
 
   return types.map((t) => ({
     id: t.id,
     name: t.name,
+    color: t.color,
+    category: t.category,
     order: t.order,
     enabled: t.enabled,
     usageCount: t._count.interviews,
+    applicationCount: t._count.applications,
   }));
 }
 
 export async function createStageType(formData: FormData) {
   const session = await requireUser();
 
-  const parsed = stageTypeSchema.safeParse({ name: formData.get("name") as string });
+  const parsed = stageTypeSchema.safeParse({
+    name: formData.get("name") as string,
+    color: (formData.get("color") as string) || "#6b7280",
+    category: (formData.get("category") as string) || "INTERVIEWING",
+  });
   if (!parsed.success) return { error: parsed.error.flatten().fieldErrors };
 
   const name = parsed.data.name.trim();
@@ -82,18 +97,29 @@ export async function createStageType(formData: FormData) {
   });
 
   const created = await prisma.pipelineStageType.create({
-    data: { userId: session.userId, name, order: (last?.order ?? -1) + 1 },
+    data: {
+      userId: session.userId,
+      name,
+      color: parsed.data.color,
+      category: parsed.data.category as StageCategory,
+      order: (last?.order ?? -1) + 1,
+    },
   });
 
   revalidatePath("/dashboard/pipeline");
   revalidatePath("/dashboard/applications");
+  revalidatePath("/dashboard");
   return { success: true, id: created.id };
 }
 
-export async function renameStageType(id: string, formData: FormData) {
+export async function updateStageType(id: string, formData: FormData) {
   const session = await requireUser();
 
-  const parsed = stageTypeSchema.safeParse({ name: formData.get("name") as string });
+  const parsed = stageTypeSchema.safeParse({
+    name: formData.get("name") as string,
+    color: (formData.get("color") as string) || "#6b7280",
+    category: (formData.get("category") as string) || "INTERVIEWING",
+  });
   if (!parsed.success) return { error: parsed.error.flatten().fieldErrors };
 
   const name = parsed.data.name.trim();
@@ -108,12 +134,16 @@ export async function renameStageType(id: string, formData: FormData) {
   });
   if (clash) return { error: { name: ["That type already exists"] } };
 
-  // Interviews reference the row, not the label, so the rename propagates to
-  // every stage already using this type without touching the Interview table.
-  await prisma.pipelineStageType.update({ where: { id }, data: { name } });
+  // Interviews and applications reference the row, not the label, so a rename
+  // propagates everywhere without touching either table.
+  await prisma.pipelineStageType.update({
+    where: { id },
+    data: { name, color: parsed.data.color, category: parsed.data.category as StageCategory },
+  });
 
   revalidatePath("/dashboard/pipeline");
   revalidatePath("/dashboard/applications");
+  revalidatePath("/dashboard");
   return { success: true };
 }
 
@@ -131,6 +161,7 @@ export async function setStageTypeEnabled(id: string, enabled: boolean) {
 
   revalidatePath("/dashboard/pipeline");
   revalidatePath("/dashboard/applications");
+  revalidatePath("/dashboard");
   return { success: true };
 }
 
@@ -142,9 +173,19 @@ export async function deleteStageType(id: string) {
   });
   if (!existing) return { error: "Stage type not found" };
 
-  // The FK is ON DELETE SET NULL, which would leave affected interviews with no
+  // Applications hold the FK with ON DELETE RESTRICT: a stage that still has
+  // cards on the board cannot be dropped without silently stranding them.
+  // Refuse and let the user move or disable it instead.
+  const inUse = await prisma.application.count({ where: { stageId: id } });
+  if (inUse > 0) {
+    return {
+      error: `${existing.name} still holds ${inUse} application${inUse === 1 ? "" : "s"}. Move them to another stage, or disable this one instead.`,
+    };
+  }
+
+  // Interviews hold it with ON DELETE SET NULL, which would leave them with no
   // label at all. Snapshot the name into customType first so they keep reading
-  // the way they did before the type was removed.
+  // the way they did before the stage was removed.
   await prisma.interview.updateMany({
     where: { stageTypeId: id },
     data: { customType: existing.name },
@@ -154,5 +195,6 @@ export async function deleteStageType(id: string) {
 
   revalidatePath("/dashboard/pipeline");
   revalidatePath("/dashboard/applications");
+  revalidatePath("/dashboard");
   return { success: true };
 }

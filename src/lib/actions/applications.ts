@@ -2,14 +2,19 @@
 
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
-import { applicationSchema, updateStatusSchema } from "@/lib/validations";
+import { applicationSchema, updateStageSchema } from "@/lib/validations";
 import { revalidatePath } from "next/cache";
-import { ApplicationStatus, ActivityType } from "@/generated/prisma/enums";
+import { resolveStage } from "@/lib/stage-display";
+import { ActivityType, StageCategory } from "@/generated/prisma/enums";
 
 async function requireUser() {
   const session = await getSession();
   if (!session) throw new Error("Unauthorized");
   return session;
+}
+
+async function findOwnedStage(stageId: string, userId: string) {
+  return prisma.pipelineStageType.findFirst({ where: { id: stageId, userId } });
 }
 
 export async function createApplication(formData: FormData) {
@@ -19,7 +24,7 @@ export async function createApplication(formData: FormData) {
     company: formData.get("company") as string,
     role: formData.get("role") as string,
     jobUrl: formData.get("jobUrl") as string,
-    status: formData.get("status") as string,
+    stageId: formData.get("stageId") as string,
     appliedDate: formData.get("appliedDate") as string,
     followUpDate: formData.get("followUpDate") as string,
     notes: formData.get("notes") as string,
@@ -32,6 +37,10 @@ export async function createApplication(formData: FormData) {
   }
 
   const data = parsed.data;
+
+  const stage = await findOwnedStage(data.stageId, session.userId);
+  if (!stage) return { error: { stageId: ["Unknown stage"] } };
+
   const tagIds = data.tags ? data.tags.split(",").filter(Boolean) : [];
 
   const application = await prisma.application.create({
@@ -40,7 +49,7 @@ export async function createApplication(formData: FormData) {
       company: data.company,
       role: data.role,
       jobUrl: data.jobUrl || null,
-      status: data.status as ApplicationStatus,
+      stageId: stage.id,
       appliedDate: data.appliedDate ? new Date(data.appliedDate) : null,
       followUpDate: data.followUpDate ? new Date(data.followUpDate) : null,
       notes: data.notes || null,
@@ -67,7 +76,7 @@ export async function updateApplication(id: string, formData: FormData) {
     company: formData.get("company") as string,
     role: formData.get("role") as string,
     jobUrl: formData.get("jobUrl") as string,
-    status: formData.get("status") as string,
+    stageId: formData.get("stageId") as string,
     appliedDate: formData.get("appliedDate") as string,
     followUpDate: formData.get("followUpDate") as string,
     notes: formData.get("notes") as string,
@@ -81,22 +90,27 @@ export async function updateApplication(id: string, formData: FormData) {
 
   const data = parsed.data;
 
+  const stage = await findOwnedStage(data.stageId, session.userId);
+  if (!stage) return { error: { stageId: ["Unknown stage"] } };
+
   const existing = await prisma.application.findFirst({
     where: { id, userId: session.userId },
-    include: { tags: true },
+    include: { tags: true, stage: true },
   });
 
   if (!existing) {
     return { error: { _form: ["Application not found"] } };
   }
 
-  // Track status change
+  // Track stage change. The description keeps the same "from X to Y" shape it
+  // has always had, now with stage names in place of enum values.
   const activities: { type: ActivityType; description: string; metadata?: string }[] = [];
-  if (existing.status !== data.status) {
+  if (existing.stageId !== stage.id) {
+    const fromLabel = existing.stage?.name ?? existing.status ?? "Unassigned";
     activities.push({
       type: ActivityType.STATUS_CHANGED,
-      description: `Status changed from ${existing.status} to ${data.status}`,
-      metadata: JSON.stringify({ from: existing.status, to: data.status }),
+      description: `Status changed from ${fromLabel} to ${stage.name}`,
+      metadata: JSON.stringify({ from: fromLabel, to: stage.name, toStageId: stage.id }),
     });
   }
 
@@ -125,7 +139,7 @@ export async function updateApplication(id: string, formData: FormData) {
       company: data.company,
       role: data.role,
       jobUrl: data.jobUrl || null,
-      status: data.status as ApplicationStatus,
+      stageId: stage.id,
       appliedDate: data.appliedDate ? new Date(data.appliedDate) : null,
       followUpDate: data.followUpDate ? new Date(data.followUpDate) : null,
       notes: data.notes || null,
@@ -140,31 +154,39 @@ export async function updateApplication(id: string, formData: FormData) {
   return { success: true };
 }
 
-export async function updateApplicationStatus(id: string, status: string) {
+export async function updateApplicationStage(id: string, stageId: string) {
   const session = await requireUser();
 
-  const parsed = updateStatusSchema.safeParse({ id, status });
+  const parsed = updateStageSchema.safeParse({ id, stageId });
   if (!parsed.success) {
     return { error: "Invalid data" };
   }
 
   const existing = await prisma.application.findFirst({
     where: { id, userId: session.userId },
+    include: { stage: true },
   });
 
   if (!existing) {
     return { error: "Application not found" };
   }
 
+  const stage = await findOwnedStage(parsed.data.stageId, session.userId);
+  if (!stage) return { error: "Stage not found" };
+
+  if (existing.stageId === stage.id) return { success: true };
+
+  const fromLabel = existing.stage?.name ?? existing.status ?? "Unassigned";
+
   await prisma.application.update({
     where: { id },
     data: {
-      status: parsed.data.status as ApplicationStatus,
+      stageId: stage.id,
       activities: {
         create: {
           type: ActivityType.STATUS_CHANGED,
-          description: `Status changed from ${existing.status} to ${parsed.data.status}`,
-          metadata: JSON.stringify({ from: existing.status, to: parsed.data.status }),
+          description: `Status changed from ${fromLabel} to ${stage.name}`,
+          metadata: JSON.stringify({ from: fromLabel, to: stage.name, toStageId: stage.id }),
         },
       },
     },
@@ -251,7 +273,7 @@ export async function deleteApplication(id: string) {
 
 export async function getApplications(params?: {
   search?: string;
-  status?: string;
+  stageId?: string;
   sort?: string;
   tag?: string;
   archived?: boolean;
@@ -263,8 +285,8 @@ export async function getApplications(params?: {
     archived: params?.archived ?? false,
   };
 
-  if (params?.status && params.status !== "ALL") {
-    where.status = params.status;
+  if (params?.stageId && params.stageId !== "ALL") {
+    where.stageId = params.stageId;
   }
 
   if (params?.search) {
@@ -289,6 +311,7 @@ export async function getApplications(params?: {
     orderBy,
     include: {
       tags: { include: { tag: true } },
+      stage: { select: { id: true, name: true, color: true, category: true } },
     },
   });
 
@@ -303,6 +326,7 @@ export async function getApplication(id: string) {
     include: {
       activities: { orderBy: { createdAt: "desc" } },
       tags: { include: { tag: true } },
+      stage: { select: { id: true, name: true, color: true, category: true } },
     },
   });
 
@@ -312,39 +336,53 @@ export async function getApplication(id: string) {
 export async function getApplicationStats() {
   const session = await requireUser();
 
-  const applications = await prisma.application.findMany({
-    where: { userId: session.userId, archived: false },
-    select: { status: true, createdAt: true },
-  });
+  const [applications, stages] = await Promise.all([
+    prisma.application.findMany({
+      where: { userId: session.userId, archived: false },
+      select: { stageId: true, createdAt: true, stage: { select: { category: true } } },
+    }),
+    prisma.pipelineStageType.findMany({
+      where: { userId: session.userId },
+      orderBy: [{ order: "asc" }, { name: "asc" }],
+      select: { id: true, name: true, color: true, category: true, enabled: true },
+    }),
+  ]);
 
   const total = applications.length;
-  const statusCounts = {
-    WISHLIST: 0,
-    APPLIED: 0,
-    SCREENING: 0,
-    INTERVIEW: 0,
-    OFFER: 0,
-    REJECTED: 0,
-    WITHDRAWN: 0,
-    ARCHIVED: 0,
-  };
 
+  // Distribution is now one entry per stage the user actually has, in their
+  // own pipeline order — no fixed set of enum keys.
+  const counts = new Map<string, number>();
   for (const app of applications) {
-    statusCounts[app.status]++;
+    if (!app.stageId) continue;
+    counts.set(app.stageId, (counts.get(app.stageId) ?? 0) + 1);
   }
 
-  const interviewRate =
-    total > 0
-      ? ((statusCounts.SCREENING + statusCounts.INTERVIEW + statusCounts.OFFER) / total) * 100
-      : 0;
-  const offerRate = total > 0 ? (statusCounts.OFFER / total) * 100 : 0;
+  const stageCounts = stages.map((stage) => ({
+    id: stage.id,
+    name: stage.name,
+    color: stage.color,
+    category: stage.category,
+    value: counts.get(stage.id) ?? 0,
+  }));
+
+  const byCategory = (category: StageCategory) =>
+    applications.filter((a) => a.stage?.category === category).length;
+
+  const interviewing = byCategory(StageCategory.INTERVIEWING);
+  const offers = byCategory(StageCategory.SUCCESS);
+
+  // Same meaning as before: everything that got past "applied" counts, which
+  // used to be SCREENING + INTERVIEW + OFFER.
+  const interviewRate = total > 0 ? ((interviewing + offers) / total) * 100 : 0;
+  const offerRate = total > 0 ? (offers / total) * 100 : 0;
 
   // Weekly stats
   const now = new Date();
   const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
   const thisWeek = applications.filter((a) => a.createdAt >= weekAgo).length;
 
-  return { total, statusCounts, interviewRate, offerRate, thisWeek };
+  return { total, stageCounts, interviewing, offers, interviewRate, offerRate, thisWeek };
 }
 
 export async function getFollowUps() {
@@ -355,10 +393,15 @@ export async function getFollowUps() {
       userId: session.userId,
       archived: false,
       followUpDate: { not: null },
-      status: { notIn: [ApplicationStatus.REJECTED, ApplicationStatus.WITHDRAWN, ApplicationStatus.ARCHIVED] },
+      // Closed stages are the pipeline equivalent of the old
+      // REJECTED / WITHDRAWN / ARCHIVED exclusion.
+      stage: { category: { not: StageCategory.CLOSED } },
     },
     orderBy: { followUpDate: "asc" },
-    include: { tags: { include: { tag: true } } },
+    include: {
+      tags: { include: { tag: true } },
+      stage: { select: { id: true, name: true, color: true, category: true } },
+    },
   });
 
   return applications;
@@ -369,7 +412,7 @@ export async function getCompanyStats() {
 
   const applications = await prisma.application.findMany({
     where: { userId: session.userId },
-    select: { company: true, status: true },
+    select: { company: true, stage: { select: { category: true } } },
   });
 
   const companyMap: Record<string, { total: number; interviews: number; offers: number }> = {};
@@ -379,8 +422,8 @@ export async function getCompanyStats() {
       companyMap[app.company] = { total: 0, interviews: 0, offers: 0 };
     }
     companyMap[app.company].total++;
-    if (app.status === "INTERVIEW") companyMap[app.company].interviews++;
-    if (app.status === "OFFER") companyMap[app.company].offers++;
+    if (app.stage?.category === StageCategory.INTERVIEWING) companyMap[app.company].interviews++;
+    if (app.stage?.category === StageCategory.SUCCESS) companyMap[app.company].offers++;
   }
 
   return Object.entries(companyMap)
@@ -399,7 +442,13 @@ export async function checkDuplicate(company: string, role: string) {
       role: { equals: role, mode: "insensitive" },
       archived: false,
     },
-    select: { id: true, company: true, role: true, status: true },
+    select: {
+      id: true,
+      company: true,
+      role: true,
+      status: true,
+      stage: { select: { name: true, color: true } },
+    },
   });
 }
 
@@ -439,14 +488,14 @@ export async function exportApplicationsCsv() {
   const applications = await prisma.application.findMany({
     where: { userId: session.userId },
     orderBy: { createdAt: "desc" },
-    include: { tags: { include: { tag: true } } },
+    include: { tags: { include: { tag: true } }, stage: { select: { name: true, color: true } } },
   });
 
   const headers = ["Company", "Role", "Status", "Applied Date", "Follow-up Date", "Job URL", "Tags", "Notes", "Created"];
   const rows = applications.map((app) => [
     app.company,
     app.role,
-    app.status,
+    resolveStage(app).name,
     app.appliedDate ? app.appliedDate.toISOString().split("T")[0] : "",
     app.followUpDate ? app.followUpDate.toISOString().split("T")[0] : "",
     app.jobUrl || "",
