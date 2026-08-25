@@ -14,6 +14,41 @@ const transporter = nodemailer.createTransport({
 });
 
 /* ──────────────────────────────────────────────
+   TEMP DEBUG WRAPPER — remove once SMTP is fixed
+────────────────────────────────────────────── */
+async function sendMail(options: nodemailer.SendMailOptions) {
+  console.log("[mail] env", {
+    SMTP_HOST: process.env.SMTP_HOST,
+    SMTP_PORT: process.env.SMTP_PORT,
+    SMTP_SECURE: process.env.SMTP_SECURE,
+    SMTP_USER: process.env.SMTP_USER,
+    SMTP_PASS: process.env.SMTP_PASS
+      ? `set (len ${process.env.SMTP_PASS.length})`
+      : "MISSING",
+    SMTP_FROM: process.env.SMTP_FROM,
+    NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
+    VERCEL_REGION: process.env.VERCEL_REGION,
+  });
+
+  try {
+    const ok = await transporter.verify();
+    console.log("[mail] verify ok:", ok);
+  } catch (err) {
+    console.error("[mail] verify FAILED:", err);
+    throw err;
+  }
+
+  try {
+    const info = await transporter.sendMail(options);
+    console.log("[mail] sent:", info.messageId, info.response);
+    return info;
+  } catch (err) {
+    console.error("[mail] sendMail FAILED:", err);
+    throw err;
+  }
+}
+
+/* ──────────────────────────────────────────────
    BASE TEMPLATE
 ────────────────────────────────────────────── */
 function baseTemplate(opts: {
@@ -132,7 +167,7 @@ export async function sendVerificationEmail(opts: {
     `,
   });
 
-  return transporter.sendMail({
+  return sendMail({
     from: process.env.SMTP_FROM,
     to: opts.to,
     subject: "Verify your Orbit account",
@@ -163,7 +198,7 @@ export async function sendEmailNotVerifiedEmail(opts: {
     `,
   });
 
-  return transporter.sendMail({
+  return sendMail({
     from: process.env.SMTP_FROM,
     to: opts.to,
     subject: "Verify your email to continue",
@@ -194,7 +229,7 @@ export async function sendPasswordResetEmail(opts: {
     `,
   });
 
-  return transporter.sendMail({
+  return sendMail({
     from: process.env.SMTP_FROM,
     to: opts.to,
     subject: "Reset your Orbit password",
@@ -271,7 +306,7 @@ export async function sendReminderEmail(opts: {
     `,
   });
 
-  return transporter.sendMail({
+  return sendMail({
     from: process.env.SMTP_FROM,
     to: opts.to,
     subject: isInterview
