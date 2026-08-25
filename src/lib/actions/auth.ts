@@ -30,6 +30,15 @@ const loginSchema = z.object({
   password: z.string().min(1, "Password is required"),
 });
 
+// Emails are stored exactly as typed (registerAction and updateProfile both
+// write the raw value), so every lookup has to be case-insensitive. A plain
+// findUnique misses "Foo@bar.com" whenever the caller normalized first.
+function findUserByEmail(email: string) {
+  return prisma.user.findFirst({
+    where: { email: { equals: email, mode: "insensitive" } },
+  });
+}
+
 // ─── Register ────────────────────────────────────────────────────────────────
 
 export async function registerAction(formData: FormData) {
@@ -46,7 +55,7 @@ export async function registerAction(formData: FormData) {
 
     const { name, email, password } = parsed.data;
 
-    const existing = await prisma.user.findUnique({ where: { email } });
+    const existing = await findUserByEmail(email);
     if (existing?.emailVerified) return conflict("Email already in use.");
 
     const hashedPassword = await bcrypt.hash(password, 12);
@@ -56,7 +65,7 @@ export async function registerAction(formData: FormData) {
     if (existing && !existing.emailVerified) {
       // Resend verification for existing unverified account
       await prisma.user.update({
-        where: { email },
+        where: { id: existing.id },
         data: { name, verificationToken: token, verificationExpiry: expiry },
       });
     } else {
@@ -121,7 +130,7 @@ export async function verifyEmailAction(token: string) {
 
 export async function resendVerificationAction(email: string) {
   try {
-    const user = await prisma.user.findUnique({ where: { email } });
+    const user = await findUserByEmail(email);
     if (!user) return notFound("No account found for this email.");
     if (user.emailVerified)
       return conflict("Email already verified. Please sign in.");
@@ -136,7 +145,7 @@ export async function resendVerificationAction(email: string) {
 
     after(async () => {
       try {
-        await sendVerificationEmail({ to: email, name: user.name, token });
+        await sendVerificationEmail({ to: user.email, name: user.name, token });
       } catch (err) {
         console.error("[resend] failed to send verification email:", err);
       }
@@ -165,7 +174,7 @@ export async function loginAction(formData: FormData) {
     const { email, password } = parsed.data;
     console.log("[login] attempt for:", email);
 
-    const user = await prisma.user.findUnique({ where: { email } });
+    const user = await findUserByEmail(email);
     if (!user) {
       console.log("[login] no user found for:", email);
       return unauthorized("Invalid email or password.");
@@ -223,10 +232,10 @@ export async function logoutAction() {
 
 export async function forgotPasswordAction(formData: FormData) {
   try {
-    const email = (formData.get("email") as string)?.trim().toLowerCase();
+    const email = (formData.get("email") as string)?.trim();
     if (!email) return fieldError("email", "Email is required.");
 
-    const user = await prisma.user.findUnique({ where: { email } });
+    const user = await findUserByEmail(email);
 
     // Dev: log why we're returning early
     if (process.env.NODE_ENV === "development") {
@@ -249,7 +258,7 @@ export async function forgotPasswordAction(formData: FormData) {
 
     after(async () => {
       try {
-        await sendPasswordResetEmail({ to: email, name: user.name, token });
+        await sendPasswordResetEmail({ to: user.email, name: user.name, token });
       } catch (err) {
         console.error("[forgot-password] failed to send reset email:", err);
       }
