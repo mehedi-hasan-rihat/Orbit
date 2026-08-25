@@ -47,6 +47,10 @@
 
 "Adding enum values is straightforward, but removing them requires type recreation with casting. A corrupted migration file forced a full migration reset — learned to always verify migration SQL before applying."
 
+### 6. Emails that worked locally but failed intermittently on Vercel
+
+"Verification and password-reset emails sent fine in development but landed unpredictably in production — sometimes delivered, sometimes silently dropped, with no error in the logs. The cause was a fire-and-forget promise: the server action called the mailer without awaiting it, so it could return immediately. Locally that's harmless because the dev server is one long-lived process, but on Vercel the function instance is frozen the moment the response is sent, killing the SMTP handshake mid-flight. It was a race between the send completing and the freeze landing, which is why it looked random. Fixed with `after()` from `next/server`, which keeps the instance alive for post-response work without making the user wait on SMTP."
+
 ---
 
 ## Key numbers
