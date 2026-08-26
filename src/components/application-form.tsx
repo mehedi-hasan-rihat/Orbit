@@ -180,7 +180,7 @@ export function ApplicationForm({ application, availableTags, stages, onClose }:
             {errors.jobUrl && <p className="text-xs text-destructive">{errors.jobUrl[0]}</p>}
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <label htmlFor="stageId" className="text-sm font-medium">Stage</label>
               <select
@@ -207,15 +207,6 @@ export function ApplicationForm({ application, availableTags, stages, onClose }:
               />
             </div>
 
-            <div className="space-y-2">
-              <label htmlFor="followUpDate" className="text-sm font-medium">Follow-up</label>
-              <DatePicker
-                id="followUpDate"
-                name="followUpDate"
-                placeholder="Pick follow-up date"
-                value={application?.followUpDate ? new Date(application.followUpDate).toISOString().split("T")[0] : ""}
-              />
-            </div>
           </div>
 
           {/* Tags */}

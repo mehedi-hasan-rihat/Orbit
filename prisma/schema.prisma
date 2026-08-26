@@ -50,6 +50,10 @@ model Application {
   status        ApplicationStatus? // Legacy — pre-pipeline rows only
   appliedDate   DateTime?
   notes         String?
+  // Mirror of the soonest open FollowUp, kept in sync by the follow-up actions.
+  // Denormalised on purpose: the list sort, the board and the dashboard all read
+  // one date off the application, and a real follow-up now carries a title and
+  // details of its own. Never written by hand — see src/lib/actions/follow-ups.ts.
   followUpDate  DateTime?
   resumeUrl     String?
   coverLetterUrl String?
@@ -60,16 +64,23 @@ model Application {
   // which is only about getting a row out of the list.
   closed        Boolean           @default(false)
   closedAt      DateTime?
+  // An offer is an outcome, not a place in the pipeline. Same shape as
+  // `closed`, but orthogonal to it: an offer you haven't answered is still a
+  // live application, so this does not imply closed.
+  offered       Boolean           @default(false)
+  offeredAt     DateTime?
   createdAt     DateTime          @default(now())
   updatedAt     DateTime          @updatedAt
   activities    Activity[]
   interviews    Interview[]
+  followUps     FollowUp[]
   tags          ApplicationTag[]
 
   @@index([userId])
   @@index([userId, stageId])
   @@index([userId, archived])
   @@index([userId, closed])
+  @@index([userId, offered])
   @@index([company])
 }
 
@@ -186,6 +197,27 @@ model Notification {
 
   @@index([userId, read])
   @@index([userId, createdAt])
+}
+
+// A named thing to chase, with its own due date. Capped at MAX_ACTIVE_FOLLOW_UPS
+// open per application (enforced in the action, not the schema — the limit is a
+// product rule about what a person can usefully track, not an invariant the
+// database needs to guarantee).
+model FollowUp {
+  id            String      @id @default(cuid())
+  applicationId String
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  title         String
+  details       String?
+  dueAt         DateTime
+  done          Boolean     @default(false)
+  doneAt        DateTime?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@index([applicationId])
+  @@index([applicationId, done])
+  @@index([dueAt])
 }
 
 model ApplicationTag {

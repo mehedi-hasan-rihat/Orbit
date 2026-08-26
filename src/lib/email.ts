@@ -240,6 +240,17 @@ export async function sendPasswordResetEmail(opts: {
 /* ──────────────────────────────────────────────
    4. REMINDER EMAIL (INTERVIEW / FOLLOWUP)
 ────────────────────────────────────────────── */
+// Follow-up details are free text the user typed, interpolated straight into an
+// HTML email body. Escape it rather than trusting it.
+function escapeHtml(value: string) {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 export async function sendReminderEmail(opts: {
   to: string;
   userName: string;
@@ -249,6 +260,10 @@ export async function sendReminderEmail(opts: {
   type: "interview" | "followup";
   date: Date;
   interviewLabel?: string;
+  // A follow-up now carries its own title and details — the reminder says what
+  // you meant to chase, not just that something was due.
+  followUpTitle?: string | null;
+  followUpDetails?: string | null;
   applicationUrl: string;
 }) {
   const isInterview = opts.type === "interview";
@@ -265,17 +280,21 @@ export async function sendReminderEmail(opts: {
     minute: "2-digit",
   });
 
-  const urgencyLabel = opts.daysUntil === 1 ? "TOMORROW" : dateStr.toUpperCase();
+  // Follow-ups fire on the day they are due (daysUntil 0); interviews 1–2 days out.
+  const urgencyLabel =
+    opts.daysUntil === 0 ? "DUE TODAY" : opts.daysUntil === 1 ? "TOMORROW" : dateStr.toUpperCase();
 
   const html = baseTemplate({
     title: isInterview ? "Interview Reminder" : "Follow-up Reminder",
-    subtitle: `${opts.company} — ${isInterview ? "Interview" : "Follow-up"}`,
+    subtitle: `${opts.company} — ${isInterview ? "Interview" : opts.followUpTitle ?? "Follow-up"}`,
     body: `
       ${blocks.greeting(
         opts.userName,
-        opts.daysUntil === 1
-          ? "Your event is tomorrow."
-          : `This is a reminder for ${dateStr}.`
+        opts.daysUntil === 0
+          ? `${opts.followUpTitle ?? "Your follow-up"} is due today.`
+          : opts.daysUntil === 1
+            ? "Your event is tomorrow."
+            : `This is a reminder for ${dateStr}.`
       )}
 
       ${blocks.metaTable(
@@ -290,9 +309,16 @@ export async function sendReminderEmail(opts: {
           : [
               { label: "Company", value: opts.company },
               { label: "Role", value: opts.role },
+              ...(opts.followUpTitle ? [{ label: "Follow-up", value: opts.followUpTitle }] : []),
               { label: "Date", value: dateStr },
             ]
       )}
+
+      ${
+        !isInterview && opts.followUpDetails
+          ? `<div style="padding:0 24px 4px;font-size:14px;color:#374151;white-space:pre-wrap;">${escapeHtml(opts.followUpDetails)}</div>`
+          : ""
+      }
 
       <div style="padding:20px 24px;text-align:center;">
         <a href="${opts.applicationUrl}" style="background:#000;color:#fff;padding:12px 24px;border-radius:10px;text-decoration:none;font-weight:600;">
@@ -311,7 +337,7 @@ export async function sendReminderEmail(opts: {
     to: opts.to,
     subject: isInterview
       ? `Interview Reminder: ${opts.company}`
-      : `Follow-up Reminder: ${opts.company}`,
+      : `Due today: ${opts.followUpTitle ?? "Follow-up"} — ${opts.company}`,
     html,
   });
 }

@@ -30,6 +30,7 @@ interface Application {
   archived: boolean;
   closed: boolean;
   closedAt: Date | null;
+  offered: boolean;
   createdAt: Date;
   updatedAt: Date;
   tags: { tag: Tag }[];
@@ -342,6 +343,7 @@ export function ApplicationsList({
                     company={app.company}
                     closed={app.closed}
                     archived={app.archived}
+                    offered={app.offered}
                   />
                 </div>
               </div>
@@ -398,6 +400,7 @@ export function ApplicationsList({
                     company={app.company}
                     closed={app.closed}
                     archived={app.archived}
+                    offered={app.offered}
                   />
                 </div>
               </div>

@@ -51,7 +51,17 @@ export async function createApplication(formData: FormData) {
       jobUrl: data.jobUrl || null,
       stageId: stage.id,
       appliedDate: data.appliedDate ? new Date(data.appliedDate) : null,
+      // Mirror of the soonest open FollowUp — see the follow-up actions. The
+      // row itself is created below, so the two never disagree.
       followUpDate: data.followUpDate ? new Date(data.followUpDate) : null,
+      followUps: data.followUpDate
+        ? {
+            create: {
+              title: `Follow up with ${data.company}`,
+              dueAt: new Date(data.followUpDate),
+            },
+          }
+        : undefined,
       notes: data.notes || null,
       activities: {
         create: {
@@ -121,13 +131,6 @@ export async function updateApplication(id: string, formData: FormData) {
     });
   }
 
-  if (data.followUpDate && data.followUpDate !== existing.followUpDate?.toISOString().split("T")[0]) {
-    activities.push({
-      type: ActivityType.FOLLOW_UP_SET,
-      description: `Follow-up set for ${data.followUpDate}`,
-    });
-  }
-
   const tagIds = data.tags ? data.tags.split(",").filter(Boolean) : [];
 
   // Remove existing tags and re-create
@@ -141,7 +144,6 @@ export async function updateApplication(id: string, formData: FormData) {
       jobUrl: data.jobUrl || null,
       stageId: stage.id,
       appliedDate: data.appliedDate ? new Date(data.appliedDate) : null,
-      followUpDate: data.followUpDate ? new Date(data.followUpDate) : null,
       notes: data.notes || null,
       activities: activities.length > 0 ? { create: activities } : undefined,
       tags: tagIds.length > 0 ? {
@@ -321,6 +323,76 @@ export async function reopenApplication(id: string) {
   return { success: true };
 }
 
+// Getting an offer is an outcome, not a place in the pipeline — same treatment
+// as closing: stageId, notes, tags and rounds are left exactly as they are, so
+// the record still shows the stage the offer came out of. Deliberately does NOT
+// set `closed`: an offer you haven't answered yet is still a live application.
+export async function markOffered(id: string) {
+  const session = await requireUser();
+
+  const existing = await prisma.application.findFirst({
+    where: { id, userId: session.userId },
+  });
+
+  if (!existing) {
+    return { error: "Application not found" };
+  }
+
+  if (existing.offered) {
+    return { success: true };
+  }
+
+  await prisma.application.update({
+    where: { id },
+    data: {
+      offered: true,
+      offeredAt: new Date(),
+      activities: {
+        create: {
+          type: ActivityType.STATUS_CHANGED,
+          description: "Got offered",
+        },
+      },
+    },
+  });
+
+  revalidatePath("/dashboard");
+  revalidatePath("/dashboard/applications");
+  revalidatePath(`/dashboard/applications/${id}`);
+  return { success: true };
+}
+
+export async function unmarkOffered(id: string) {
+  const session = await requireUser();
+
+  const existing = await prisma.application.findFirst({
+    where: { id, userId: session.userId },
+  });
+
+  if (!existing) {
+    return { error: "Application not found" };
+  }
+
+  await prisma.application.update({
+    where: { id },
+    data: {
+      offered: false,
+      offeredAt: null,
+      activities: {
+        create: {
+          type: ActivityType.STATUS_CHANGED,
+          description: "Offer removed",
+        },
+      },
+    },
+  });
+
+  revalidatePath("/dashboard");
+  revalidatePath("/dashboard/applications");
+  revalidatePath(`/dashboard/applications/${id}`);
+  return { success: true };
+}
+
 export async function deleteApplication(id: string) {
   const session = await requireUser();
 
@@ -419,7 +491,12 @@ export async function getApplicationStats() {
     // the applications still in flight, which reads far rosier than reality.
     prisma.application.findMany({
       where: { userId: session.userId, archived: false },
-      select: { stageId: true, createdAt: true, stage: { select: { category: true } } },
+      select: {
+        stageId: true,
+        createdAt: true,
+        offered: true,
+        stage: { select: { category: true } },
+      },
     }),
     prisma.pipelineStageType.findMany({
       where: { userId: session.userId },
@@ -450,11 +527,19 @@ export async function getApplicationStats() {
     applications.filter((a) => a.stage?.category === category).length;
 
   const interviewing = byCategory(StageCategory.INTERVIEWING);
-  const offers = byCategory(StageCategory.SUCCESS);
 
-  // Same meaning as before: everything that got past "applied" counts, which
-  // used to be SCREENING + INTERVIEW + OFFER.
-  const interviewRate = total > 0 ? ((interviewing + offers) / total) * 100 : 0;
+  // Offers are a flag now, not a stage. Reading them off StageCategory.SUCCESS
+  // would report zero as soon as a user deletes the Offer stage that is no
+  // longer seeded — and it always undercounted anyway, since an application
+  // that got an offer and then moved on left the stage behind.
+  const offers = applications.filter((a) => a.offered).length;
+
+  // Same meaning as before: everything that got past "applied" counts. An
+  // offered application counts even if its stage never left INTERVIEWING.
+  const reached = applications.filter(
+    (a) => a.offered || a.stage?.category === StageCategory.INTERVIEWING,
+  ).length;
+  const interviewRate = total > 0 ? (reached / total) * 100 : 0;
   const offerRate = total > 0 ? (offers / total) * 100 : 0;
 
   // Weekly stats
@@ -494,7 +579,7 @@ export async function getCompanyStats() {
 
   const applications = await prisma.application.findMany({
     where: { userId: session.userId },
-    select: { company: true, stage: { select: { category: true } } },
+    select: { company: true, offered: true, stage: { select: { category: true } } },
   });
 
   const companyMap: Record<string, { total: number; interviews: number; offers: number }> = {};
@@ -505,7 +590,7 @@ export async function getCompanyStats() {
     }
     companyMap[app.company].total++;
     if (app.stage?.category === StageCategory.INTERVIEWING) companyMap[app.company].interviews++;
-    if (app.stage?.category === StageCategory.SUCCESS) companyMap[app.company].offers++;
+    if (app.offered) companyMap[app.company].offers++;
   }
 
   return Object.entries(companyMap)
