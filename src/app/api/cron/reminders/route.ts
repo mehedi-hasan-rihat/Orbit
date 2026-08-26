@@ -46,7 +46,7 @@ export async function GET(req: NextRequest) {
       where: {
         scheduledAt: { gte: targetDay, lt: nextDay },
         outcome: { in: OPEN_OUTCOMES },
-        application: { archived: false },
+        application: { archived: false, closed: false },
       },
       include: {
         stageType: { select: { name: true } },
@@ -109,6 +109,7 @@ export async function GET(req: NextRequest) {
     const followUps = await prisma.application.findMany({
       where: {
         archived: false,
+        closed: false,
         followUpDate: { gte: targetDay, lt: nextDay },
       },
       include: { user: { select: { id: true, name: true, email: true } } },

@@ -12,7 +12,7 @@ export async function getCalendarEvents() {
   const interviews = await prisma.interview.findMany({
     where: {
       scheduledAt: { not: null },
-      application: { userId: session.userId, archived: false },
+      application: { userId: session.userId, archived: false, closed: false },
     },
     include: {
       stageType: { select: { name: true } },
@@ -26,6 +26,7 @@ export async function getCalendarEvents() {
     where: {
       userId: session.userId,
       archived: false,
+      closed: false,
       followUpDate: { not: null },
     },
     select: { id: true, company: true, role: true, followUpDate: true },

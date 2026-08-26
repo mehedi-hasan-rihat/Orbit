@@ -252,6 +252,75 @@ export async function unarchiveApplication(id: string) {
   return { success: true };
 }
 
+// Closing is deliberately not "move it to a Rejected stage": the stage, notes,
+// tags and interview rounds are all left untouched, so the record still shows
+// how far the application actually got. Only `closed`/`closedAt` change.
+export async function closeApplication(id: string) {
+  const session = await requireUser();
+
+  const existing = await prisma.application.findFirst({
+    where: { id, userId: session.userId },
+  });
+
+  if (!existing) {
+    return { error: "Application not found" };
+  }
+
+  if (existing.closed) {
+    return { success: true };
+  }
+
+  await prisma.application.update({
+    where: { id },
+    data: {
+      closed: true,
+      closedAt: new Date(),
+      activities: {
+        create: {
+          type: ActivityType.STATUS_CHANGED,
+          description: "Application closed",
+        },
+      },
+    },
+  });
+
+  revalidatePath("/dashboard");
+  revalidatePath("/dashboard/applications");
+  revalidatePath(`/dashboard/applications/${id}`);
+  return { success: true };
+}
+
+export async function reopenApplication(id: string) {
+  const session = await requireUser();
+
+  const existing = await prisma.application.findFirst({
+    where: { id, userId: session.userId },
+  });
+
+  if (!existing) {
+    return { error: "Application not found" };
+  }
+
+  await prisma.application.update({
+    where: { id },
+    data: {
+      closed: false,
+      closedAt: null,
+      activities: {
+        create: {
+          type: ActivityType.STATUS_CHANGED,
+          description: "Application reopened",
+        },
+      },
+    },
+  });
+
+  revalidatePath("/dashboard");
+  revalidatePath("/dashboard/applications");
+  revalidatePath(`/dashboard/applications/${id}`);
+  return { success: true };
+}
+
 export async function deleteApplication(id: string) {
   const session = await requireUser();
 
@@ -277,6 +346,7 @@ export async function getApplications(params?: {
   sort?: string;
   tag?: string;
   archived?: boolean;
+  closed?: boolean;
 }) {
   const session = await requireUser();
 
@@ -284,6 +354,13 @@ export async function getApplications(params?: {
     userId: session.userId,
     archived: params?.archived ?? false,
   };
+
+  // The two flags are orthogonal, so the archive deliberately shows everything
+  // that was archived whether it was closed first or not. Outside the archive,
+  // closed applications get their own tab instead of cluttering the active one.
+  if (!params?.archived) {
+    where.closed = params?.closed ?? false;
+  }
 
   if (params?.stageId && params.stageId !== "ALL") {
     where.stageId = params.stageId;
@@ -337,6 +414,9 @@ export async function getApplicationStats() {
   const session = await requireUser();
 
   const [applications, stages] = await Promise.all([
+    // Closed applications stay in the numbers on purpose. They are the bulk of
+    // the denominator — drop them and the interview/offer rates only measure
+    // the applications still in flight, which reads far rosier than reality.
     prisma.application.findMany({
       where: { userId: session.userId, archived: false },
       select: { stageId: true, createdAt: true, stage: { select: { category: true } } },
@@ -392,9 +472,11 @@ export async function getFollowUps() {
     where: {
       userId: session.userId,
       archived: false,
+      closed: false,
       followUpDate: { not: null },
       // Closed stages are the pipeline equivalent of the old
-      // REJECTED / WITHDRAWN / ARCHIVED exclusion.
+      // REJECTED / WITHDRAWN / ARCHIVED exclusion. A closed application is
+      // excluded too, whatever stage it kept.
       stage: { category: { not: StageCategory.CLOSED } },
     },
     orderBy: { followUpDate: "asc" },
@@ -441,6 +523,7 @@ export async function checkDuplicate(company: string, role: string) {
       company: { equals: company, mode: "insensitive" },
       role: { equals: role, mode: "insensitive" },
       archived: false,
+      closed: false,
     },
     select: {
       id: true,
@@ -491,11 +574,14 @@ export async function exportApplicationsCsv() {
     include: { tags: { include: { tag: true } }, stage: { select: { name: true, color: true } } },
   });
 
-  const headers = ["Company", "Role", "Status", "Applied Date", "Follow-up Date", "Job URL", "Tags", "Notes", "Created"];
+  // "Status" is the stage the application kept, which a closed row preserves —
+  // so the export needs its own column to tell a live row from a finished one.
+  const headers = ["Company", "Role", "Status", "Closed", "Applied Date", "Follow-up Date", "Job URL", "Tags", "Notes", "Created"];
   const rows = applications.map((app) => [
     app.company,
     app.role,
     resolveStage(app).name,
+    app.closed ? (app.closedAt?.toISOString().split("T")[0] ?? "Yes") : "",
     app.appliedDate ? app.appliedDate.toISOString().split("T")[0] : "",
     app.followUpDate ? app.followUpDate.toISOString().split("T")[0] : "",
     app.jobUrl || "",

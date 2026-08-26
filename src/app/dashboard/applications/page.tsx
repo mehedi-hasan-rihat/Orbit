@@ -4,12 +4,20 @@ import { getStageTypes } from "@/lib/actions/pipeline";
 import { ApplicationsList } from "@/components/applications-list";
 
 interface Props {
-  searchParams: Promise<{ search?: string; stage?: string; sort?: string; tag?: string; archived?: string }>;
+  searchParams: Promise<{
+    search?: string;
+    stage?: string;
+    sort?: string;
+    tag?: string;
+    archived?: string;
+    closed?: string;
+  }>;
 }
 
 export default async function ApplicationsPage({ searchParams }: Props) {
   const params = await searchParams;
   const showArchived = params.archived === "true";
+  const showClosed = !showArchived && params.closed === "true";
 
   const [applications, tags, stages] = await Promise.all([
     getApplications({
@@ -18,6 +26,7 @@ export default async function ApplicationsPage({ searchParams }: Props) {
       sort: params.sort || "createdAt",
       tag: params.tag,
       archived: showArchived,
+      closed: showClosed,
     }),
     getTags(),
     getStageTypes(),
@@ -32,6 +41,7 @@ export default async function ApplicationsPage({ searchParams }: Props) {
       stageId={params.stage || "ALL"}
       sort={params.sort || "createdAt"}
       showArchived={showArchived}
+      showClosed={showClosed}
     />
   );
 }

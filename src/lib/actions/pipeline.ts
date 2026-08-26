@@ -80,10 +80,11 @@ async function reconcileStages(
   }
 
   // Clear the retired seeds ("Archived") for users who were seeded before they
-  // were dropped. Only the untouched ones: still hidden, holding nothing. A
-  // user who enabled one or filed something under it keeps it as an ordinary
-  // stage they can rename or delete themselves.
-  const retired = existing.filter((e) => RETIRED_STAGE_NAMES.includes(e.name) && !e.enabled);
+  // were dropped. The name can no longer be created, so any surviving row is
+  // that old seed rather than something the user made. Still gated on holding
+  // nothing: a stage with cards in it stays until the user moves them, since
+  // deleting it would have to invent a stage to put them in.
+  const retired = existing.filter((e) => RETIRED_STAGE_NAMES.includes(e.name));
   for (const stage of retired) {
     const [applications, interviews] = await Promise.all([
       prisma.application.count({ where: { stageId: stage.id } }),
