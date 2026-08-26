@@ -168,7 +168,7 @@ export function ApplicationForm({ application, availableTags, stages, onClose }:
           </div>
 
           <div className="space-y-2">
-            <label htmlFor="jobUrl" className="text-sm font-medium">Job URL</label>
+            <label htmlFor="jobUrl" className="text-sm font-medium">Job Description URL</label>
             <input
               id="jobUrl"
               name="jobUrl"

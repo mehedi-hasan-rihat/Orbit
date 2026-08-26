@@ -286,7 +286,7 @@ export function ApplicationsList({
                       rel="noopener noreferrer"
                       className="text-[10px] text-muted-foreground hover:underline"
                     >
-                      View posting ↗
+                      View Description ↗
                     </a>
                   )}
                 </div>

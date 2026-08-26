@@ -117,7 +117,7 @@ export default async function ApplicationDetailPage({ params }: Props) {
                   rel="noopener noreferrer"
                   className="inline-flex h-8 items-center gap-1.5 rounded-lg border px-3 text-xs font-medium hover:bg-accent transition-colors"
                 >
-                  Job Posting ↗
+                  Job Description ↗
                 </a>
               )}
               <ApplicationActions
