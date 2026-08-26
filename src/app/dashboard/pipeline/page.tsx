@@ -66,6 +66,16 @@ export default async function PipelinePage() {
                 </p>
               </div>
 
+              <div className="space-y-2 border-t pt-4">
+                <p className="text-xs font-semibold">Default stages</p>
+                <p className="text-xs text-muted-foreground">
+                  Wishlist, Applied, Screening, Interview, Offer and Rejected are
+                  always part of your pipeline. You can recolour them, but their name
+                  and category are fixed and they can&rsquo;t be hidden or deleted —
+                  everything else on the list is yours to change.
+                </p>
+              </div>
+
               <div className="border-t pt-4 space-y-2">
                 <p className="text-xs font-semibold">Hide vs. delete</p>
                 <p className="text-xs text-muted-foreground">
@@ -76,6 +86,7 @@ export default async function PipelinePage() {
                 <p className="text-xs text-muted-foreground">
                   <strong className="text-foreground">Delete</strong> is refused while
                   applications still sit in the stage. Move them first, or hide it instead.
+                  Both apply to your own stages only.
                 </p>
               </div>
             </div>

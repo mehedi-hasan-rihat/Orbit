@@ -18,6 +18,7 @@ interface StageType {
   category: StageCategoryValue;
   order: number;
   enabled: boolean;
+  isSystem: boolean;
   usageCount: number;
   applicationCount: number;
 }
@@ -97,6 +98,11 @@ export function PipelineManager({ stageTypes }: { stageTypes: StageType[] }) {
   }
 
   async function handleDelete(type: StageType) {
+    if (type.isSystem) {
+      setError(`${type.name} is a default stage and cannot be deleted.`);
+      return;
+    }
+
     if (type.applicationCount > 0) {
       setError(
         `${type.name} still holds ${type.applicationCount} application${type.applicationCount === 1 ? "" : "s"}. Move them to another stage, or disable this one instead.`,
@@ -125,7 +131,8 @@ export function PipelineManager({ stageTypes }: { stageTypes: StageType[] }) {
         <h2 className="text-sm font-semibold">Stage types</h2>
         <p className="text-xs text-muted-foreground mt-1">
           The types you can pick when adding an interview round. Renaming one updates
-          every round already using it.
+          every round already using it. The stages marked <strong>Default</strong> are
+          fixed — you can recolour them, but not rename, hide or delete them.
         </p>
       </div>
 
@@ -184,14 +191,18 @@ export function PipelineManager({ stageTypes }: { stageTypes: StageType[] }) {
                   value={editingName}
                   onChange={(e) => setEditingName(e.target.value)}
                   maxLength={100}
-                  autoFocus
-                  className="flex h-8 flex-1 min-w-0 rounded-md border bg-background px-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                  autoFocus={!type.isSystem}
+                  disabled={type.isSystem}
+                  title={type.isSystem ? "Default stages keep their name" : undefined}
+                  className="flex h-8 flex-1 min-w-0 rounded-md border bg-background px-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-60 disabled:cursor-not-allowed"
                 />
                 <select
                   value={editingCategory}
                   onChange={(e) => setEditingCategory(e.target.value as StageCategoryValue)}
                   aria-label="Stage category"
-                  className="h-8 shrink-0 rounded-md border bg-background px-1 text-xs focus:outline-none focus:ring-2 focus:ring-ring"
+                  disabled={type.isSystem}
+                  title={type.isSystem ? "Default stages keep their category" : undefined}
+                  className="h-8 shrink-0 rounded-md border bg-background px-1 text-xs focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   {STAGE_CATEGORIES.map((c) => (
                     <option key={c} value={c}>{CATEGORY_LABELS[c]}</option>
@@ -218,13 +229,23 @@ export function PipelineManager({ stageTypes }: { stageTypes: StageType[] }) {
                   style={{ backgroundColor: type.color }}
                 />
                 <div className="flex-1 min-w-0">
-                  <p
-                    className={clsx(
-                      "text-sm font-medium truncate",
-                      !type.enabled && "text-muted-foreground line-through",
+                  <p className="flex items-center gap-1.5 text-sm font-medium">
+                    <span
+                      className={clsx(
+                        "truncate",
+                        !type.enabled && "text-muted-foreground line-through",
+                      )}
+                    >
+                      {type.name}
+                    </span>
+                    {type.isSystem && (
+                      <span
+                        title="Default stage — name, category and visibility are fixed"
+                        className="shrink-0 rounded-full border px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground"
+                      >
+                        Default
+                      </span>
                     )}
-                  >
-                    {type.name}
                   </p>
                   <p className="text-xs text-muted-foreground">
                     {CATEGORY_LABELS[type.category]}
@@ -242,22 +263,26 @@ export function PipelineManager({ stageTypes }: { stageTypes: StageType[] }) {
                   }}
                   className="text-xs text-muted-foreground hover:text-foreground"
                 >
-                  Edit
+                  {type.isSystem ? "Colour" : "Edit"}
                 </button>
-                <button
-                  onClick={() => handleToggle(type.id, !type.enabled)}
-                  disabled={pending === type.id}
-                  className="text-xs text-muted-foreground hover:text-foreground disabled:opacity-50"
-                >
-                  {type.enabled ? "Hide" : "Show"}
-                </button>
-                <button
-                  onClick={() => handleDelete(type)}
-                  disabled={pending === type.id}
-                  className="text-xs text-destructive hover:text-destructive/80 disabled:opacity-50"
-                >
-                  Delete
-                </button>
+                {!type.isSystem && (
+                  <>
+                    <button
+                      onClick={() => handleToggle(type.id, !type.enabled)}
+                      disabled={pending === type.id}
+                      className="text-xs text-muted-foreground hover:text-foreground disabled:opacity-50"
+                    >
+                      {type.enabled ? "Hide" : "Show"}
+                    </button>
+                    <button
+                      onClick={() => handleDelete(type)}
+                      disabled={pending === type.id}
+                      className="text-xs text-destructive hover:text-destructive/80 disabled:opacity-50"
+                    >
+                      Delete
+                    </button>
+                  </>
+                )}
               </>
             )}
           </div>

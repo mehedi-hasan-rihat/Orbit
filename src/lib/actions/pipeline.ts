@@ -2,7 +2,14 @@
 
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
-import { stageTypeSchema, DEFAULT_STAGE_TYPES } from "@/lib/validations";
+import {
+  stageTypeSchema,
+  DEFAULT_STAGE_TYPES,
+  RETIRED_STAGE_NAMES,
+  isSystemStageName,
+  isReservedStageName,
+  isRetiredStageName,
+} from "@/lib/validations";
 import type { StageCategory } from "@/generated/prisma/enums";
 import { revalidatePath } from "next/cache";
 
@@ -30,6 +37,72 @@ async function seedDefaults(userId: string) {
   });
 }
 
+// Brings an existing pipeline in line with the current catalogue. Every branch
+// is gated on something already present in the rows we just read, so a healthy
+// pipeline costs no extra queries. Returns whether anything changed.
+async function reconcileStages(
+  userId: string,
+  existing: { id: string; name: string; order: number; enabled: boolean }[],
+) {
+  let changed = false;
+
+  // The system stages are guaranteed, not merely seeded: one lost before they
+  // were locked is restored here. Restored rows are appended rather than
+  // slotted back into place — there is no reordering UI, so order only grows.
+  const missing = DEFAULT_STAGE_TYPES.filter(
+    (d) => isSystemStageName(d.name) && !existing.some((e) => e.name === d.name),
+  );
+  if (missing.length > 0) {
+    const nextOrder = Math.max(-1, ...existing.map((e) => e.order)) + 1;
+    await prisma.pipelineStageType.createMany({
+      data: missing.map((d, i) => ({
+        userId,
+        name: d.name,
+        color: d.color,
+        category: d.category as StageCategory,
+        enabled: true,
+        order: nextOrder + i,
+      })),
+      skipDuplicates: true,
+    });
+    changed = true;
+  }
+
+  // A system stage hidden before the lock existed would otherwise stay hidden
+  // with no way back — the toggle now refuses to touch it.
+  const hidden = existing.filter((e) => isSystemStageName(e.name) && !e.enabled);
+  if (hidden.length > 0) {
+    await prisma.pipelineStageType.updateMany({
+      where: { userId, name: { in: hidden.map((h) => h.name) } },
+      data: { enabled: true },
+    });
+    changed = true;
+  }
+
+  // Clear the retired seeds ("Archived") for users who were seeded before they
+  // were dropped. Only the untouched ones: still hidden, holding nothing. A
+  // user who enabled one or filed something under it keeps it as an ordinary
+  // stage they can rename or delete themselves.
+  const retired = existing.filter((e) => RETIRED_STAGE_NAMES.includes(e.name) && !e.enabled);
+  for (const stage of retired) {
+    const [applications, interviews] = await Promise.all([
+      prisma.application.count({ where: { stageId: stage.id } }),
+      prisma.interview.count({ where: { stageTypeId: stage.id } }),
+    ]);
+    if (applications > 0 || interviews > 0) continue;
+
+    // Application.stageId is ON DELETE RESTRICT, so a card moved in between the
+    // count and the delete makes this throw rather than strand anything. Leave
+    // the row for the next read instead of failing the page.
+    const removed = await prisma.pipelineStageType
+      .deleteMany({ where: { id: stage.id, userId } })
+      .catch(() => null);
+    if (removed && removed.count > 0) changed = true;
+  }
+
+  return changed;
+}
+
 export async function getStageTypes() {
   const session = await getSession();
   if (!session) return [];
@@ -38,9 +111,13 @@ export async function getStageTypes() {
     where: { userId: session.userId },
     orderBy: [{ order: "asc" }, { name: "asc" }],
   });
-  if (existing.length > 0) return existing;
 
-  await seedDefaults(session.userId);
+  if (existing.length === 0) {
+    await seedDefaults(session.userId);
+  } else if (!(await reconcileStages(session.userId, existing))) {
+    return existing;
+  }
+
   return prisma.pipelineStageType.findMany({
     where: { userId: session.userId },
     orderBy: [{ order: "asc" }, { name: "asc" }],
@@ -68,6 +145,7 @@ export async function getStageTypesWithUsage() {
     category: t.category,
     order: t.order,
     enabled: t.enabled,
+    isSystem: isSystemStageName(t.name),
     usageCount: t._count.interviews,
     applicationCount: t._count.applications,
   }));
@@ -84,6 +162,20 @@ export async function createStageType(formData: FormData) {
   if (!parsed.success) return { error: parsed.error.flatten().fieldErrors };
 
   const name = parsed.data.name.trim();
+
+  // The exact name is caught by the lookup below; this also catches the
+  // case-variants ("wishlist") the unique constraint would happily accept.
+  if (isReservedStageName(name)) {
+    return { error: { name: [`"${name}" is a default stage — it already exists`] } };
+  }
+
+  if (isRetiredStageName(name)) {
+    return {
+      error: {
+        name: ["Archiving isn't a stage — use Archive on the application itself"],
+      },
+    };
+  }
 
   const existing = await prisma.pipelineStageType.findFirst({
     where: { userId: session.userId, name },
@@ -129,6 +221,40 @@ export async function updateStageType(id: string, formData: FormData) {
   });
   if (!existing) return { error: "Stage type not found" };
 
+  // A default stage keeps its name and category — the category is what every
+  // aggregation is built on, and the name is what the legacy status fallback in
+  // stage-display.ts resolves to. Colour is cosmetic, so it stays editable.
+  if (isSystemStageName(existing.name)) {
+    if (name !== existing.name) {
+      return { error: { name: [`${existing.name} is a default stage and cannot be renamed`] } };
+    }
+    if (parsed.data.category !== existing.category) {
+      return { error: `${existing.name} is a default stage — its category is fixed.` };
+    }
+
+    await prisma.pipelineStageType.update({
+      where: { id },
+      data: { color: parsed.data.color },
+    });
+
+    revalidatePath("/dashboard/pipeline");
+    revalidatePath("/dashboard/applications");
+    revalidatePath("/dashboard");
+    return { success: true };
+  }
+
+  if (isReservedStageName(name)) {
+    return { error: { name: [`"${name}" is a default stage — pick another name`] } };
+  }
+
+  if (isRetiredStageName(name)) {
+    return {
+      error: {
+        name: ["Archiving isn't a stage — use Archive on the application itself"],
+      },
+    };
+  }
+
   const clash = await prisma.pipelineStageType.findFirst({
     where: { userId: session.userId, name, NOT: { id } },
   });
@@ -155,6 +281,12 @@ export async function setStageTypeEnabled(id: string, enabled: boolean) {
   });
   if (!existing) return { error: "Stage type not found" };
 
+  // Default stages are always on the board — hiding one would strand the cards
+  // sitting in it with no column to show them in.
+  if (isSystemStageName(existing.name)) {
+    return { error: `${existing.name} is a default stage and is always shown.` };
+  }
+
   // Disabling only hides it from the picker for new stages; interviews already
   // using it keep rendering it.
   await prisma.pipelineStageType.update({ where: { id }, data: { enabled } });
@@ -172,6 +304,10 @@ export async function deleteStageType(id: string) {
     where: { id, userId: session.userId },
   });
   if (!existing) return { error: "Stage type not found" };
+
+  if (isSystemStageName(existing.name)) {
+    return { error: `${existing.name} is a default stage and cannot be deleted.` };
+  }
 
   // Applications hold the FK with ON DELETE RESTRICT: a stage that still has
   // cards on the board cannot be dropped without silently stranding them.

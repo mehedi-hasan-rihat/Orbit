@@ -68,13 +68,53 @@ export const DEFAULT_STAGE_TYPES = [
   { name: "Offer", color: "#22c55e", category: "SUCCESS", enabled: true },
   { name: "Rejected", color: "#ef4444", category: "CLOSED", enabled: true },
   { name: "Withdrawn", color: "#f97316", category: "CLOSED", enabled: false },
-  { name: "Archived", color: "#64748b", category: "CLOSED", enabled: false },
 ] as const satisfies readonly {
   name: string;
   color: string;
   category: StageCategoryValue;
   enabled: boolean;
 }[];
+
+// The stages every pipeline is guaranteed to have. Seeded like the rest, but
+// locked afterwards: name, category, visibility and existence are fixed, and
+// they are restored if one ever goes missing. Everything else in
+// DEFAULT_STAGE_TYPES is only a starting suggestion the user owns outright.
+export const SYSTEM_STAGE_NAMES = [
+  "Wishlist",
+  "Applied",
+  "Screening",
+  "Interview",
+  "Offer",
+  "Rejected",
+] as const satisfies readonly (typeof DEFAULT_STAGE_TYPES)[number]["name"][];
+
+export type SystemStageName = (typeof SYSTEM_STAGE_NAMES)[number];
+
+// Stages that were seeded once and shouldn't have been. "Archived" is not a
+// place in the pipeline — archiving is a flag on the application
+// (Application.archived) with its own tab and its own actions. The leftover
+// seeded row is cleared on the next pipeline read if it was never used.
+export const RETIRED_STAGE_NAMES: readonly string[] = ["Archived"];
+
+export function isSystemStageName(name: string): name is SystemStageName {
+  return (SYSTEM_STAGE_NAMES as readonly string[]).includes(name);
+}
+
+// Case-insensitive on purpose. @@unique([userId, name]) is case-sensitive, so
+// a second "wishlist" would be accepted next to the locked "Wishlist" and read
+// as a duplicate column on the board.
+export function isReservedStageName(name: string): boolean {
+  const candidate = name.trim().toLowerCase();
+  return SYSTEM_STAGE_NAMES.some((n) => n.toLowerCase() === candidate);
+}
+
+// Retired names stay unavailable rather than merely unseeded: the reconcile
+// pass clears an unused hidden "Archived", so letting one be recreated would
+// mean it vanished again the moment the user hid it.
+export function isRetiredStageName(name: string): boolean {
+  const candidate = name.trim().toLowerCase();
+  return RETIRED_STAGE_NAMES.some((n) => n.toLowerCase() === candidate);
+}
 
 export const stageTypeSchema = z.object({
   name: z.string().min(1, "Name is required").max(100),
