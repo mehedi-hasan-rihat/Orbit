@@ -112,8 +112,9 @@ export async function getProfileStats() {
 
   const [total, offers, interviews] = await Promise.all([
     prisma.application.count({ where: { userId: session.userId } }),
+    // Offers are a flag on the application now, not a SUCCESS-category stage.
     prisma.application.count({
-      where: { userId: session.userId, stage: { category: StageCategory.SUCCESS } },
+      where: { userId: session.userId, offered: true },
     }),
     prisma.application.count({
       where: { userId: session.userId, stage: { category: StageCategory.INTERVIEWING } },

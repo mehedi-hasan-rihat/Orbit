@@ -60,6 +60,16 @@ An application's stage is a **row the user owns** (`PipelineStageType`), not an 
 - Defaults are seeded **lazily** on first read of `getStageTypes()`, not at registration — existing users predate the feature. `createMany` + `skipDuplicates` against `@@unique([userId, name])` makes it concurrency-safe.
 - Deleting a stage that still holds applications is **refused** (the FK is `Restrict`). Deleting one used by interview rounds snapshots its name into `Interview.customType` first.
 
+### Outcomes and follow-ups
+An outcome is a **flag on the application**, not a stage. A stage is where you sit; `offered` and `closed` are what happened.
+
+- `Application.offered` / `closed` leave `stageId`, notes, tags and rounds untouched, so a card still shows the stage the offer (or the rejection) came out of. They are orthogonal: an unanswered offer is not closed.
+- **Offer rate and company stats read `offered`, never `StageCategory.SUCCESS`.** `Offer` and `Rejected` are no longer seeded or in `SYSTEM_STAGE_NAMES`, so a user can delete them — anything keying off SUCCESS silently reports zero once they do.
+- `INTERVIEW_OUTCOMES` describes **one round**, not the application. `REJECTED`/`WITHDRAWN` were removed as duplicates of `FAILED`/`CANCELLED`; `outcome` is a plain `String?`, so unrecognised values still render through `outcomeDisplay`.
+- A follow-up is a `FollowUp` row with a title, details and `dueAt`. Max **2 open** per application, enforced in `createFollowUp` *and* in `setFollowUpDone` — without the second check, "complete two, add two, reopen" walks straight past the cap.
+- **`Application.followUpDate` is a derived mirror** of the soonest open `FollowUp`, rewritten by `syncMirror()` (`src/lib/actions/follow-ups.ts:23`) after every follow-up write. It exists only so the list sort, board and dashboard can read one date. Never write it from anywhere else — the row it mirrors is what the reminder cron actually queries, so a direct write desyncs the two and the UI starts showing a date nothing will ever chase. This is why the application form no longer has a follow-up field.
+- Reminders are asymmetric on purpose: interviews fire **2 days and 1 day before** (an appointment you prepare for), follow-ups fire **on the due date** (a task, nothing to prepare). Dedupe keys are per-interview and per-follow-up, so several due the same day each send once.
+
 ### Component Conventions
 - `"use client"` at top of client components.
 - `useSession()` from `src/components/session-provider.tsx` for client-side user access.
