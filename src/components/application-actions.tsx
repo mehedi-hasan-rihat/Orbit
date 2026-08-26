@@ -102,7 +102,7 @@ export function ApplicationActions({
   }
 
   return (
-    <>
+    <div className="flex flex-col items-start gap-1.5 sm:items-end">
       <div className="flex flex-wrap items-center gap-2">
         <select
           value={stageId ?? ""}
@@ -194,7 +194,7 @@ export function ApplicationActions({
       {/* These four read as interchangeable ways of "getting rid of" an
           application, and the tooltips explaining them never appear on touch.
           Closed by default so it doesn't shout at someone who already knows. */}
-      <details className="mt-2 w-full">
+      <details>
         <summary className="cursor-pointer text-[11px] text-muted-foreground hover:text-foreground transition-colors list-none">
           What do these do?
         </summary>
@@ -238,6 +238,6 @@ export function ApplicationActions({
           onClose={() => setEditing(false)}
         />
       )}
-    </>
+    </div>
   );
 }
