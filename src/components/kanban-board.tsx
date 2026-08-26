@@ -17,31 +17,30 @@ import {
 } from "@dnd-kit/sortable";
 import { KanbanColumn } from "./kanban-column";
 import { KanbanCard } from "./kanban-card";
-import { updateApplicationStatus } from "@/lib/actions/applications";
+import { updateApplicationStage } from "@/lib/actions/applications";
 import { useRouter } from "next/navigation";
 
 interface Application {
   id: string;
   company: string;
   role: string;
-  status: string;
+  stageId: string | null;
   appliedDate: Date | null;
   createdAt: Date;
 }
 
-const columns = [
-  { id: "WISHLIST", title: "Wishlist", color: "bg-gray-500" },
-  { id: "APPLIED", title: "Applied", color: "bg-blue-500" },
-  { id: "SCREENING", title: "Screening", color: "bg-purple-500" },
-  { id: "INTERVIEW", title: "Interview", color: "bg-amber-500" },
-  { id: "OFFER", title: "Offer", color: "bg-green-500" },
-  { id: "REJECTED", title: "Rejected", color: "bg-red-500" },
-];
+export interface BoardStage {
+  id: string;
+  name: string;
+  color: string;
+}
 
 export function KanbanBoard({
   applications,
+  stages,
 }: {
   applications: Application[];
+  stages: BoardStage[];
 }) {
   const [items, setItems] = useState(applications);
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -75,28 +74,28 @@ export function KanbanBoard({
     const activeApp = items.find((item) => item.id === active.id);
     if (!activeApp) return;
 
-    let targetStatus: string;
-    const overColumn = columns.find((col) => col.id === over.id);
+    let targetStageId: string;
+    const overColumn = stages.find((col) => col.id === over.id);
     if (overColumn) {
-      targetStatus = overColumn.id;
+      targetStageId = overColumn.id;
     } else {
       const overApp = items.find((item) => item.id === over.id);
-      if (overApp) {
-        targetStatus = overApp.status;
+      if (overApp?.stageId) {
+        targetStageId = overApp.stageId;
       } else {
         return;
       }
     }
 
-    if (activeApp.status === targetStatus) return;
+    if (activeApp.stageId === targetStageId) return;
 
     setItems((prev) =>
       prev.map((item) =>
-        item.id === active.id ? { ...item, status: targetStatus } : item
+        item.id === active.id ? { ...item, stageId: targetStageId } : item
       )
     );
 
-    await updateApplicationStatus(active.id as string, targetStatus);
+    await updateApplicationStage(active.id as string, targetStageId);
     router.refresh();
   }
 
@@ -104,13 +103,13 @@ export function KanbanBoard({
   if (!mounted) {
     return (
       <div className="flex gap-3 pb-4 overflow-x-auto snap-x snap-mandatory md:snap-none">
-        {columns.map((column) => {
-          const columnItems = items.filter((item) => item.status === column.id);
+        {stages.map((column) => {
+          const columnItems = items.filter((item) => item.stageId === column.id);
           return (
             <KanbanColumn
               key={column.id}
               id={column.id}
-              title={column.title}
+              title={column.name}
               color={column.color}
               count={columnItems.length}
             >
@@ -140,9 +139,9 @@ export function KanbanBoard({
       onDragEnd={handleDragEnd}
     >
       <div className="flex gap-3 pb-4 overflow-x-auto snap-x snap-mandatory md:snap-none">
-        {columns.map((column) => {
+        {stages.map((column) => {
           const columnItems = items.filter(
-            (item) => item.status === column.id
+            (item) => item.stageId === column.id
           );
           return (
             <SortableContext
@@ -152,7 +151,7 @@ export function KanbanBoard({
             >
               <KanbanColumn
                 id={column.id}
-                title={column.title}
+                title={column.name}
                 color={column.color}
                 count={columnItems.length}
               >

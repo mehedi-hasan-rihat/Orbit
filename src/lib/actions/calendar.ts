@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
+import { resolveStageLabel } from "@/lib/stage-label";
 
 export async function getCalendarEvents() {
   const session = await getSession();
@@ -11,10 +12,11 @@ export async function getCalendarEvents() {
   const interviews = await prisma.interview.findMany({
     where: {
       scheduledAt: { not: null },
-      application: { userId: session.userId, archived: false },
+      application: { userId: session.userId, archived: false, closed: false },
     },
     include: {
-      application: { select: { id: true, company: true, role: true, status: true } },
+      stageType: { select: { name: true } },
+      application: { select: { id: true, company: true, role: true } },
     },
     orderBy: { scheduledAt: "asc" },
   });
@@ -24,9 +26,10 @@ export async function getCalendarEvents() {
     where: {
       userId: session.userId,
       archived: false,
+      closed: false,
       followUpDate: { not: null },
     },
-    select: { id: true, company: true, role: true, status: true, followUpDate: true },
+    select: { id: true, company: true, role: true, followUpDate: true },
     orderBy: { followUpDate: "asc" },
   });
 
@@ -35,11 +38,10 @@ export async function getCalendarEvents() {
       id: i.id,
       applicationId: i.application.id,
       type: "INTERVIEW" as const,
-      title: `${i.application.company} — Round ${i.round} ${i.type.replace("_", " ")}`,
+      title: `${i.application.company} — Round ${i.round} ${resolveStageLabel(i)}`,
       company: i.application.company,
       role: i.application.role,
       date: i.scheduledAt!,
-      status: i.application.status,
       outcome: i.outcome,
     })),
     ...followUps.map((f) => ({
@@ -50,7 +52,6 @@ export async function getCalendarEvents() {
       company: f.company,
       role: f.role,
       date: f.followUpDate!,
-      status: f.status,
       outcome: null,
     })),
   ].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());

@@ -1,6 +1,8 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { sendReminderEmail } from "@/lib/email";
+import { resolveStageLabel } from "@/lib/stage-label";
+import { OPEN_OUTCOMES } from "@/lib/validations";
 
 export const dynamic = "force-dynamic";
 
@@ -43,10 +45,11 @@ export async function GET(req: NextRequest) {
     const interviews = await prisma.interview.findMany({
       where: {
         scheduledAt: { gte: targetDay, lt: nextDay },
-        outcome: "PENDING",
-        application: { archived: false },
+        outcome: { in: OPEN_OUTCOMES },
+        application: { archived: false, closed: false },
       },
       include: {
+        stageType: { select: { name: true } },
         application: {
           include: { user: { select: { id: true, name: true, email: true } } },
         },
@@ -57,10 +60,7 @@ export async function GET(req: NextRequest) {
 
     for (const interview of interviews) {
       const { user } = interview.application;
-      const label =
-        interview.type === "OTHER" && interview.customType
-          ? interview.customType
-          : `Round ${interview.round} ${interview.type.replace(/_/g, " ")}`;
+      const label = `Round ${interview.round} ${resolveStageLabel(interview)}`;
 
       const dedupeKey = `interview-${interview.id}-${daysUntil}d`;
       const exists = await prisma.notification.findFirst({ where: { userId: user.id, body: dedupeKey } });
@@ -109,6 +109,7 @@ export async function GET(req: NextRequest) {
     const followUps = await prisma.application.findMany({
       where: {
         archived: false,
+        closed: false,
         followUpDate: { gte: targetDay, lt: nextDay },
       },
       include: { user: { select: { id: true, name: true, email: true } } },

@@ -90,26 +90,45 @@ Orbit follows a **monolithic full-stack architecture** built on Next.js App Rout
      └──────1:N──┌──────────────┐
                  │ Notification │
                  └──────────────┘
+
+     └──────1:N──┌───────────────────┐
+                 │ PipelineStageType │
+                 └───────────────────┘
+                     ▲           ▲
+                     │           │
+        Application.stageId   Interview.stageTypeId
+           N:1 (Restrict)        N:1 (SetNull)
 ```
+
+A stage type is referenced from two directions: it is both the column an
+application sits in and the type an interview round is filed under.
 
 ### Table Details
 
 | Model | Primary Purpose | Key Indexes |
 |-------|----------------|-------------|
 | User | Account and authentication | `email` (unique) |
-| Application | Core tracked entity | `(userId)`, `(userId, status)`, `(userId, archived)`, `(company)` |
+| Application | Core tracked entity | `(userId)`, `(userId, stageId)`, `(userId, archived)`, `(company)` |
 | Activity | Immutable audit log | `(applicationId)` |
-| Interview | Per-round interview tracking | `(applicationId)` |
+| Interview | Per-round interview tracking | `(applicationId)`, `(stageTypeId)` |
+| PipelineStageType | User-defined stage catalogue | `(userId)`, `(userId, name)` unique |
 | Tag | User-defined labels | `(userId)`, `(userId, name)` unique |
 | ApplicationTag | Junction table (N:M) | `(applicationId, tagId)` unique |
 | Notification | In-app and email reminders | `(userId, read)`, `(userId, createdAt)` |
 
 ### Cascade Rules
 
-All foreign keys use `onDelete: Cascade`:
-- Deleting a User removes all their Applications, Tags, and Notifications.
+Ownership edges cascade:
+- Deleting a User removes all their Applications, Tags, PipelineStageTypes, and Notifications.
 - Deleting an Application removes all its Activities, Interviews, and ApplicationTags.
 - Deleting a Tag removes all ApplicationTag associations.
+
+The two references to `PipelineStageType` deliberately do not:
+
+| Reference | Rule | Why |
+|-----------|------|-----|
+| `Application.stageId` | `Restrict` | A stage holding applications cannot be deleted. `SetNull` would strand those cards off the board with no stage at all, so the server action refuses the delete and asks the user to move them or hide the stage instead. |
+| `Interview.stageTypeId` | `SetNull` | An interview round is a historical record; losing its stage should not delete it. The delete action first copies the stage name into `Interview.customType`, so the round keeps reading the way it did — it simply stops following future renames. |
 
 ---
 
@@ -263,7 +282,7 @@ Prisma uses parameterised queries exclusively, eliminating SQL injection risk. C
 
 ### Database Indexes
 
-Composite indexes on `(userId, status)` and `(userId, archived)` support the most common filtered queries. The `(userId)` index supports all per-user data fetches. The `(applicationId)` indexes on Activity and Interview support detail page loads. The unique index on `(applicationId, tagId)` prevents duplicate tag assignments at the database level.
+Composite indexes on `(userId, stageId)` and `(userId, archived)` support the most common filtered queries. The `(userId)` index supports all per-user data fetches. The `(applicationId)` indexes on Activity and Interview support detail page loads. The unique index on `(applicationId, tagId)` prevents duplicate tag assignments at the database level.
 
 ### Rendering Strategy
 
@@ -275,7 +294,9 @@ The Kanban board updates local state immediately on drag-and-drop, before the se
 
 ### Analytics Computation
 
-Application statistics (total, status counts, interview rate, offer rate) are computed in-memory from a single database query returning only `status` and `createdAt` fields. For typical user data volumes (fewer than 1,000 applications), this is faster than complex SQL aggregation and avoids additional query round-trips.
+Application statistics (total, per-stage counts, interview rate, offer rate) are computed in-memory from two queries: the user's applications with their stage category, and the user's stage catalogue. For typical user data volumes (fewer than 1,000 applications), this is faster than complex SQL aggregation and avoids additional query round-trips.
+
+The catalogue is fetched even though the applications alone carry the counts, because a stage with zero applications still has to appear in the pipeline ordering. Rates are derived from `StageCategory` rather than stage names — a user who renames "Offer" or adds "Final Round" must still get a correct offer rate, which a name-based rule could not deliver.
 
 ---
 

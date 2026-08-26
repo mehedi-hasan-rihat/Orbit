@@ -2,16 +2,24 @@ import { getApplications, getApplicationStats, getFollowUps } from "@/lib/action
 import { AnalyticsCharts } from "@/components/analytics-charts";
 import { KanbanBoard } from "@/components/kanban-board";
 import { FollowUps } from "@/components/follow-ups";
+import { getStageTypes } from "@/lib/actions/pipeline";
 import { StatusBadge } from "@/components/status-badge";
 import Link from "next/link";
 import { MobileNav } from "@/components/mobile-nav";
 
 export default async function DashboardPage() {
-  const [applications, stats, followUps] = await Promise.all([
+  const [applications, stats, followUps, stages] = await Promise.all([
     getApplications(),
     getApplicationStats(),
     getFollowUps(),
+    getStageTypes(),
   ]);
+
+  // Only enabled stages become board columns; disabled ones stay assignable
+  // but stop taking up horizontal space.
+  const boardStages = stages
+    .filter((s) => s.enabled)
+    .map((s) => ({ id: s.id, name: s.name, color: s.color }));
 
   const recentApplications = applications.slice(0, 5);
 
@@ -65,7 +73,10 @@ export default async function DashboardPage() {
               </Link>
             )}
           </div>
-          <KanbanBoard applications={JSON.parse(JSON.stringify(applications.slice(0, 20)))} />
+          <KanbanBoard
+            applications={JSON.parse(JSON.stringify(applications.slice(0, 20)))}
+            stages={boardStages}
+          />
         </section>
 
         {/* Recent Applications Section */}
@@ -114,7 +125,7 @@ export default async function DashboardPage() {
                       </td>
                       <td className="py-3 px-4 text-muted-foreground">{app.role}</td>
                       <td className="py-3 px-4">
-                        <StatusBadge status={app.status} />
+                        <StatusBadge application={app} />
                       </td>
                       <td className="py-3 px-4 text-muted-foreground hidden sm:table-cell">
                         {app.appliedDate

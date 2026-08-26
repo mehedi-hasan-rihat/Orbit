@@ -6,7 +6,7 @@ import { StatusBadge } from "./status-badge";
 import { ApplicationForm } from "./application-form";
 import { deleteApplication } from "@/lib/actions/applications";
 import { ExportButton } from "./export-button";
-import { QuickActions } from "./quick-actions";
+import { QuickActions, type StageOption } from "./quick-actions";
 import { useRouter } from "next/navigation";
 import clsx from "clsx";
 
@@ -21,11 +21,15 @@ interface Application {
   company: string;
   role: string;
   jobUrl: string | null;
-  status: string;
+  stageId: string | null;
+  status: string | null;
+  stage: { name: string; color: string } | null;
   appliedDate: Date | null;
   followUpDate: Date | null;
   notes: string | null;
   archived: boolean;
+  closed: boolean;
+  closedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
   tags: { tag: Tag }[];
@@ -34,36 +38,41 @@ interface Application {
 interface ApplicationsListProps {
   applications: Application[];
   availableTags: Tag[];
+  stages: StageOption[];
   search: string;
-  status: string;
+  stageId: string;
   sort: string;
   showArchived?: boolean;
+  showClosed?: boolean;
 }
 
 export function ApplicationsList({
   applications,
   availableTags,
+  stages,
   search,
-  status,
+  stageId,
   sort,
   showArchived,
+  showClosed,
 }: ApplicationsListProps) {
   const [showForm, setShowForm] = useState(false);
   const [editingApp, setEditingApp] = useState<Application | null>(null);
   const [searchInput, setSearchInput] = useState(search);
-  const [statusFilter, setStatusFilter] = useState(status);
+  const [stageFilter, setStageFilter] = useState(stageId);
   const [sortBy, setSortBy] = useState(sort);
   const router = useRouter();
 
-  function applyFilters(newSearch?: string, newStatus?: string, newSort?: string) {
+  function applyFilters(newSearch?: string, newStage?: string, newSort?: string) {
     const s = newSearch ?? searchInput;
-    const st = newStatus ?? statusFilter;
+    const st = newStage ?? stageFilter;
     const so = newSort ?? sortBy;
     const params = new URLSearchParams();
     if (s) params.set("search", s);
-    if (st && st !== "ALL") params.set("status", st);
+    if (st && st !== "ALL") params.set("stage", st);
     if (so) params.set("sort", so);
     if (showArchived) params.set("archived", "true");
+    if (showClosed) params.set("closed", "true");
     router.push(`/dashboard/applications?${params.toString()}`);
   }
 
@@ -72,6 +81,7 @@ export function ApplicationsList({
     await deleteApplication(id);
     router.refresh();
   }
+
 
   const isOverdue = (date: Date | null) =>
     date ? new Date(date) < new Date() : false;
@@ -82,13 +92,13 @@ export function ApplicationsList({
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="text-xl font-semibold tracking-tight">
-            {showArchived ? "Archived" : "Applications"}
+            {showArchived ? "Archived" : showClosed ? "Closed" : "Applications"}
           </h1>
           <p className="text-sm text-muted-foreground mt-0.5">
             {applications.length} {applications.length === 1 ? "application" : "applications"}
           </p>
         </div>
-        {!showArchived && (
+        {!showArchived && !showClosed && (
           <div className="flex items-center gap-2">
             <ExportButton />
             <button
@@ -109,18 +119,29 @@ export function ApplicationsList({
             onClick={() => {
               const params = new URLSearchParams();
               if (searchInput) params.set("search", searchInput);
-              if (statusFilter && statusFilter !== "ALL") params.set("status", statusFilter);
+              if (stageFilter && stageFilter !== "ALL") params.set("stage", stageFilter);
               if (sortBy) params.set("sort", sortBy);
               router.push(`/dashboard/applications?${params.toString()}`);
             }}
             className={clsx(
               "px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors",
-              !showArchived
+              !showArchived && !showClosed
                 ? "border-foreground text-foreground"
                 : "border-transparent text-muted-foreground hover:text-foreground"
             )}
           >
             Active
+          </button>
+          <button
+            onClick={() => router.push("/dashboard/applications?closed=true")}
+            className={clsx(
+              "px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors",
+              showClosed
+                ? "border-foreground text-foreground"
+                : "border-transparent text-muted-foreground hover:text-foreground"
+            )}
+          >
+            Closed
           </button>
           <button
             onClick={() => router.push("/dashboard/applications?archived=true")}
@@ -150,18 +171,14 @@ export function ApplicationsList({
             />
           </div>
           <select
-            value={statusFilter}
-            onChange={(e) => { setStatusFilter(e.target.value); applyFilters(undefined, e.target.value); }}
+            value={stageFilter}
+            onChange={(e) => { setStageFilter(e.target.value); applyFilters(undefined, e.target.value); }}
             className="flex h-8 rounded-md border bg-background px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
           >
-            <option value="ALL">All Statuses</option>
-            <option value="WISHLIST">Wishlist</option>
-            <option value="APPLIED">Applied</option>
-            <option value="SCREENING">Screening</option>
-            <option value="INTERVIEW">Interview</option>
-            <option value="OFFER">Offer</option>
-            <option value="REJECTED">Rejected</option>
-            <option value="WITHDRAWN">Withdrawn</option>
+            <option value="ALL">All Stages</option>
+            {stages.map((stage) => (
+              <option key={stage.id} value={stage.id}>{stage.name}</option>
+            ))}
           </select>
           <select
             value={sortBy}
@@ -181,19 +198,25 @@ export function ApplicationsList({
       {applications.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center border rounded-xl">
           <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center text-xl mb-4">
-            {showArchived ? "📦" : "📋"}
+            {showArchived ? "📦" : showClosed ? "🚪" : "📋"}
           </div>
           <p className="font-medium">
-            {showArchived ? "No archived applications" : "No applications yet"}
+            {showArchived
+              ? "No archived applications"
+              : showClosed
+              ? "No closed applications"
+              : "No applications yet"}
           </p>
           <p className="text-sm text-muted-foreground mt-1 max-w-xs">
-            {search || (status && status !== "ALL")
+            {search || (stageId && stageId !== "ALL")
               ? "No results match your filters. Try adjusting them."
               : showArchived
               ? "Applications you archive will appear here."
+              : showClosed
+              ? "Applications you close land here with their stage and history intact."
               : "Track your first job application to get started."}
           </p>
-          {!search && (!status || status === "ALL") && !showArchived && (
+          {!search && (!stageId || stageId === "ALL") && !showArchived && !showClosed && (
             <button
               onClick={() => setShowForm(true)}
               className="mt-5 h-8 px-4 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity"
@@ -232,7 +255,7 @@ export function ApplicationsList({
                     >
                       {app.company}
                     </Link>
-                    {app.followUpDate && isOverdue(app.followUpDate) && (
+                    {app.followUpDate && !app.closed && isOverdue(app.followUpDate) && (
                       <span className="inline-flex items-center rounded-full bg-red-100 text-red-600 dark:bg-red-900/40 dark:text-red-400 px-1.5 py-0.5 text-[10px] font-medium shrink-0">
                         Overdue
                       </span>
@@ -263,14 +286,14 @@ export function ApplicationsList({
                       rel="noopener noreferrer"
                       className="text-[10px] text-muted-foreground hover:underline"
                     >
-                      View posting ↗
+                      View Description ↗
                     </a>
                   )}
                 </div>
 
                 {/* Status */}
                 <div>
-                  <StatusBadge status={app.status} />
+                  <StatusBadge application={app} />
                 </div>
 
                 {/* Date */}
@@ -280,9 +303,14 @@ export function ApplicationsList({
                       ? new Date(app.appliedDate).toLocaleDateString([], { month: "short", day: "numeric", year: "numeric" })
                       : "—"}
                   </p>
-                  {app.followUpDate && (
+                  {app.followUpDate && !app.closed && (
                     <p className={clsx("text-[10px] mt-0.5", isOverdue(app.followUpDate) ? "text-destructive" : "text-muted-foreground")}>
                       ↻ {new Date(app.followUpDate).toLocaleDateString([], { month: "short", day: "numeric" })}
+                    </p>
+                  )}
+                  {app.closed && app.closedAt && (
+                    <p className="text-[10px] mt-0.5 text-muted-foreground">
+                      🚪 {new Date(app.closedAt).toLocaleDateString([], { month: "short", day: "numeric" })}
                     </p>
                   )}
                 </div>
@@ -307,13 +335,14 @@ export function ApplicationsList({
                   >
                     Delete
                   </button>
-                  {!showArchived && (
-                    <QuickActions
-                      applicationId={app.id}
-                      currentStatus={app.status}
-                      company={app.company}
-                    />
-                  )}
+                  <QuickActions
+                    applicationId={app.id}
+                    currentStageId={app.stageId}
+                    stages={stages}
+                    company={app.company}
+                    closed={app.closed}
+                    archived={app.archived}
+                  />
                 </div>
               </div>
             ))}
@@ -347,7 +376,7 @@ export function ApplicationsList({
                       </div>
                     )}
                   </div>
-                  <StatusBadge status={app.status} />
+                  <StatusBadge application={app} />
                 </div>
                 <div className="flex items-center gap-2 flex-wrap">
                   <Link
@@ -362,13 +391,14 @@ export function ApplicationsList({
                   >
                     Edit
                   </button>
-                  {!showArchived && (
-                    <QuickActions
-                      applicationId={app.id}
-                      currentStatus={app.status}
-                      company={app.company}
-                    />
-                  )}
+                  <QuickActions
+                    applicationId={app.id}
+                    currentStageId={app.stageId}
+                    stages={stages}
+                    company={app.company}
+                    closed={app.closed}
+                    archived={app.archived}
+                  />
                 </div>
               </div>
             ))}
@@ -378,12 +408,13 @@ export function ApplicationsList({
 
       {/* Modals */}
       {showForm && (
-        <ApplicationForm availableTags={availableTags} onClose={() => setShowForm(false)} />
+        <ApplicationForm availableTags={availableTags} stages={stages} onClose={() => setShowForm(false)} />
       )}
       {editingApp && (
         <ApplicationForm
           application={editingApp}
           availableTags={availableTags}
+          stages={stages}
           onClose={() => setEditingApp(null)}
         />
       )}

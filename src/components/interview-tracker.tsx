@@ -2,61 +2,94 @@
 
 import { useState } from "react";
 import { createInterview, updateInterview, deleteInterview } from "@/lib/actions/interviews";
+import { createStageType } from "@/lib/actions/pipeline";
+import { INTERVIEW_OUTCOMES, ROUND_CATEGORIES } from "@/lib/validations";
+import { outcomeDisplay } from "@/lib/outcome-display";
+import { resolveStageLabel } from "@/lib/stage-label";
 import { DatePicker } from "./date-picker";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import clsx from "clsx";
 
+export interface StageTypeOption {
+  id: string;
+  name: string;
+  category: string;
+  enabled: boolean;
+}
+
 interface Interview {
   id: string;
-  type: string;
+  stageTypeId: string | null;
+  stageType: StageTypeOption | null;
   customType: string | null;
+  type: string | null;
   round: number;
   scheduledAt: Date | null;
   notes: string | null;
   outcome: string | null;
 }
 
-const typeLabels: Record<string, string> = {
-  PHONE_SCREEN: "Phone Screen",
-  ONSITE: "Onsite",
-  PANEL: "Panel",
-  ASSESSMENT: "Assessment",
-  TASK: "Task/Assignment",
-  FINAL: "Final Round",
-  OTHER: "Other",
-};
-
-const outcomeConfig: Record<string, { label: string; className: string }> = {
-  PENDING: { label: "Pending", className: "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400" },
-  PASSED: { label: "Passed ✓", className: "bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300" },
-  FAILED: { label: "Failed", className: "bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300" },
-  CANCELLED: { label: "Cancelled", className: "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400" },
-};
+const NEW_TYPE = "__new__";
 
 interface InterviewFormProps {
   applicationId: string;
+  stageTypes: StageTypeOption[];
   interview?: Interview;
   onClose: () => void;
 }
 
-function InterviewForm({ applicationId, interview, onClose }: InterviewFormProps) {
+function InterviewForm({ applicationId, stageTypes, interview, onClose }: InterviewFormProps) {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string[]>>({});
-  const [selectedType, setSelectedType] = useState(interview?.type || "PHONE_SCREEN");
+  const [formError, setFormError] = useState<string | null>(null);
   const router = useRouter();
+
+  // Only stages you actually sit an interview for. OPEN and CLOSED stages
+  // (Wishlist, Applied, Rejected…) are application lifecycle states, not round
+  // types. A hidden or out-of-category stage stays selectable while it is the one
+  // this round already uses — editing the notes should not silently retype it.
+  const options = stageTypes.filter(
+    (t) =>
+      (t.enabled && ROUND_CATEGORIES.includes(t.category as (typeof ROUND_CATEGORIES)[number])) ||
+      t.id === interview?.stageTypeId,
+  );
+
+  const [selectedType, setSelectedType] = useState(
+    interview?.stageTypeId ?? options[0]?.id ?? NEW_TYPE,
+  );
+  const [newTypeName, setNewTypeName] = useState("");
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setLoading(true);
     setErrors({});
+    setFormError(null);
 
     const formData = new FormData(e.currentTarget);
+
+    // Creating a type inline: make it first, then point the stage at it.
+    if (selectedType === NEW_TYPE) {
+      const typeForm = new FormData();
+      typeForm.set("name", newTypeName);
+      const created = await createStageType(typeForm);
+
+      if ("error" in created) {
+        setErrors(created.error as Record<string, string[]>);
+        setLoading(false);
+        return;
+      }
+      formData.set("stageTypeId", created.id);
+    }
+
     const result = interview
       ? await updateInterview(interview.id, applicationId, formData)
       : await createInterview(applicationId, formData);
 
     if (result.error && typeof result.error === "object") {
       setErrors(result.error as Record<string, string[]>);
+    } else if (typeof result.error === "string") {
+      setFormError(result.error);
     } else if (result.success) {
       router.refresh();
       onClose();
@@ -79,21 +112,25 @@ function InterviewForm({ applicationId, interview, onClose }: InterviewFormProps
             <div className="space-y-2">
               <label className="text-sm font-medium">Type *</label>
               <select
-                name="type"
+                name="stageTypeId"
                 value={selectedType}
                 onChange={(e) => setSelectedType(e.target.value)}
                 className="flex h-9 w-full rounded-md border bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
               >
-                {Object.entries(typeLabels).map(([value, label]) => (
-                  <option key={value} value={value}>{label}</option>
+                {options.map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {t.name}
+                    {t.enabled ? "" : " (disabled)"}
+                  </option>
                 ))}
+                <option value={NEW_TYPE}>+ New type…</option>
               </select>
-              {selectedType === "OTHER" && (
+              {selectedType === NEW_TYPE && (
                 <input
-                  name="customType"
                   type="text"
-                  defaultValue={interview?.customType || ""}
-                  placeholder="Enter interview type..."
+                  value={newTypeName}
+                  onChange={(e) => setNewTypeName(e.target.value)}
+                  placeholder="Name your stage type…"
                   required
                   className="flex h-9 w-full rounded-md border bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring mt-1"
                 />
@@ -134,10 +171,9 @@ function InterviewForm({ applicationId, interview, onClose }: InterviewFormProps
                 defaultValue={interview?.outcome || "PENDING"}
                 className="flex h-9 w-full rounded-md border bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
               >
-                <option value="PENDING">Pending</option>
-                <option value="PASSED">Passed</option>
-                <option value="FAILED">Failed</option>
-                <option value="CANCELLED">Cancelled</option>
+                {INTERVIEW_OUTCOMES.map((o) => (
+                  <option key={o} value={o}>{outcomeDisplay(o).label}</option>
+                ))}
               </select>
             </div>
           </div>
@@ -153,8 +189,11 @@ function InterviewForm({ applicationId, interview, onClose }: InterviewFormProps
             />
           </div>
 
+          {formError && <p className="text-xs text-destructive">{formError}</p>}
           {Object.keys(errors).length > 0 && (
-            <p className="text-xs text-destructive">Please fill in required fields correctly.</p>
+            <p className="text-xs text-destructive">
+              {Object.values(errors).flat()[0] ?? "Please fill in required fields correctly."}
+            </p>
           )}
 
           <div className="flex justify-end gap-2">
@@ -182,9 +221,11 @@ function InterviewForm({ applicationId, interview, onClose }: InterviewFormProps
 export function InterviewTracker({
   applicationId,
   interviews,
+  stageTypes,
 }: {
   applicationId: string;
   interviews: Interview[];
+  stageTypes: StageTypeOption[];
 }) {
   const [showForm, setShowForm] = useState(false);
   const [editingInterview, setEditingInterview] = useState<Interview | null>(null);
@@ -200,12 +241,20 @@ export function InterviewTracker({
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold">Interview Rounds</h2>
-        <button
-          onClick={() => setShowForm(true)}
-          className="h-8 px-3 rounded-md bg-primary text-primary-foreground text-xs font-medium hover:opacity-90 transition-colors"
-        >
-          + Add Round
-        </button>
+        <div className="flex items-center gap-2">
+          <Link
+            href="/dashboard/pipeline"
+            className="h-8 px-3 inline-flex items-center rounded-md border text-xs font-medium hover:bg-accent transition-colors"
+          >
+            Manage pipeline
+          </Link>
+          <button
+            onClick={() => setShowForm(true)}
+            className="h-8 px-3 rounded-md bg-primary text-primary-foreground text-xs font-medium hover:opacity-90 transition-colors"
+          >
+            + Add Round
+          </button>
+        </div>
       </div>
 
       {interviews.length === 0 ? (
@@ -223,78 +272,79 @@ export function InterviewTracker({
         </div>
       ) : (
         <div className="space-y-3">
-          {interviews.map((interview) => (
-            <div
-              key={interview.id}
-              className="border rounded-lg p-4 space-y-3"
-            >
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center justify-center w-7 h-7 rounded-full bg-muted text-xs font-bold">
-                    {interview.round}
+          {interviews.map((interview) => {
+            const outcome = outcomeDisplay(interview.outcome);
+            return (
+              <div
+                key={interview.id}
+                className="border rounded-lg p-4 space-y-3"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center justify-center w-7 h-7 rounded-full bg-muted text-xs font-bold">
+                      {interview.round}
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium">{resolveStageLabel(interview)}</p>
+                      {interview.scheduledAt && (
+                        <p className="text-xs text-muted-foreground">
+                          {new Date(interview.scheduledAt).toLocaleString([], {
+                            month: "short",
+                            day: "numeric",
+                            year: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </p>
+                      )}
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-sm font-medium">
-                      {interview.type === "OTHER" && interview.customType
-                        ? interview.customType
-                        : typeLabels[interview.type]}
-                    </p>
-                    {interview.scheduledAt && (
-                      <p className="text-xs text-muted-foreground">
-                        {new Date(interview.scheduledAt).toLocaleString([], {
-                          month: "short",
-                          day: "numeric",
-                          year: "numeric",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </p>
-                    )}
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={clsx(
+                        "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium",
+                        outcome.className
+                      )}
+                    >
+                      {outcome.label}
+                    </span>
+                    <button
+                      onClick={() => setEditingInterview(interview)}
+                      className="text-xs text-muted-foreground hover:text-foreground"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleDelete(interview.id)}
+                      className="text-xs text-destructive hover:text-destructive/80"
+                    >
+                      Delete
+                    </button>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span
-                    className={clsx(
-                      "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium",
-                      outcomeConfig[interview.outcome || "PENDING"]?.className
-                    )}
-                  >
-                    {outcomeConfig[interview.outcome || "PENDING"]?.label}
-                  </span>
-                  <button
-                    onClick={() => setEditingInterview(interview)}
-                    className="text-xs text-muted-foreground hover:text-foreground"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleDelete(interview.id)}
-                    className="text-xs text-destructive hover:text-destructive/80"
-                  >
-                    Delete
-                  </button>
-                </div>
-              </div>
 
-              {interview.notes && (
-                <p className="text-xs text-muted-foreground border-t pt-3 whitespace-pre-wrap">
-                  {interview.notes}
-                </p>
-              )}
-            </div>
-          ))}
+                {interview.notes && (
+                  <p className="text-xs text-muted-foreground border-t pt-3 whitespace-pre-wrap">
+                    {interview.notes}
+                  </p>
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
 
       {showForm && (
         <InterviewForm
           applicationId={applicationId}
+          stageTypes={stageTypes}
           onClose={() => setShowForm(false)}
         />
       )}
       {editingInterview && (
         <InterviewForm
           applicationId={applicationId}
+          stageTypes={stageTypes}
           interview={editingInterview}
           onClose={() => setEditingInterview(null)}
         />

@@ -14,19 +14,24 @@ Returns aggregate metrics for the dashboard.
 ```typescript
 {
   total: number;           // non-archived application count
-  statusCounts: {
-    WISHLIST: number;
-    APPLIED: number;
-    INTERVIEW: number;
-    OFFER: number;
-    REJECTED: number;
-    ARCHIVED: number;
-  };
-  interviewRate: number;   // (INTERVIEW + OFFER) / total * 100
-  offerRate: number;       // OFFER / total * 100
+  stageCounts: Array<{     // one entry per stage, in the user's pipeline order
+    id: string;
+    name: string;
+    color: string;
+    category: StageCategory;
+    value: number;
+  }>;
+  interviewing: number;    // applications in an INTERVIEWING stage
+  offers: number;          // applications in a SUCCESS stage
+  interviewRate: number;   // (interviewing + offers) / total * 100
+  offerRate: number;       // offers / total * 100
   thisWeek: number;        // apps created in last 7 days
 }
 ```
+
+`stageCounts` includes stages with a `value` of `0` — the caller decides whether to
+drop them. Rates are derived from `StageCategory`, never from stage names, so they
+survive a rename or a custom stage.
 
 ---
 
@@ -63,7 +68,7 @@ Generates a full CSV export of all applications.
 |--------|--------|
 | Company | `application.company` |
 | Role | `application.role` |
-| Status | `application.status` |
+| Status | Stage name (`application.stage.name`), falling back to the legacy `status` for pre-pipeline rows. The header is still `Status` — it is an external format and renaming the column would break existing spreadsheets. |
 | Applied Date | `application.appliedDate` (YYYY-MM-DD or empty) |
 | Follow-up Date | `application.followUpDate` (YYYY-MM-DD or empty) |
 | Job URL | `application.jobUrl` or empty |

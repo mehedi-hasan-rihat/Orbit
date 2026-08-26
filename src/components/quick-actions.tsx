@@ -1,28 +1,45 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import { updateApplicationStatus, archiveApplication, addQuickNote } from "@/lib/actions/applications";
+import {
+  updateApplicationStage,
+  archiveApplication,
+  unarchiveApplication,
+  closeApplication,
+  reopenApplication,
+  addQuickNote,
+} from "@/lib/actions/applications";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createPortal } from "react-dom";
 
-const STAGES = [
-  { value: "WISHLIST", label: "Wishlist" },
-  { value: "APPLIED", label: "Applied" },
-  { value: "SCREENING", label: "Screening" },
-  { value: "INTERVIEW", label: "Interview" },
-  { value: "OFFER", label: "Offer" },
-  { value: "REJECTED", label: "Rejected" },
-  { value: "WITHDRAWN", label: "Withdrawn" },
-];
+export interface StageOption {
+  id: string;
+  name: string;
+  color: string;
+  // Present on the pipeline rows this is fed from. Hidden stages stay
+  // assignable via the form but are kept out of the quick move list, matching
+  // the board and the detail-page picker.
+  enabled?: boolean;
+}
 
 interface QuickActionsProps {
   applicationId: string;
-  currentStatus: string;
+  currentStageId: string | null;
+  stages: StageOption[];
   company: string;
+  closed?: boolean;
+  archived?: boolean;
 }
 
-export function QuickActions({ applicationId, currentStatus, company }: QuickActionsProps) {
+export function QuickActions({
+  applicationId,
+  currentStageId,
+  stages,
+  company,
+  closed = false,
+  archived = false,
+}: QuickActionsProps) {
   const [open, setOpen] = useState(false);
   const [showNoteInput, setShowNoteInput] = useState(false);
   const [note, setNote] = useState("");
@@ -61,30 +78,42 @@ export function QuickActions({ applicationId, currentStatus, company }: QuickAct
       }
     }
 
-    function handleScroll() {
-      setOpen(false);
-      setShowNoteInput(false);
+    // Capture-phase, so this also fires for the menu's own scroll container.
+    // The menu is position:fixed and anchored to the button by a one-off
+    // measurement, so page scroll has to re-anchor it — but scrolling *within*
+    // the menu must not move or close it.
+    function handleScroll(e: Event) {
+      if (dropdownRef.current?.contains(e.target as Node)) return;
+
+      // Once the trigger has scrolled out of view there is nothing to anchor
+      // to, so close rather than leave the menu floating.
+      const rect = buttonRef.current?.getBoundingClientRect();
+      if (!rect || rect.bottom < 0 || rect.top > window.innerHeight) {
+        setOpen(false);
+        setShowNoteInput(false);
+        return;
+      }
+
+      updatePosition();
     }
 
     document.addEventListener("mousedown", handleClickOutside);
     window.addEventListener("scroll", handleScroll, true);
+    window.addEventListener("resize", updatePosition);
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
       window.removeEventListener("scroll", handleScroll, true);
+      window.removeEventListener("resize", updatePosition);
     };
   }, [open, updatePosition]);
 
-  async function handleStageChange(status: string) {
-    setLoading(true);
-    await updateApplicationStatus(applicationId, status);
-    setOpen(false);
-    setLoading(false);
-    router.refresh();
+  async function handleStageChange(stageId: string) {
+    await run(() => updateApplicationStage(applicationId, stageId));
   }
 
-  async function handleArchive() {
+  async function run(action: () => Promise<unknown>) {
     setLoading(true);
-    await archiveApplication(applicationId);
+    await action();
     setOpen(false);
     setLoading(false);
     router.refresh();
@@ -127,15 +156,20 @@ export function QuickActions({ applicationId, currentStatus, company }: QuickAct
             {/* Move Stage */}
             <div className="px-2 pt-2 pb-1">
               <p className="text-xs font-medium text-muted-foreground px-2 pb-1">Move to stage</p>
-              {STAGES.filter((s) => s.value !== currentStatus).map((stage) => (
+              {stages
+                .filter((s) => s.id !== currentStageId && s.enabled !== false)
+                .map((stage) => (
                 <button
-                  key={stage.value}
-                  onClick={() => handleStageChange(stage.value)}
+                  key={stage.id}
+                  onClick={() => handleStageChange(stage.id)}
                   disabled={loading}
                   className="flex w-full items-center gap-2 px-2 py-1.5 text-sm rounded-md hover:bg-accent transition-colors"
                 >
-                  <span className="text-xs text-muted-foreground">→</span>
-                  {stage.label}
+                  <span
+                    className="w-2 h-2 rounded-full shrink-0"
+                    style={{ backgroundColor: stage.color }}
+                  />
+                  {stage.name}
                 </button>
               ))}
             </div>
@@ -190,14 +224,45 @@ export function QuickActions({ applicationId, currentStatus, company }: QuickAct
 
             <div className="border-t my-1" />
 
+            {/* Close — ends the process but keeps the stage and history as-is */}
+            {closed ? (
+              <button
+                onClick={() => run(() => reopenApplication(applicationId))}
+                disabled={loading}
+                className="flex w-full items-center gap-2 px-4 py-2 text-sm text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+              >
+                <span>↩️</span> Reopen
+              </button>
+            ) : (
+              <button
+                onClick={() => run(() => closeApplication(applicationId))}
+                disabled={loading}
+                className="flex w-full items-center gap-2 px-4 py-2 text-sm text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+                title="Ends the process. Stage, notes and rounds are kept exactly as they are."
+              >
+                <span>🚪</span> Close
+              </button>
+            )}
+
             {/* Archive */}
-            <button
-              onClick={handleArchive}
-              disabled={loading}
-              className="flex w-full items-center gap-2 px-4 py-2 text-sm text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
-            >
-              <span>📦</span> Archive
-            </button>
+            {archived ? (
+              <button
+                onClick={() => run(() => unarchiveApplication(applicationId))}
+                disabled={loading}
+                className="flex w-full items-center gap-2 px-4 py-2 text-sm text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+              >
+                <span>📤</span> Unarchive
+              </button>
+            ) : (
+              <button
+                onClick={() => run(() => archiveApplication(applicationId))}
+                disabled={loading}
+                className="flex w-full items-center gap-2 px-4 py-2 text-sm text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+                title="Hides it from the list. Everything else is left alone."
+              >
+                <span>📦</span> Archive
+              </button>
+            )}
           </div>
         </div>,
         document.body

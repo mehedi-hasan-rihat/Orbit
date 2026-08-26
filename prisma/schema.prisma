@@ -18,14 +18,15 @@ model User {
   passwordResetToken  String?       @unique
   passwordResetExpiry DateTime?
   theme               String        @default("system")
-  pipelineStages      String?
   createdAt           DateTime      @default(now())
   updatedAt           DateTime      @updatedAt
   applications        Application[]
   tags                Tag[]
   notifications       Notification[]
+  stageTypes          PipelineStageType[]
 }
 
+// Legacy application stage. Superseded by PipelineStageType.
 enum ApplicationStatus {
   WISHLIST
   APPLIED
@@ -44,13 +45,21 @@ model Application {
   company       String
   role          String
   jobUrl        String?
-  status        ApplicationStatus @default(WISHLIST)
+  stageId       String?
+  stage         PipelineStageType? @relation(fields: [stageId], references: [id], onDelete: Restrict)
+  status        ApplicationStatus? // Legacy — pre-pipeline rows only
   appliedDate   DateTime?
   notes         String?
   followUpDate  DateTime?
   resumeUrl     String?
   coverLetterUrl String?
   archived      Boolean           @default(false)
+  // Closing ends the process without rewriting history: stageId, notes, tags
+  // and interview rounds are all left exactly as they were, so a card that
+  // died at "Technical Interview" still says so. Orthogonal to `archived`,
+  // which is only about getting a row out of the list.
+  closed        Boolean           @default(false)
+  closedAt      DateTime?
   createdAt     DateTime          @default(now())
   updatedAt     DateTime          @updatedAt
   activities    Activity[]
@@ -58,8 +67,9 @@ model Application {
   tags          ApplicationTag[]
 
   @@index([userId])
-  @@index([userId, status])
+  @@index([userId, stageId])
   @@index([userId, archived])
+  @@index([userId, closed])
   @@index([company])
 }
 
@@ -98,6 +108,35 @@ model Tag {
   @@index([userId])
 }
 
+enum StageCategory {
+  OPEN          // not yet in process — Wishlist, Applied
+  INTERVIEWING  // actively progressing through rounds
+  SUCCESS       // Offer
+  CLOSED        // Rejected, Withdrawn, Archived
+}
+
+// User-owned catalogue of interview stage types. Seeded with defaults on first
+// read (see src/lib/actions/pipeline.ts) so existing users get a pipeline too.
+model PipelineStageType {
+  id         String      @id @default(cuid())
+  userId     String
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name         String
+  color        String        @default("#6b7280")
+  category     StageCategory @default(INTERVIEWING)
+  order        Int           @default(0)
+  enabled      Boolean       @default(true)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  interviews   Interview[]
+  applications Application[]
+
+  @@unique([userId, name])
+  @@index([userId])
+}
+
+// Legacy stage type. Superseded by PipelineStageType; kept nullable so rows
+// written before the pipeline rework still render their original label.
 enum InterviewType {
   PHONE_SCREEN
   ONSITE
@@ -112,16 +151,20 @@ model Interview {
   id            String        @id @default(cuid())
   applicationId String
   application   Application   @relation(fields: [applicationId], references: [id], onDelete: Cascade)
-  type          InterviewType
-  customType    String?       // User-provided label when type is OTHER
+  stageTypeId   String?
+  stageType     PipelineStageType? @relation(fields: [stageTypeId], references: [id], onDelete: SetNull)
+  type          InterviewType?     // Legacy — pre-rework rows only
+  customType    String?            // Free-form label: legacy OTHER rows, and the
+                                   // snapshot taken when a stage type is deleted
   round         Int           @default(1)
   scheduledAt   DateTime?
   notes         String?
-  outcome       String?       // PASSED, FAILED, PENDING, CANCELLED
+  outcome       String?       // One of INTERVIEW_OUTCOMES in src/lib/validations.ts
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
 
   @@index([applicationId])
+  @@index([stageTypeId])
 }
 
 enum NotificationType {

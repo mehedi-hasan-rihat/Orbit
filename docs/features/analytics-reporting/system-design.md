@@ -4,21 +4,35 @@
 
 ### `getApplicationStats()`
 
-Fetches all non-archived applications for the user (only `status` and `createdAt` fields for efficiency).
+Fetches two things in parallel: the user's non-archived applications (with each
+one's stage category) and the user's stage catalogue.
 
 ```typescript
-const applications = await prisma.application.findMany({
-  where: { userId, archived: false },
-  select: { status: true, createdAt: true },
-});
+const [applications, stages] = await Promise.all([
+  prisma.application.findMany({
+    where: { userId, archived: false },
+    select: { stageId: true, createdAt: true, stage: { select: { category: true } } },
+  }),
+  prisma.pipelineStageType.findMany({ where: { userId }, orderBy: [{ order: "asc" }, { name: "asc" }] }),
+]);
 ```
+
+The catalogue query looks redundant — the applications already carry their stage —
+but it is what lets an empty stage appear in the distribution at all, and in the
+right position. Counting only what applications reference would silently drop every
+stage the user has not used yet.
 
 Computes:
 - `total` — array length
-- `statusCounts` — loops through and counts each status
-- `interviewRate` — `(INTERVIEW + OFFER) / total * 100`
-- `offerRate` — `OFFER / total * 100`
+- `stageCounts` — counts keyed by `stageId`, then mapped over the catalogue so order and colour come from the pipeline
+- `interviewing` / `offers` — counts by `StageCategory.INTERVIEWING` / `SUCCESS`
+- `interviewRate` — `(interviewing + offers) / total * 100`
+- `offerRate` — `offers / total * 100`
 - `thisWeek` — filter where `createdAt >= now - 7 days`
+
+Categories rather than names are what make these rates survive customisation: a user
+who renames "Offer" to "Got the job", or adds a "Final Round" stage, still gets
+correct numbers. A name-based rule would quietly return zero.
 
 All computation happens in-memory (no complex SQL aggregation). This is fine for per-user data (typically hundreds of records, not millions).
 
@@ -26,17 +40,21 @@ All computation happens in-memory (no complex SQL aggregation). This is fine for
 
 ### `getCompanyStats()`
 
-Fetches all applications (including archived) with `company` and `status`.
+Fetches all applications (including archived) with `company` and the stage category.
 
 Groups by company name:
 ```typescript
 const companyMap: Record<string, { total, interviews, offers }> = {};
 for (const app of applications) {
   companyMap[app.company].total++;
-  if (app.status === "INTERVIEW") companyMap[app.company].interviews++;
-  if (app.status === "OFFER") companyMap[app.company].offers++;
+  if (app.stage?.category === StageCategory.INTERVIEWING) companyMap[app.company].interviews++;
+  if (app.stage?.category === StageCategory.SUCCESS) companyMap[app.company].offers++;
 }
 ```
+
+This widened slightly: the old rule counted only applications sitting in `INTERVIEW`,
+so one parked in `SCREENING` scored zero interviews for that company. Every
+interviewing stage now counts.
 
 Returns sorted by total descending.
 

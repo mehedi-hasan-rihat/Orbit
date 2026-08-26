@@ -22,7 +22,8 @@ model Application {
   company        String
   role           String
   jobUrl         String?
-  status         ApplicationStatus @default(WISHLIST)
+  stageId        String?            // → PipelineStageType, onDelete: Restrict
+  status         ApplicationStatus? // Legacy — pre-pipeline rows only, never written
   appliedDate    DateTime?
   followUpDate   DateTime?
   notes          String?
@@ -36,17 +37,23 @@ model Application {
   tags           ApplicationTag[]
 }
 
+// Legacy. Retained because pre-pipeline rows still hold these values and
+// removing an enum value requires recreating the type with casting.
 enum ApplicationStatus {
   WISHLIST | APPLIED | SCREENING | INTERVIEW | OFFER | REJECTED | WITHDRAWN | ARCHIVED
 }
 ```
+
+An application's stage is a row the user owns, not an enum value. The enum column
+survives as a read-only fallback: a backfill migration matched every existing row to
+a stage, and `resolveStage()` reads `status` only if `stageId` is somehow absent.
 
 ### Indexes
 
 | Index | Purpose |
 |-------|---------|
 | `(userId)` | Fetch all applications for a user |
-| `(userId, status)` | Status-filtered queries |
+| `(userId, stageId)` | Stage-filtered queries |
 | `(userId, archived)` | Active vs archived split |
 | `(company)` | Company search and grouping |
 
@@ -59,7 +66,7 @@ applicationSchema = z.object({
   company:      z.string().min(1).max(200),
   role:         z.string().min(1).max(200),
   jobUrl:       z.string().url().optional().or(z.literal("")),
-  status:       z.enum([...8 statuses]),
+  stageId:      z.string().min(1),   // ownership verified in the action, not here
   appliedDate:  z.string().optional().or(z.literal("")),
   followUpDate: z.string().optional().or(z.literal("")),
   notes:        z.string().max(5000).optional().or(z.literal("")),
@@ -91,7 +98,7 @@ applicationSchema = z.object({
 2. Zod validate formData
 3. prisma.application.findFirst({ id, userId }) → ownership check
 4. Compare old vs new values:
-   - status changed → push STATUS_CHANGED activity
+   - stage changed → push STATUS_CHANGED activity (description uses stage names)
    - notes changed → push NOTE_ADDED activity
    - followUpDate changed → push FOLLOW_UP_SET activity
 5. Delete all existing ApplicationTag records for this application
@@ -118,18 +125,18 @@ Calls `prisma.application.delete()`. Cascade rules automatically remove all rela
 The `getApplications(params)` action constructs a dynamic Prisma `where` clause:
 
 - **search**: `{ OR: [{ company: { contains, mode: "insensitive" } }, { role: { contains, mode: "insensitive" } }] }` — maps to PostgreSQL `ILIKE %term%`
-- **status**: exact enum match (skipped if value is "ALL")
+- **stageId**: exact match on the stage row id (skipped if value is "ALL")
 - **tag**: `{ tags: { some: { tagId } } }` — relation filter
 - **archived**: boolean flag (defaults to `false`)
 - **sort**: maps to Prisma `orderBy` (createdAt, updatedAt, company, appliedDate, followUpDate)
 
 ### Application Detail
 
-Returns a single application with `activities` (ordered by `createdAt` desc) and `tags` with tag details included.
+Returns a single application with `activities` (ordered by `createdAt` desc), `tags` with tag details, and the `stage` relation. The stage include is required by every caller that renders a status badge.
 
 ### Statistics
 
-Fetches all non-archived applications selecting only `status` and `createdAt`. Computes totals, status counts, interview rate, offer rate, and this-week count in-memory. No complex SQL aggregation is required.
+Fetches all non-archived applications with their stage category, plus the user's stage catalogue. Computes totals, per-stage counts, interview rate, offer rate, and this-week count in-memory. Rates key off `StageCategory`, not stage names. No complex SQL aggregation is required.
 
 ### Duplicate Check
 
@@ -140,7 +147,8 @@ prisma.application.findFirst({
     company: { equals: company, mode: "insensitive" },
     role:    { equals: role,    mode: "insensitive" },
   },
-  select: { id: true, company: true, role: true, status: true },
+  select: { id: true, company: true, role: true, status: true,
+            stage: { select: { name: true, color: true } } },
 })
 ```
 
