@@ -195,6 +195,7 @@ export function ApplicationForm({ application, availableTags, stages, onClose }:
                   </option>
                 ))}
               </select>
+              {errors.stageId && <p className="text-xs text-destructive">{errors.stageId[0]}</p>}
             </div>
 
             <div className="space-y-2">
@@ -207,6 +208,17 @@ export function ApplicationForm({ application, availableTags, stages, onClose }:
               />
             </div>
 
+          </div>
+
+          <div className="space-y-2">
+            <label htmlFor="followUpDate" className="text-sm font-medium">Follow-up Date</label>
+            <DatePicker
+              id="followUpDate"
+              name="followUpDate"
+              placeholder="Pick follow-up date"
+              value={application?.followUpDate ? new Date(application.followUpDate).toISOString().split("T")[0] : ""}
+            />
+            {errors.followUpDate && <p className="text-xs text-destructive">{errors.followUpDate[0]}</p>}
           </div>
 
           {/* Tags */}

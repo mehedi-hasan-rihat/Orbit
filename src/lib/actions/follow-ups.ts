@@ -20,7 +20,7 @@ async function findOwnedApplication(applicationId: string, userId: string) {
 // Application.followUpDate is a mirror of the soonest still-open follow-up. The
 // list sort, the board and the reminder queries all read that one column, so it
 // is recomputed after every write here rather than left to drift.
-async function syncMirror(applicationId: string) {
+export async function syncMirror(applicationId: string) {
   const soonest = await prisma.followUp.findFirst({
     where: { applicationId, done: false },
     orderBy: { dueAt: "asc" },

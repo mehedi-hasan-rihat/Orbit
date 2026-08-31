@@ -6,6 +6,7 @@ import { applicationSchema, updateStageSchema } from "@/lib/validations";
 import { revalidatePath } from "next/cache";
 import { resolveStage } from "@/lib/stage-display";
 import { ActivityType, StageCategory } from "@/generated/prisma/enums";
+import { syncMirror } from "@/lib/actions/follow-ups";
 
 async function requireUser() {
   const session = await getSession();
@@ -51,9 +52,7 @@ export async function createApplication(formData: FormData) {
       jobUrl: data.jobUrl || null,
       stageId: stage.id,
       appliedDate: data.appliedDate ? new Date(data.appliedDate) : null,
-      // Mirror of the soonest open FollowUp — see the follow-up actions. The
-      // row itself is created below, so the two never disagree.
-      followUpDate: data.followUpDate ? new Date(data.followUpDate) : null,
+      notes: data.notes || null,
       followUps: data.followUpDate
         ? {
             create: {
@@ -62,7 +61,6 @@ export async function createApplication(formData: FormData) {
             },
           }
         : undefined,
-      notes: data.notes || null,
       activities: {
         create: {
           type: ActivityType.CREATED,
@@ -74,6 +72,11 @@ export async function createApplication(formData: FormData) {
       } : undefined,
     },
   });
+
+  // Sync the followUpDate mirror from the FollowUp rows we just created.
+  if (data.followUpDate) {
+    await syncMirror(application.id);
+  }
 
   revalidatePath("/dashboard");
   return { success: true, id: application.id };
@@ -151,6 +154,35 @@ export async function updateApplication(id: string, formData: FormData) {
       } : undefined,
     },
   });
+
+  // If a follow-up date was provided, upsert against the soonest open follow-up
+  // (the one most likely created from this same form). If none exists yet, create
+  // one — respecting the cap. Then let syncMirror recompute the mirror column.
+  if (data.followUpDate) {
+    const newDueAt = new Date(data.followUpDate);
+    const soonest = await prisma.followUp.findFirst({
+      where: { applicationId: id, done: false },
+      orderBy: { dueAt: "asc" },
+    });
+
+    if (soonest) {
+      await prisma.followUp.update({
+        where: { id: soonest.id },
+        data: { dueAt: newDueAt },
+      });
+    } else {
+      // No open follow-up exists — create one (cap check: 0 open, so always safe)
+      await prisma.followUp.create({
+        data: {
+          applicationId: id,
+          title: `Follow up with ${data.company}`,
+          dueAt: newDueAt,
+        },
+      });
+    }
+
+    await syncMirror(id);
+  }
 
   revalidatePath("/dashboard");
   return { success: true };
