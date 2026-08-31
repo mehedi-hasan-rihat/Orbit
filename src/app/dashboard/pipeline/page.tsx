@@ -1,7 +1,5 @@
 import { getStageTypesWithUsage } from "@/lib/actions/pipeline";
 import { PipelineManager } from "@/components/pipeline-manager";
-import { INTERVIEW_OUTCOMES } from "@/lib/validations";
-import { outcomeDisplay } from "@/lib/outcome-display";
 
 export default async function PipelinePage() {
   const stageTypes = await getStageTypesWithUsage();
@@ -29,29 +27,8 @@ export default async function PipelinePage() {
                 <h3 className="text-sm font-semibold">How the pipeline works</h3>
                 <p className="text-xs text-muted-foreground mt-1">
                   Your stages are the columns on the board — drag a card between them
-                  to move an application. The same stages file your interview rounds,
-                  each with a <strong>round number</strong> and an <strong>outcome</strong>.
-                </p>
-              </div>
-
-              <div className="space-y-3 border-t pt-4">
-                <p className="text-xs font-semibold">Outcomes</p>
-                <div className="flex flex-wrap gap-1.5">
-                  {INTERVIEW_OUTCOMES.map((o) => {
-                    const d = outcomeDisplay(o);
-                    return (
-                      <span
-                        key={o}
-                        className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${d.className}`}
-                      >
-                        {d.label}
-                      </span>
-                    );
-                  })}
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Rounds left <em>Pending</em> or <em>Scheduled</em> are the ones Orbit
-                  sends you reminders for.
+                  to move an application. Each application also carries a stage outcome
+                  (Scheduled, Passed, Failed, etc.) that you set when editing it.
                 </p>
               </div>
 
@@ -59,20 +36,22 @@ export default async function PipelinePage() {
                 <p className="text-xs font-semibold">Categories</p>
                 <p className="text-xs text-muted-foreground">
                   A stage&rsquo;s category is what the numbers are built on:{" "}
-                  <strong className="text-foreground">In process</strong> and{" "}
-                  <strong className="text-foreground">Offer</strong> drive your interview
-                  and offer rates, and <strong className="text-foreground">Closed</strong>{" "}
-                  stages stop chasing follow-ups.
+                  <strong className="text-foreground">In process</strong> drives your
+                  interview rate,{" "}
+                  <strong className="text-foreground">Final stage</strong> drives your
+                  offer rate, and{" "}
+                  <strong className="text-foreground">Closed</strong> stages stop chasing
+                  follow-ups.
                 </p>
               </div>
 
               <div className="space-y-2 border-t pt-4">
                 <p className="text-xs font-semibold">Default stages</p>
                 <p className="text-xs text-muted-foreground">
-                  Wishlist, Applied, Screening, Interview, Offer and Rejected are
-                  always part of your pipeline. You can recolour them, but their name
-                  and category are fixed and they can&rsquo;t be hidden or deleted —
-                  everything else on the list is yours to change.
+                  Wishlist, Applied, Screening, Assessment, Interview, Get Offer, Hired
+                  and Rejected are always part of your pipeline. You can recolour them,
+                  but their name and category are fixed and they can&rsquo;t be hidden or
+                  deleted — everything else on the list is yours to change.
                 </p>
               </div>
 
