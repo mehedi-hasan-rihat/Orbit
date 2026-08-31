@@ -180,7 +180,6 @@ export default async function ApplicationDetailPage({ params }: Props) {
               stages={enabledStages}
               closed={application.closed}
               archived={application.archived}
-              offered={application.offered}
               application={JSON.parse(JSON.stringify(application))}
               availableTags={JSON.parse(JSON.stringify(tags))}
             />

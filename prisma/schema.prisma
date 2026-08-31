@@ -69,6 +69,7 @@ model Application {
   // live application, so this does not imply closed.
   offered       Boolean           @default(false)
   offeredAt     DateTime?
+  stageStatus   String?           // Optional sub-status for the current stage (e.g. Scheduled, Passed)
   createdAt     DateTime          @default(now())
   updatedAt     DateTime          @updatedAt
   activities    Activity[]

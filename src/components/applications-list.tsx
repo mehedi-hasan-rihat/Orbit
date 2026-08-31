@@ -2,13 +2,29 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { StatusBadge } from "./status-badge";
 import { ApplicationForm } from "./application-form";
 import { deleteApplication } from "@/lib/actions/applications";
 import { ExportButton } from "./export-button";
 import { QuickActions, type StageOption } from "./quick-actions";
 import { useRouter } from "next/navigation";
 import clsx from "clsx";
+import { resolveStage } from "@/lib/stage-display";
+
+// Human-readable label + semantic colour for a stageStatus value.
+const OUTCOME_DISPLAY: Record<string, { label: string; color: string }> = {
+  SCHEDULED: { label: "Scheduled", color: "#3b82f6" },
+  COMPLETED: { label: "Completed", color: "#a855f7" },
+  PASSED:    { label: "Passed",    color: "#22c55e" },
+  FAILED:    { label: "Failed",    color: "#ef4444" },
+  CANCELLED: { label: "Cancelled", color: "#f97316" },
+};
+
+function resolveStageStatus(app: Application): { label: string; color: string } | null {
+  if (app.offered) return { label: "Got Offer", color: "#22c55e" };
+  if (app.closed)  return { label: "Closed",    color: "#6b7280" };
+  if (app.stageStatus) return OUTCOME_DISPLAY[app.stageStatus] ?? { label: app.stageStatus, color: "#6b7280" };
+  return null;
+}
 
 interface Tag {
   id: string;
@@ -23,9 +39,10 @@ interface Application {
   jobUrl: string | null;
   stageId: string | null;
   status: string | null;
-  stage: { name: string; color: string } | null;
+  stage: { name: string; color: string; category: string } | null;
   appliedDate: Date | null;
   followUpDate: Date | null;
+  stageStatus: string | null;
   notes: string | null;
   archived: boolean;
   closed: boolean;
@@ -231,10 +248,11 @@ export function ApplicationsList({
         <div className="border rounded-xl overflow-hidden">
           {/* Table header — matches row columns exactly */}
           <div className="hidden sm:grid items-center px-4 py-2.5 bg-muted/40 border-b"
-            style={{ gridTemplateColumns: "minmax(0,2fr) minmax(0,2fr) 120px 130px 180px" }}
+            style={{ gridTemplateColumns: "minmax(0,2fr) minmax(0,2fr) 120px 110px 130px 180px" }}
           >
             <span className="text-xs font-medium text-muted-foreground">Company</span>
             <span className="text-xs font-medium text-muted-foreground">Role</span>
+            <span className="text-xs font-medium text-muted-foreground">Stage</span>
             <span className="text-xs font-medium text-muted-foreground">Status</span>
             <span className="text-xs font-medium text-muted-foreground">Applied</span>
             <span className="text-xs font-medium text-muted-foreground text-right">Actions</span>
@@ -245,7 +263,7 @@ export function ApplicationsList({
               <div
                 key={app.id}
                 className="group hidden sm:grid items-center px-4 py-3 hover:bg-muted/30 transition-colors"
-                style={{ gridTemplateColumns: "minmax(0,2fr) minmax(0,2fr) 120px 130px 180px" }}
+                style={{ gridTemplateColumns: "minmax(0,2fr) minmax(0,2fr) 120px 110px 130px 180px" }}
               >
                 {/* Company */}
                 <div className="min-w-0 pr-3">
@@ -292,9 +310,36 @@ export function ApplicationsList({
                   )}
                 </div>
 
-                {/* Status */}
+                {/* Stage */}
                 <div>
-                  <StatusBadge application={app} />
+                  {(() => {
+                    const stage = resolveStage(app);
+                    return (
+                      <span
+                        className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium"
+                        style={{ backgroundColor: `${stage.color}1f`, color: stage.color }}
+                      >
+                        <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: stage.color }} />
+                        {stage.name}
+                      </span>
+                    );
+                  })()}
+                </div>
+
+                {/* Status — meaningful sub-status for in-process stages */}
+                <div>
+                  {(() => {
+                    const s = resolveStageStatus(app);
+                    if (!s) return <span className="text-xs text-muted-foreground">—</span>;
+                    return (
+                      <span
+                        className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium"
+                        style={{ backgroundColor: `${s.color}1f`, color: s.color }}
+                      >
+                        {s.label}
+                      </span>
+                    );
+                  })()}
                 </div>
 
                 {/* Date */}
@@ -378,7 +423,32 @@ export function ApplicationsList({
                       </div>
                     )}
                   </div>
-                  <StatusBadge application={app} />
+                  <div className="flex flex-col items-end gap-1 shrink-0">
+                    {(() => {
+                      const stage = resolveStage(app);
+                      return (
+                        <span
+                          className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium"
+                          style={{ backgroundColor: `${stage.color}1f`, color: stage.color }}
+                        >
+                          <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: stage.color }} />
+                          {stage.name}
+                        </span>
+                      );
+                    })()}
+                    {(() => {
+                      const s = resolveStageStatus(app);
+                      if (!s) return null;
+                      return (
+                        <span
+                          className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium"
+                          style={{ backgroundColor: `${s.color}1f`, color: s.color }}
+                        >
+                          {s.label}
+                        </span>
+                      );
+                    })()}
+                  </div>
                 </div>
                 <div className="flex items-center gap-2 flex-wrap">
                   <Link

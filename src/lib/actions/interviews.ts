@@ -58,7 +58,7 @@ async function advanceOnPass(
   await prisma.application.update({
     where: { id: applicationId },
     data: {
-      stageId: target.id,
+      stage: { connect: { id: target.id } },
       activities: {
         create: {
           type: ActivityType.STATUS_CHANGED,

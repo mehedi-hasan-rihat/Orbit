@@ -9,8 +9,6 @@ import {
   archiveApplication,
   unarchiveApplication,
   deleteApplication,
-  markOffered,
-  unmarkOffered,
 } from "@/lib/actions/applications";
 import { ApplicationForm } from "./application-form";
 import type { StageOption } from "./quick-actions";
@@ -27,7 +25,6 @@ interface Props {
   stages: StageOption[];
   closed: boolean;
   archived: boolean;
-  offered: boolean;
   // Everything the edit modal needs. The detail page could show a field but not
   // change it — company, role, URL and both dates were editable only from the
   // list, so opening a card to fix a typo meant navigating back.
@@ -43,7 +40,6 @@ export function ApplicationActions({
   stages,
   closed,
   archived,
-  offered,
   application,
   availableTags,
 }: Props) {
@@ -121,28 +117,6 @@ export function ApplicationActions({
           Edit
         </button>
 
-        {/* An offer is an outcome, not a stage — and not an ending either, so
-            it sits beside Close rather than replacing it. */}
-        {offered ? (
-          <button
-            onClick={() => run(() => unmarkOffered(applicationId))}
-            disabled={pending}
-            title="Removes the offer flag. Stage, notes and rounds are left alone."
-            className={BUTTON}
-          >
-            Offered
-          </button>
-        ) : (
-          <button
-            onClick={() => run(() => markOffered(applicationId))}
-            disabled={pending}
-            title="Records that you got an offer. Doesn't close the application."
-            className={BUTTON}
-          >
-            Got offered
-          </button>
-        )}
-
         {closed ? (
           <button
             onClick={() => run(() => reopenApplication(applicationId))}
@@ -199,13 +173,6 @@ export function ApplicationActions({
           What do these do?
         </summary>
         <dl className="mt-2 space-y-1.5 text-[11px] text-muted-foreground max-w-prose">
-          <div>
-            <dt className="inline font-medium text-foreground">Got offered — </dt>
-            <dd className="inline">
-              records that you got an offer. Doesn&apos;t end anything: an offer you
-              haven&apos;t answered is still live, and the stage you reached is kept.
-            </dd>
-          </div>
           <div>
             <dt className="inline font-medium text-foreground">Close — </dt>
             <dd className="inline">

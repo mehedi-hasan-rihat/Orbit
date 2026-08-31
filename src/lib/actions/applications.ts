@@ -6,7 +6,6 @@ import { applicationSchema, updateStageSchema } from "@/lib/validations";
 import { revalidatePath } from "next/cache";
 import { resolveStage } from "@/lib/stage-display";
 import { ActivityType, StageCategory } from "@/generated/prisma/enums";
-import { syncMirror } from "@/lib/actions/follow-ups";
 
 async function requireUser() {
   const session = await getSession();
@@ -27,7 +26,7 @@ export async function createApplication(formData: FormData) {
     jobUrl: formData.get("jobUrl") as string,
     stageId: formData.get("stageId") as string,
     appliedDate: formData.get("appliedDate") as string,
-    followUpDate: formData.get("followUpDate") as string,
+    stageStatus: formData.get("stageStatus") as string,
     notes: formData.get("notes") as string,
     tags: formData.get("tags") as string,
   };
@@ -42,6 +41,17 @@ export async function createApplication(formData: FormData) {
   const stage = await findOwnedStage(data.stageId, session.userId);
   if (!stage) return { error: { stageId: ["Unknown stage"] } };
 
+  // Applied Date is required for every stage except Wishlist.
+  if (stage.name !== "Wishlist" && !data.appliedDate) {
+    return { error: { appliedDate: ["Applied date is required"] } };
+  }
+
+  // stageStatus is required when the stage is a scheduling stage.
+  const isSchedulingStage = ["Screening", "Assessment", "Interview"].includes(stage.name);
+  if (isSchedulingStage && !data.stageStatus) {
+    return { error: { stageStatus: ["Status is required for this stage"] } };
+  }
+
   const tagIds = data.tags ? data.tags.split(",").filter(Boolean) : [];
 
   const application = await prisma.application.create({
@@ -52,15 +62,8 @@ export async function createApplication(formData: FormData) {
       jobUrl: data.jobUrl || null,
       stageId: stage.id,
       appliedDate: data.appliedDate ? new Date(data.appliedDate) : null,
+      stageStatus: data.stageStatus || null,
       notes: data.notes || null,
-      followUps: data.followUpDate
-        ? {
-            create: {
-              title: `Follow up with ${data.company}`,
-              dueAt: new Date(data.followUpDate),
-            },
-          }
-        : undefined,
       activities: {
         create: {
           type: ActivityType.CREATED,
@@ -72,11 +75,6 @@ export async function createApplication(formData: FormData) {
       } : undefined,
     },
   });
-
-  // Sync the followUpDate mirror from the FollowUp rows we just created.
-  if (data.followUpDate) {
-    await syncMirror(application.id);
-  }
 
   revalidatePath("/dashboard");
   return { success: true, id: application.id };
@@ -91,7 +89,7 @@ export async function updateApplication(id: string, formData: FormData) {
     jobUrl: formData.get("jobUrl") as string,
     stageId: formData.get("stageId") as string,
     appliedDate: formData.get("appliedDate") as string,
-    followUpDate: formData.get("followUpDate") as string,
+    stageStatus: formData.get("stageStatus") as string,
     notes: formData.get("notes") as string,
     tags: formData.get("tags") as string,
   };
@@ -105,6 +103,17 @@ export async function updateApplication(id: string, formData: FormData) {
 
   const stage = await findOwnedStage(data.stageId, session.userId);
   if (!stage) return { error: { stageId: ["Unknown stage"] } };
+
+  // Applied Date is required for every stage except Wishlist.
+  if (stage.name !== "Wishlist" && !data.appliedDate) {
+    return { error: { appliedDate: ["Applied date is required"] } };
+  }
+
+  // stageStatus is required when the stage is a scheduling stage.
+  const isSchedulingStage = ["Screening", "Assessment", "Interview"].includes(stage.name);
+  if (isSchedulingStage && !data.stageStatus) {
+    return { error: { stageStatus: ["Status is required for this stage"] } };
+  }
 
   const existing = await prisma.application.findFirst({
     where: { id, userId: session.userId },
@@ -145,8 +154,9 @@ export async function updateApplication(id: string, formData: FormData) {
       company: data.company,
       role: data.role,
       jobUrl: data.jobUrl || null,
-      stageId: stage.id,
+      stage: { connect: { id: stage.id } },
       appliedDate: data.appliedDate ? new Date(data.appliedDate) : null,
+      stageStatus: data.stageStatus || null,
       notes: data.notes || null,
       activities: activities.length > 0 ? { create: activities } : undefined,
       tags: tagIds.length > 0 ? {
@@ -154,35 +164,6 @@ export async function updateApplication(id: string, formData: FormData) {
       } : undefined,
     },
   });
-
-  // If a follow-up date was provided, upsert against the soonest open follow-up
-  // (the one most likely created from this same form). If none exists yet, create
-  // one — respecting the cap. Then let syncMirror recompute the mirror column.
-  if (data.followUpDate) {
-    const newDueAt = new Date(data.followUpDate);
-    const soonest = await prisma.followUp.findFirst({
-      where: { applicationId: id, done: false },
-      orderBy: { dueAt: "asc" },
-    });
-
-    if (soonest) {
-      await prisma.followUp.update({
-        where: { id: soonest.id },
-        data: { dueAt: newDueAt },
-      });
-    } else {
-      // No open follow-up exists — create one (cap check: 0 open, so always safe)
-      await prisma.followUp.create({
-        data: {
-          applicationId: id,
-          title: `Follow up with ${data.company}`,
-          dueAt: newDueAt,
-        },
-      });
-    }
-
-    await syncMirror(id);
-  }
 
   revalidatePath("/dashboard");
   return { success: true };
@@ -215,7 +196,8 @@ export async function updateApplicationStage(id: string, stageId: string) {
   await prisma.application.update({
     where: { id },
     data: {
-      stageId: stage.id,
+      stage: { connect: { id: stage.id } },
+      stageStatus: null, // clear sub-status when moving to a new stage
       activities: {
         create: {
           type: ActivityType.STATUS_CHANGED,

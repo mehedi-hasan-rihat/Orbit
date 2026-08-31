@@ -19,6 +19,7 @@ export interface StageOption {
   id: string;
   name: string;
   color: string;
+  category: string;
   // Present on the pipeline rows this is fed from. Hidden stages stay
   // assignable via the form but are kept out of the quick move list, matching
   // the board and the detail-page picker.
