@@ -8,52 +8,40 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 gsap.registerPlugin(ScrollTrigger);
 
 export function CTASection() {
-  const containerRef = useRef<HTMLDivElement>(null);
-
+  const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const ctx = gsap.context(() => {
-      gsap.fromTo(
-        ".cta-content",
-        { opacity: 0, y: 30 },
-        {
-          opacity: 1,
-          y: 0,
-          duration: 0.8,
-          ease: "power2.out",
-          scrollTrigger: {
-            trigger: containerRef.current,
-            start: "top 80%",
-          },
-        }
-      );
-    }, containerRef);
-
+      gsap.fromTo(".cta-inner", { opacity: 0, y: 30 }, {
+        opacity: 1, y: 0, duration: 0.7, ease: "power2.out",
+        scrollTrigger: { trigger: ref.current, start: "top 82%" },
+      });
+    }, ref);
     return () => ctx.revert();
   }, []);
 
   return (
-    <section ref={containerRef} className="py-24 px-6 border-t">
-      <div className="cta-content opacity-0 max-w-2xl mx-auto text-center space-y-8">
+    <section ref={ref} className="py-24 px-6 border-t bg-muted/20">
+      <div className="cta-inner opacity-0 max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
         <div className="space-y-4">
+          <p className="text-sm text-muted-foreground uppercase tracking-widest">Get started</p>
           <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">
-            Ready to take control?
+            Ready to take control of your job search?
           </h2>
-          <p className="text-lg text-muted-foreground max-w-lg mx-auto">
-            Join thousands of job seekers who use Orbit to stay organized, follow up on time, and land their next role faster.
+          <p className="text-muted-foreground leading-relaxed">
+            Free forever. No credit card. Set up in minutes — not hours.
           </p>
         </div>
 
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-          <Link
-            href="/register"
-            className="group inline-flex h-12 items-center rounded-full px-8 text-sm font-semibold text-white bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 transition-all shadow-lg shadow-indigo-500/25 hover:shadow-xl hover:shadow-indigo-500/30 hover:scale-[1.02] active:scale-[0.98]"
-          >
-            Create Free Account
-            <svg className="ml-2 w-4 h-4 transition-transform group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-            </svg>
+        <div className="flex flex-col sm:flex-row lg:flex-col xl:flex-row gap-4 lg:justify-end">
+          <Link href="/register"
+            className="inline-flex h-11 items-center justify-center px-8 text-sm font-semibold text-white rounded-lg transition-all hover:opacity-90"
+            style={{ background: "linear-gradient(135deg,#6366f1,#a855f7)" }}>
+            Create free account →
           </Link>
-          <p className="text-xs text-muted-foreground">No credit card required · Free forever</p>
+          <Link href="/login"
+            className="inline-flex h-11 items-center justify-center border rounded-lg px-8 text-sm font-medium hover:bg-accent transition-all">
+            Sign in
+          </Link>
         </div>
       </div>
     </section>

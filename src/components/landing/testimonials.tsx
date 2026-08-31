@@ -3,7 +3,6 @@
 import { useEffect, useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { Star } from "lucide-react";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -29,56 +28,33 @@ const testimonials = [
 ];
 
 export function TestimonialsSection() {
-  const containerRef = useRef<HTMLDivElement>(null);
-
+  const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const ctx = gsap.context(() => {
-      gsap.fromTo(
-        ".testimonial-card",
-        { opacity: 0, y: 30 },
-        {
-          opacity: 1,
-          y: 0,
-          duration: 0.7,
-          stagger: 0.15,
-          ease: "power2.out",
-          scrollTrigger: {
-            trigger: containerRef.current,
-            start: "top 75%",
-          },
-        }
-      );
-    }, containerRef);
-
+      gsap.fromTo(".t-card", { opacity: 0, y: 25 }, {
+        opacity: 1, y: 0, duration: 0.6, stagger: 0.12, ease: "power2.out",
+        scrollTrigger: { trigger: ref.current, start: "top 78%" },
+      });
+    }, ref);
     return () => ctx.revert();
   }, []);
 
   return (
-    <section ref={containerRef} className="py-24 px-6 border-t">
-      <div className="max-w-6xl mx-auto space-y-16">
-        <div className="text-center space-y-4 max-w-2xl mx-auto">
-          <p className="text-sm font-medium text-indigo-500 uppercase tracking-wider">Testimonials</p>
-          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">
-            Loved by job seekers
-          </h2>
+    <section ref={ref} className="py-24 px-6 border-t">
+      <div className="max-w-6xl mx-auto space-y-12">
+        <div className="space-y-3">
+          <p className="text-sm text-muted-foreground uppercase tracking-widest">Testimonials</p>
+          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">What people say</h2>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {testimonials.map((t) => (
-            <div
-              key={t.name}
-              className="testimonial-card opacity-0 rounded-2xl border border-border/50 p-6 space-y-4 bg-muted/20"
-            >
-              <div className="flex gap-0.5">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="w-4 h-4 fill-amber-400 text-amber-400" />
-                ))}
-              </div>
-              <p className="text-sm leading-relaxed text-foreground/90">
+            <div key={t.name} className="t-card opacity-0 rounded-xl border bg-background p-6 space-y-4 hover:shadow-sm transition-shadow">
+              <p className="text-sm leading-relaxed text-muted-foreground">
                 &ldquo;{t.quote}&rdquo;
               </p>
-              <div className="flex items-center gap-3 pt-2">
-                <div className="w-9 h-9 rounded-full bg-primary/10 text-primary flex items-center justify-center text-sm font-bold">
+              <div className="flex items-center gap-3 pt-2 border-t">
+                <div className="w-8 h-8 rounded-full bg-indigo-500/10 text-indigo-500 flex items-center justify-center text-sm font-bold shrink-0">
                   {t.avatar}
                 </div>
                 <div>
