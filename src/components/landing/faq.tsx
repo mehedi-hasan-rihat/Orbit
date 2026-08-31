@@ -14,7 +14,7 @@ const faqs = [
   { question: "Is my data private?", answer: "Absolutely. Each account is fully isolated. We use HTTP-only cookies for authentication, and your data is never shared with third parties." },
   { question: "Can I export my data?", answer: "Yes. You can export all your applications as a CSV file at any time from the Applications page." },
   { question: "Does it work on mobile?", answer: "Yes. Orbit is fully responsive with a dedicated mobile navigation and touch-friendly drag-and-drop pipeline." },
-  { question: "What makes this different from Notion or Trello?", answer: "Orbit is purpose-built for job tracking — interview round tracking, follow-up reminders, analytics, and a pipeline designed specifically for the application process. No setup required." },
+  { question: "What makes this different from Notion or Trello?", answer: "Orbit is purpose-built for job managment — interview round tracking, follow-up reminders, analytics, and a pipeline designed specifically for the application process. No setup required." },
 ];
 
 function FAQItem({ question, answer }: { question: string; answer: string }) {

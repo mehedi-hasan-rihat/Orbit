@@ -34,8 +34,7 @@ export function CTASection() {
 
         <div className="flex flex-col sm:flex-row lg:flex-col xl:flex-row gap-4 lg:justify-end">
           <Link href="/register"
-            className="inline-flex h-11 items-center justify-center px-8 text-sm font-semibold text-white rounded-lg transition-all hover:opacity-90"
-            style={{ background: "linear-gradient(135deg,#6366f1,#a855f7)" }}>
+            className="inline-flex h-11 items-center justify-center px-8 text-sm font-semibold bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition-opacity">
             Create free account →
           </Link>
           <Link href="/login"

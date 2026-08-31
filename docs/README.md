@@ -71,7 +71,7 @@ Browser → Server Components (SSR/RSC) → Server Actions → Prisma ORM → Po
 | Feature | Documentation |
 |---------|--------------|
 | Authentication | [features/authentication/](./features/authentication/) |
-| Application Tracking | [features/application-tracking/](./features/application-tracking/) |
+| Application Managment | [features/application-tracking/](./features/application-tracking/) |
 | Pipeline | [features/pipeline/](./features/pipeline/) |
 | Kanban Board | [features/kanban-board/](./features/kanban-board/) |
 | Interview Management | [features/interview-management/](./features/interview-management/) |

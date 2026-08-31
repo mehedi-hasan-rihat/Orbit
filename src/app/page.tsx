@@ -32,8 +32,7 @@ export default function Home() {
               Sign in
             </Link>
             <Link href="/register"
-              className="inline-flex h-9 items-center rounded-lg px-5 text-sm font-semibold text-white transition-opacity hover:opacity-90"
-              style={{ background: "linear-gradient(135deg,#6366f1,#a855f7)" }}>
+              className="inline-flex h-9 items-center rounded-lg px-5 text-sm font-semibold bg-primary text-primary-foreground hover:opacity-90 transition-opacity">
               Get started
             </Link>
           </div>
@@ -67,33 +66,41 @@ export default function Home() {
       <footer className="border-t">
         <div className="max-w-6xl mx-auto px-6 py-10 flex flex-col sm:flex-row items-start justify-between gap-8">
           {/* Brand */}
-          <div className="space-y-2">
+          <div className="space-y-2 max-w-xs">
             <div className="flex items-center gap-2">
               <Logo className="w-5 h-5" />
               <span className="font-semibold text-sm">Orbit</span>
             </div>
-            <p className="text-xs text-muted-foreground max-w-xs leading-relaxed">
-              A job application tracker built to replace the spreadsheet chaos. Visual pipeline, smart reminders, real analytics.
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              A job application management tool built to replace the spreadsheet chaos. Visual pipeline, smart reminders, real analytics.
             </p>
             <p className="text-xs text-muted-foreground">Currently free · No credit card required</p>
           </div>
 
           {/* Links */}
-          <div className="flex gap-12 text-sm">
+          <div className="flex flex-wrap gap-10">
             <div className="space-y-3">
               <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Product</p>
               <div className="space-y-2">
                 <a href="#features" className="block text-xs text-muted-foreground hover:text-foreground transition-colors">Features</a>
                 <a href="#how-it-works" className="block text-xs text-muted-foreground hover:text-foreground transition-colors">How it works</a>
                 <a href="#faq" className="block text-xs text-muted-foreground hover:text-foreground transition-colors">FAQ</a>
+                <Link href="/pricing" className="block text-xs text-muted-foreground hover:text-foreground transition-colors">Pricing</Link>
               </div>
             </div>
             <div className="space-y-3">
-              <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Links</p>
+              <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Account</p>
               <div className="space-y-2">
                 <Link href="/register" className="block text-xs text-muted-foreground hover:text-foreground transition-colors">Get started</Link>
                 <Link href="/login" className="block text-xs text-muted-foreground hover:text-foreground transition-colors">Sign in</Link>
                 <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="block text-xs text-muted-foreground hover:text-foreground transition-colors">GitHub</a>
+              </div>
+            </div>
+            <div className="space-y-3">
+              <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Legal</p>
+              <div className="space-y-2">
+                <Link href="/terms" className="block text-xs text-muted-foreground hover:text-foreground transition-colors">Terms of Service</Link>
+                <Link href="/privacy" className="block text-xs text-muted-foreground hover:text-foreground transition-colors">Privacy Policy</Link>
               </div>
             </div>
           </div>

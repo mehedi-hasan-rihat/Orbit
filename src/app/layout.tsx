@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Orbit - Job Application Tracker",
+  title: "Orbit - Job Application Manager",
   description: "Track your career journey from application to offer.",
 };
 

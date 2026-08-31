@@ -66,7 +66,7 @@ export default function RegisterPage() {
       <div className="w-full max-w-sm space-y-6">
         <div className="space-y-2 text-center">
           <h1 className="text-2xl font-bold">Create your account</h1>
-          <p className="text-sm text-muted-foreground">Start tracking your job applications with Orbit</p>
+          <p className="text-sm text-muted-foreground">Start managing your job applications with Orbit</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">

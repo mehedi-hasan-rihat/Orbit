@@ -8,7 +8,7 @@ gsap.registerPlugin(ScrollTrigger);
 
 const testimonials = [
   {
-    quote: "I was tracking 40+ applications in a Google Sheet and losing my mind. Orbit replaced all of that in one afternoon.",
+    quote: "I was managinf 40+ applications in a Google Sheet and losing my mind. Orbit replaced all of that in one afternoon.",
     name: "Sarah K.",
     role: "Software Engineer",
     avatar: "S",

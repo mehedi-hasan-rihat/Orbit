@@ -129,8 +129,7 @@ export function HeroSection() {
           <div className="flex flex-wrap gap-3 pt-1">
             <Link
               href="/register"
-              className="inline-flex h-10 items-center rounded-lg px-6 text-sm font-semibold text-white transition-opacity hover:opacity-90"
-              style={{ background: "linear-gradient(135deg,#6366f1,#a855f7)" }}
+              className="inline-flex h-10 items-center rounded-lg px-6 text-sm font-semibold bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
             >
               Start tracking free →
             </Link>
