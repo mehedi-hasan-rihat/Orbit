@@ -1,0 +1,8 @@
+-- Add new ActivityType enum values.
+ALTER TYPE "ActivityType" ADD VALUE IF NOT EXISTS 'OUTCOME_CHANGE';
+
+-- Backfill legacy values:
+-- STATUS_CHANGED and OUTCOME → OUTCOME_CHANGE
+-- INTERVIEW_OUTCOME → INTERVIEW_SCHEDULED
+UPDATE "Activity" SET "type" = 'OUTCOME_CHANGE'       WHERE "type" IN ('STATUS_CHANGED', 'OUTCOME');
+UPDATE "Activity" SET "type" = 'INTERVIEW_SCHEDULED'  WHERE "type" = 'INTERVIEW_OUTCOME';

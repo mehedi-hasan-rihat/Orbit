@@ -26,7 +26,7 @@ export async function createApplication(formData: FormData) {
     jobUrl: formData.get("jobUrl") as string,
     stageId: formData.get("stageId") as string,
     appliedDate: formData.get("appliedDate") as string,
-    followUpDate: formData.get("followUpDate") as string,
+    stageOutcome: formData.get("stageOutcome") as string,
     notes: formData.get("notes") as string,
     tags: formData.get("tags") as string,
   };
@@ -41,6 +41,17 @@ export async function createApplication(formData: FormData) {
   const stage = await findOwnedStage(data.stageId, session.userId);
   if (!stage) return { error: { stageId: ["Unknown stage"] } };
 
+  // Applied Date is required for every stage except Wishlist.
+  if (stage.name !== "Wishlist" && !data.appliedDate) {
+    return { error: { appliedDate: ["Applied date is required"] } };
+  }
+
+  // stageOutcome is required when the stage is a scheduling stage.
+  const isSchedulingStage = ["Screening", "Assessment", "Interview"].includes(stage.name);
+  if (isSchedulingStage && !data.stageOutcome) {
+    return { error: { stageOutcome: ["Status is required for this stage"] } };
+  }
+
   const tagIds = data.tags ? data.tags.split(",").filter(Boolean) : [];
 
   const application = await prisma.application.create({
@@ -51,17 +62,7 @@ export async function createApplication(formData: FormData) {
       jobUrl: data.jobUrl || null,
       stageId: stage.id,
       appliedDate: data.appliedDate ? new Date(data.appliedDate) : null,
-      // Mirror of the soonest open FollowUp — see the follow-up actions. The
-      // row itself is created below, so the two never disagree.
-      followUpDate: data.followUpDate ? new Date(data.followUpDate) : null,
-      followUps: data.followUpDate
-        ? {
-            create: {
-              title: `Follow up with ${data.company}`,
-              dueAt: new Date(data.followUpDate),
-            },
-          }
-        : undefined,
+      stageOutcome: data.stageOutcome || null,
       notes: data.notes || null,
       activities: {
         create: {
@@ -88,7 +89,7 @@ export async function updateApplication(id: string, formData: FormData) {
     jobUrl: formData.get("jobUrl") as string,
     stageId: formData.get("stageId") as string,
     appliedDate: formData.get("appliedDate") as string,
-    followUpDate: formData.get("followUpDate") as string,
+    stageOutcome: formData.get("stageOutcome") as string,
     notes: formData.get("notes") as string,
     tags: formData.get("tags") as string,
   };
@@ -102,6 +103,17 @@ export async function updateApplication(id: string, formData: FormData) {
 
   const stage = await findOwnedStage(data.stageId, session.userId);
   if (!stage) return { error: { stageId: ["Unknown stage"] } };
+
+  // Applied Date is required for every stage except Wishlist.
+  if (stage.name !== "Wishlist" && !data.appliedDate) {
+    return { error: { appliedDate: ["Applied date is required"] } };
+  }
+
+  // stageOutcome is required when the stage is a scheduling stage.
+  const isSchedulingStage = ["Screening", "Assessment", "Interview"].includes(stage.name);
+  if (isSchedulingStage && !data.stageOutcome) {
+    return { error: { stageOutcome: ["Status is required for this stage"] } };
+  }
 
   const existing = await prisma.application.findFirst({
     where: { id, userId: session.userId },
@@ -118,7 +130,7 @@ export async function updateApplication(id: string, formData: FormData) {
   if (existing.stageId !== stage.id) {
     const fromLabel = existing.stage?.name ?? existing.status ?? "Unassigned";
     activities.push({
-      type: ActivityType.STATUS_CHANGED,
+      type: ActivityType.OUTCOME_CHANGE,
       description: `Status changed from ${fromLabel} to ${stage.name}`,
       metadata: JSON.stringify({ from: fromLabel, to: stage.name, toStageId: stage.id }),
     });
@@ -142,8 +154,9 @@ export async function updateApplication(id: string, formData: FormData) {
       company: data.company,
       role: data.role,
       jobUrl: data.jobUrl || null,
-      stageId: stage.id,
+      stage: { connect: { id: stage.id } },
       appliedDate: data.appliedDate ? new Date(data.appliedDate) : null,
+      stageOutcome: data.stageOutcome || null,
       notes: data.notes || null,
       activities: activities.length > 0 ? { create: activities } : undefined,
       tags: tagIds.length > 0 ? {
@@ -183,10 +196,11 @@ export async function updateApplicationStage(id: string, stageId: string) {
   await prisma.application.update({
     where: { id },
     data: {
-      stageId: stage.id,
+      stage: { connect: { id: stage.id } },
+      stageOutcome: null, // clear sub-status when moving to a new stage
       activities: {
         create: {
-          type: ActivityType.STATUS_CHANGED,
+          type: ActivityType.OUTCOME_CHANGE,
           description: `Status changed from ${fromLabel} to ${stage.name}`,
           metadata: JSON.stringify({ from: fromLabel, to: stage.name, toStageId: stage.id }),
         },
@@ -215,7 +229,7 @@ export async function archiveApplication(id: string) {
       archived: true,
       activities: {
         create: {
-          type: ActivityType.STATUS_CHANGED,
+          type: ActivityType.OUTCOME_CHANGE,
           description: "Application archived",
         },
       },
@@ -243,7 +257,7 @@ export async function unarchiveApplication(id: string) {
       archived: false,
       activities: {
         create: {
-          type: ActivityType.STATUS_CHANGED,
+          type: ActivityType.OUTCOME_CHANGE,
           description: "Application unarchived",
         },
       },
@@ -279,7 +293,7 @@ export async function closeApplication(id: string) {
       closedAt: new Date(),
       activities: {
         create: {
-          type: ActivityType.STATUS_CHANGED,
+          type: ActivityType.OUTCOME_CHANGE,
           description: "Application closed",
         },
       },
@@ -310,7 +324,7 @@ export async function reopenApplication(id: string) {
       closedAt: null,
       activities: {
         create: {
-          type: ActivityType.STATUS_CHANGED,
+          type: ActivityType.OUTCOME_CHANGE,
           description: "Application reopened",
         },
       },
@@ -349,7 +363,7 @@ export async function markOffered(id: string) {
       offeredAt: new Date(),
       activities: {
         create: {
-          type: ActivityType.STATUS_CHANGED,
+          type: ActivityType.OUTCOME_CHANGE,
           description: "Got offered",
         },
       },
@@ -380,7 +394,7 @@ export async function unmarkOffered(id: string) {
       offeredAt: null,
       activities: {
         create: {
-          type: ActivityType.STATUS_CHANGED,
+          type: ActivityType.OUTCOME_CHANGE,
           description: "Offer removed",
         },
       },

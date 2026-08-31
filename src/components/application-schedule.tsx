@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { createInterview, updateInterview, deleteInterview } from "@/lib/actions/interviews";
-import { createStageType } from "@/lib/actions/pipeline";
 import { addQuickNote } from "@/lib/actions/applications";
 import {
   createFollowUp,
@@ -10,7 +9,7 @@ import {
   setFollowUpDone,
   deleteFollowUp,
 } from "@/lib/actions/follow-ups";
-import { INTERVIEW_OUTCOMES, ROUND_CATEGORIES, MAX_ACTIVE_FOLLOW_UPS } from "@/lib/validations";
+import { ROUND_CATEGORIES, MAX_ACTIVE_FOLLOW_UPS, SCHEDULING_STAGE_NAMES } from "@/lib/validations";
 import { outcomeDisplay } from "@/lib/outcome-display";
 import { resolveStageLabel } from "@/lib/stage-label";
 import { roundBucket } from "@/lib/interview-summary";
@@ -39,7 +38,6 @@ export interface ScheduleEntry {
   outcome: string | null;
 }
 
-const NEW_TYPE = "__new__";
 const MAX_ROUND = 20;
 
 // ─── Entry form ──────────────────────────────────────────────────────────────
@@ -59,20 +57,19 @@ function EntryForm({ applicationId, stageTypes, entry, nextRound, onClose }: Ent
   const [formError, setFormError] = useState<string | null>(null);
   const router = useRouter();
 
-  // Only stages you actually sit an interview for. OPEN and CLOSED stages
-  // (Wishlist, Applied, Rejected…) are application lifecycle states, not entry
-  // types. A hidden or out-of-category stage stays selectable while it is the
-  // one this entry already uses — editing the notes should not silently retype it.
+  // Only the three scheduling stage types: Screening, Assessment, Interview.
+  // Get Offer and Hired are outcomes, not things you sit in. A stage that is
+  // already attached to this entry stays selectable so editing notes doesn't
+  // silently retype it.
   const options = stageTypes.filter(
     (t) =>
-      (t.enabled && ROUND_CATEGORIES.includes(t.category as (typeof ROUND_CATEGORIES)[number])) ||
+      SCHEDULING_STAGE_NAMES.includes(t.name) ||
       t.id === entry?.stageTypeId,
   );
 
   const [selectedType, setSelectedType] = useState(
-    entry?.stageTypeId ?? options[0]?.id ?? NEW_TYPE,
+    entry?.stageTypeId ?? options[0]?.id ?? "",
   );
-  const [newTypeName, setNewTypeName] = useState("");
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -85,20 +82,6 @@ function EntryForm({ applicationId, stageTypes, entry, nextRound, onClose }: Ent
     // The date is the handle now, so the position in the sequence is derived
     // instead of typed. It still has to satisfy the 1–20 the schema enforces.
     formData.set("round", String(entry?.round ?? Math.min(nextRound, MAX_ROUND)));
-
-    // Creating a type inline: make it first, then point the entry at it.
-    if (selectedType === NEW_TYPE) {
-      const typeForm = new FormData();
-      typeForm.set("name", newTypeName);
-      const created = await createStageType(typeForm);
-
-      if ("error" in created) {
-        setErrors(created.error as Record<string, string[]>);
-        setLoading(false);
-        return;
-      }
-      formData.set("stageTypeId", created.id);
-    }
 
     const result = entry
       ? await updateInterview(entry.id, applicationId, formData)
@@ -143,8 +126,7 @@ function EntryForm({ applicationId, stageTypes, entry, nextRound, onClose }: Ent
             </p>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
+          <div className="space-y-2">
               <label className="text-sm font-medium">Type *</label>
               <select
                 name="stageTypeId"
@@ -158,42 +140,14 @@ function EntryForm({ applicationId, stageTypes, entry, nextRound, onClose }: Ent
                     {t.enabled ? "" : " (disabled)"}
                   </option>
                 ))}
-                <option value={NEW_TYPE}>+ New type…</option>
               </select>
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Outcome</label>
-              <select
-                name="outcome"
-                defaultValue={entry?.outcome || "PENDING"}
-                className="flex h-9 w-full rounded-md border bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-              >
-                {INTERVIEW_OUTCOMES.map((o) => (
-                  <option key={o} value={o}>{outcomeDisplay(o).label}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          {selectedType === NEW_TYPE && (
-            <div className="space-y-1.5">
-              <input
-                type="text"
-                value={newTypeName}
-                onChange={(e) => setNewTypeName(e.target.value)}
-                placeholder="Name your entry type…"
-                required
-                className="flex h-9 w-full rounded-md border bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-              />
-              {/* An entry type *is* a pipeline stage — same row, same table.
-                  Creating one here adds a column to the board, which used to
-                  happen with no warning at all. */}
-              <p className="text-[11px] leading-snug text-muted-foreground">
-                Entry types are pipeline stages, so this also adds an “In process”
-                column to your board.
+              <p className="text-[11px] text-muted-foreground">
+                Need a different type?{" "}
+                <Link href="/dashboard/pipeline" className="underline hover:text-foreground">
+                  Manage pipeline
+                </Link>
               </p>
             </div>
-          )}
 
           <div className="space-y-2">
             <label className="text-sm font-medium">Notes</label>

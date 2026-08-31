@@ -6,7 +6,7 @@ export const applicationSchema = z.object({
   jobUrl: z.string().url("Must be a valid URL").optional().or(z.literal("")),
   stageId: z.string().min(1, "Stage is required"),
   appliedDate: z.string().optional().or(z.literal("")),
-  followUpDate: z.string().optional().or(z.literal("")),
+  stageOutcome: z.string().optional().or(z.literal("")),
   notes: z.string().max(5000).optional().or(z.literal("")),
   tags: z.string().optional().or(z.literal("")), // comma-separated tag ids
 });
@@ -82,14 +82,27 @@ export const CATEGORY_LABELS: Record<StageCategoryValue, string> = {
 // application lifecycle states, not things you sit an interview for.
 export const ROUND_CATEGORIES: StageCategoryValue[] = ["INTERVIEWING", "SUCCESS"];
 
+// The subset of system stages that appear in the "Type" dropdown when
+// scheduling an interview entry on the detail page. Get Offer and Hired are
+// outcomes, not things you sit an interview for — only Screening, Assessment
+// and Interview are scheduling targets.
+export const SCHEDULING_STAGE_NAMES: readonly string[] = [
+  "Screening",
+  "Assessment",
+  "Interview",
+];
+
 // Seeded for every user on first read of their pipeline. Order here is the
 // order stages appear on the board.
 export const DEFAULT_STAGE_TYPES = [
-  { name: "Wishlist", color: "#6b7280", category: "OPEN", enabled: true },
-  { name: "Applied", color: "#3b82f6", category: "OPEN", enabled: true },
-  { name: "Screening", color: "#a855f7", category: "INTERVIEWING", enabled: true },
-  { name: "Interview", color: "#f59e0b", category: "INTERVIEWING", enabled: true },
-  { name: "Technical Interview", color: "#0ea5e9", category: "INTERVIEWING", enabled: true },
+  { name: "Wishlist",    color: "#6b7280", category: "OPEN",         enabled: true },
+  { name: "Applied",     color: "#3b82f6", category: "OPEN",         enabled: true },
+  { name: "Screening",   color: "#a855f7", category: "OPEN",         enabled: true },
+  { name: "Assessment",  color: "#f59e0b", category: "INTERVIEWING", enabled: true },
+  { name: "Interview",   color: "#f97316", category: "INTERVIEWING", enabled: true },
+  { name: "Get Offer",   color: "#22c55e", category: "SUCCESS",      enabled: true },
+  { name: "Hired",       color: "#10b981", category: "SUCCESS",      enabled: true },
+  { name: "Rejected",    color: "#ef4444", category: "CLOSED",       enabled: true },
 ] as const satisfies readonly {
   name: string;
   color: string;
@@ -105,16 +118,21 @@ export const SYSTEM_STAGE_NAMES = [
   "Wishlist",
   "Applied",
   "Screening",
+  "Assessment",
   "Interview",
+  "Get Offer",
+  "Hired",
+  "Rejected",
 ] as const satisfies readonly (typeof DEFAULT_STAGE_TYPES)[number]["name"][];
 
 export type SystemStageName = (typeof SYSTEM_STAGE_NAMES)[number];
 
 // Stages that were seeded once and shouldn't have been. "Archived" is not a
 // place in the pipeline — archiving is a flag on the application
-// (Application.archived) with its own tab and its own actions. The leftover
-// seeded row is cleared on the next pipeline read if it was never used.
-export const RETIRED_STAGE_NAMES: readonly string[] = ["Archived"];
+// (Application.archived) with its own tab and its own actions. "Technical
+// Interview" was replaced by the Assessment + Interview split. Both are cleared
+// on the next pipeline read if they were never used.
+export const RETIRED_STAGE_NAMES: readonly string[] = ["Archived", "Technical Interview"];
 
 export function isSystemStageName(name: string): name is SystemStageName {
   return (SYSTEM_STAGE_NAMES as readonly string[]).includes(name);

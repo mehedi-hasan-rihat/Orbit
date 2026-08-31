@@ -4,6 +4,8 @@ import { useState, useRef } from "react";
 import { createApplication, updateApplication, checkDuplicate } from "@/lib/actions/applications";
 import { DatePicker } from "./date-picker";
 import { useRouter } from "next/navigation";
+import { SCHEDULING_STAGE_NAMES } from "@/lib/validations";
+import { outcomeDisplay } from "@/lib/outcome-display";
 
 interface Tag {
   id: string;
@@ -19,14 +21,23 @@ interface ApplicationFormProps {
     jobUrl: string | null;
     stageId: string | null;
     appliedDate: Date | null;
-    followUpDate: Date | null;
+    stageOutcome: string | null;
     notes: string | null;
     tags?: { tag: Tag }[];
   };
   availableTags: Tag[];
-  stages: { id: string; name: string; color: string }[];
+  stages: { id: string; name: string; color: string; category: string }[];
   onClose: () => void;
 }
+
+// Status options available per stage (Screening / Assessment / Interview).
+const STATUS_OPTIONS = [
+  "SCHEDULED",
+  "COMPLETED",
+  "PASSED",
+  "FAILED",
+  "CANCELLED",
+] as const;
 
 export function ApplicationForm({ application, availableTags, stages, onClose }: ApplicationFormProps) {
   const [loading, setLoading] = useState(false);
@@ -41,8 +52,19 @@ export function ApplicationForm({ application, availableTags, stages, onClose }:
   const [selectedTags, setSelectedTags] = useState<string[]>(
     application?.tags?.map((t) => t.tag.id) || []
   );
+  const [selectedStageId, setSelectedStageId] = useState(
+    application?.stageId ?? stages[0]?.id ?? ""
+  );
   const duplicateCheckTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const router = useRouter();
+
+  const selectedStage = stages.find((s) => s.id === selectedStageId);
+  // Applied Date is required once the application has moved past Wishlist.
+  const isWishlist = selectedStage?.name === "Wishlist";
+  // Status dropdown appears only for stages that represent active process steps.
+  const showStatus = selectedStage
+    ? SCHEDULING_STAGE_NAMES.includes(selectedStage.name)
+    : false;
 
   // Debounced duplicate check
   function handleFieldChange(company: string, role: string) {
@@ -65,6 +87,8 @@ export function ApplicationForm({ application, availableTags, stages, onClose }:
 
     const formData = new FormData(e.currentTarget);
     formData.set("tags", selectedTags.join(","));
+    // Clear stageOutcome when the selected stage doesn't support it.
+    if (!showStatus) formData.set("stageOutcome", "");
 
     try {
       let result;
@@ -180,13 +204,15 @@ export function ApplicationForm({ application, availableTags, stages, onClose }:
             {errors.jobUrl && <p className="text-xs text-destructive">{errors.jobUrl[0]}</p>}
           </div>
 
+          {/* Stage + Applied Date row */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <label htmlFor="stageId" className="text-sm font-medium">Stage</label>
+              <label htmlFor="stageId" className="text-sm font-medium">Stage *</label>
               <select
                 id="stageId"
                 name="stageId"
-                defaultValue={application?.stageId ?? stages[0]?.id ?? ""}
+                value={selectedStageId}
+                onChange={(e) => setSelectedStageId(e.target.value)}
                 className="flex h-10 w-full rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
               >
                 {stages.map((stage) => (
@@ -195,19 +221,48 @@ export function ApplicationForm({ application, availableTags, stages, onClose }:
                   </option>
                 ))}
               </select>
+              {errors.stageId && <p className="text-xs text-destructive">{errors.stageId[0]}</p>}
             </div>
 
-            <div className="space-y-2">
-              <label htmlFor="appliedDate" className="text-sm font-medium">Applied Date</label>
-              <DatePicker
-                id="appliedDate"
-                name="appliedDate"
-                placeholder="Pick applied date"
-                value={application?.appliedDate ? new Date(application.appliedDate).toISOString().split("T")[0] : ""}
-              />
-            </div>
-
+            {/* Applied Date: hidden for Wishlist, required for everything else */}
+            {!isWishlist && (
+              <div className="space-y-2">
+                <label htmlFor="appliedDate" className="text-sm font-medium">
+                  Applied Date {!isWishlist && <span className="text-destructive">*</span>}
+                </label>
+                <DatePicker
+                  id="appliedDate"
+                  name="appliedDate"
+                  placeholder="Pick applied date"
+                  required
+                  value={application?.appliedDate ? new Date(application.appliedDate).toISOString().split("T")[0] : ""}
+                />
+                {errors.appliedDate && <p className="text-xs text-destructive">{errors.appliedDate[0]}</p>}
+              </div>
+            )}
           </div>
+
+          {/* Status: only for Screening / Assessment / Interview */}
+          {showStatus && (
+            <div className="space-y-2">
+              <label htmlFor="stageOutcome" className="text-sm font-medium">
+                {selectedStage?.name} Status *
+              </label>
+              <select
+                id="stageOutcome"
+                name="stageOutcome"
+                defaultValue={application?.stageOutcome ?? "SCHEDULED"}
+                className="flex h-10 w-full rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              >
+                {STATUS_OPTIONS.map((o) => (
+                  <option key={o} value={o}>
+                    {outcomeDisplay(o).label}
+                  </option>
+                ))}
+              </select>
+              {errors.stageOutcome && <p className="text-xs text-destructive">{errors.stageOutcome[0]}</p>}
+            </div>
+          )}
 
           {/* Tags */}
           {availableTags.length > 0 && (

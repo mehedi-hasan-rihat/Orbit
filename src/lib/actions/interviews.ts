@@ -58,10 +58,10 @@ async function advanceOnPass(
   await prisma.application.update({
     where: { id: applicationId },
     data: {
-      stageId: target.id,
+      stage: { connect: { id: target.id } },
       activities: {
         create: {
-          type: ActivityType.STATUS_CHANGED,
+          type: ActivityType.OUTCOME_CHANGE,
           description: `Status changed from ${fromLabel} to ${target.name} (interview passed)`,
           metadata: JSON.stringify({ from: fromLabel, to: target.name, toStageId: target.id }),
         },
@@ -173,7 +173,7 @@ export async function updateInterview(id: string, applicationId: string, formDat
     await prisma.activity.create({
       data: {
         applicationId,
-        type: ActivityType.INTERVIEW_OUTCOME,
+        type: ActivityType.INTERVIEW_SCHEDULED,
         description: `Round ${data.round} ${stageType.name} interview: ${outcome}`,
         metadata: JSON.stringify({
           stageTypeId: stageType.id,
