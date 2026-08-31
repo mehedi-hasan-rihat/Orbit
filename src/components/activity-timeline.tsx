@@ -17,9 +17,9 @@ const typeConfig: Record<string, { color: string; label: string; className: stri
     label: "Created",
     className: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300",
   },
-  STATUS_CHANGED: {
+  OUTCOME_CHANGE: {
     color: "#f59e0b",
-    label: "Status",
+    label: "Outcome",
     className: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300",
   },
   NOTE_ADDED: {
@@ -37,25 +37,14 @@ const typeConfig: Record<string, { color: string; label: string; className: stri
     label: "Interview",
     className: "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300",
   },
-  INTERVIEW_OUTCOME: {
-    color: "#14b8a6",
-    label: "Outcome",
-    className: "bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-300",
-  },
-  RESUME_UPLOADED: {
-    color: "#64748b",
-    label: "Resume",
-    className: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300",
-  },
 };
 
 const filterOptions = [
   { value: "ALL", label: "All" },
   { value: "CREATED", label: "Created" },
-  { value: "STATUS_CHANGED", label: "Status" },
+  { value: "OUTCOME_CHANGE", label: "Outcomes" },
   { value: "NOTE_ADDED", label: "Notes" },
   { value: "INTERVIEW_SCHEDULED", label: "Interviews" },
-  { value: "INTERVIEW_OUTCOME", label: "Outcomes" },
   { value: "FOLLOW_UP_SET", label: "Follow-ups" },
 ];
 

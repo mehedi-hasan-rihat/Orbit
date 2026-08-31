@@ -6,7 +6,7 @@ export const applicationSchema = z.object({
   jobUrl: z.string().url("Must be a valid URL").optional().or(z.literal("")),
   stageId: z.string().min(1, "Stage is required"),
   appliedDate: z.string().optional().or(z.literal("")),
-  stageStatus: z.string().optional().or(z.literal("")),
+  stageOutcome: z.string().optional().or(z.literal("")),
   notes: z.string().max(5000).optional().or(z.literal("")),
   tags: z.string().optional().or(z.literal("")), // comma-separated tag ids
 });

@@ -26,7 +26,7 @@ export async function createApplication(formData: FormData) {
     jobUrl: formData.get("jobUrl") as string,
     stageId: formData.get("stageId") as string,
     appliedDate: formData.get("appliedDate") as string,
-    stageStatus: formData.get("stageStatus") as string,
+    stageOutcome: formData.get("stageOutcome") as string,
     notes: formData.get("notes") as string,
     tags: formData.get("tags") as string,
   };
@@ -46,10 +46,10 @@ export async function createApplication(formData: FormData) {
     return { error: { appliedDate: ["Applied date is required"] } };
   }
 
-  // stageStatus is required when the stage is a scheduling stage.
+  // stageOutcome is required when the stage is a scheduling stage.
   const isSchedulingStage = ["Screening", "Assessment", "Interview"].includes(stage.name);
-  if (isSchedulingStage && !data.stageStatus) {
-    return { error: { stageStatus: ["Status is required for this stage"] } };
+  if (isSchedulingStage && !data.stageOutcome) {
+    return { error: { stageOutcome: ["Status is required for this stage"] } };
   }
 
   const tagIds = data.tags ? data.tags.split(",").filter(Boolean) : [];
@@ -62,7 +62,7 @@ export async function createApplication(formData: FormData) {
       jobUrl: data.jobUrl || null,
       stageId: stage.id,
       appliedDate: data.appliedDate ? new Date(data.appliedDate) : null,
-      stageStatus: data.stageStatus || null,
+      stageOutcome: data.stageOutcome || null,
       notes: data.notes || null,
       activities: {
         create: {
@@ -89,7 +89,7 @@ export async function updateApplication(id: string, formData: FormData) {
     jobUrl: formData.get("jobUrl") as string,
     stageId: formData.get("stageId") as string,
     appliedDate: formData.get("appliedDate") as string,
-    stageStatus: formData.get("stageStatus") as string,
+    stageOutcome: formData.get("stageOutcome") as string,
     notes: formData.get("notes") as string,
     tags: formData.get("tags") as string,
   };
@@ -109,10 +109,10 @@ export async function updateApplication(id: string, formData: FormData) {
     return { error: { appliedDate: ["Applied date is required"] } };
   }
 
-  // stageStatus is required when the stage is a scheduling stage.
+  // stageOutcome is required when the stage is a scheduling stage.
   const isSchedulingStage = ["Screening", "Assessment", "Interview"].includes(stage.name);
-  if (isSchedulingStage && !data.stageStatus) {
-    return { error: { stageStatus: ["Status is required for this stage"] } };
+  if (isSchedulingStage && !data.stageOutcome) {
+    return { error: { stageOutcome: ["Status is required for this stage"] } };
   }
 
   const existing = await prisma.application.findFirst({
@@ -130,7 +130,7 @@ export async function updateApplication(id: string, formData: FormData) {
   if (existing.stageId !== stage.id) {
     const fromLabel = existing.stage?.name ?? existing.status ?? "Unassigned";
     activities.push({
-      type: ActivityType.STATUS_CHANGED,
+      type: ActivityType.OUTCOME_CHANGE,
       description: `Status changed from ${fromLabel} to ${stage.name}`,
       metadata: JSON.stringify({ from: fromLabel, to: stage.name, toStageId: stage.id }),
     });
@@ -156,7 +156,7 @@ export async function updateApplication(id: string, formData: FormData) {
       jobUrl: data.jobUrl || null,
       stage: { connect: { id: stage.id } },
       appliedDate: data.appliedDate ? new Date(data.appliedDate) : null,
-      stageStatus: data.stageStatus || null,
+      stageOutcome: data.stageOutcome || null,
       notes: data.notes || null,
       activities: activities.length > 0 ? { create: activities } : undefined,
       tags: tagIds.length > 0 ? {
@@ -197,10 +197,10 @@ export async function updateApplicationStage(id: string, stageId: string) {
     where: { id },
     data: {
       stage: { connect: { id: stage.id } },
-      stageStatus: null, // clear sub-status when moving to a new stage
+      stageOutcome: null, // clear sub-status when moving to a new stage
       activities: {
         create: {
-          type: ActivityType.STATUS_CHANGED,
+          type: ActivityType.OUTCOME_CHANGE,
           description: `Status changed from ${fromLabel} to ${stage.name}`,
           metadata: JSON.stringify({ from: fromLabel, to: stage.name, toStageId: stage.id }),
         },
@@ -229,7 +229,7 @@ export async function archiveApplication(id: string) {
       archived: true,
       activities: {
         create: {
-          type: ActivityType.STATUS_CHANGED,
+          type: ActivityType.OUTCOME_CHANGE,
           description: "Application archived",
         },
       },
@@ -257,7 +257,7 @@ export async function unarchiveApplication(id: string) {
       archived: false,
       activities: {
         create: {
-          type: ActivityType.STATUS_CHANGED,
+          type: ActivityType.OUTCOME_CHANGE,
           description: "Application unarchived",
         },
       },
@@ -293,7 +293,7 @@ export async function closeApplication(id: string) {
       closedAt: new Date(),
       activities: {
         create: {
-          type: ActivityType.STATUS_CHANGED,
+          type: ActivityType.OUTCOME_CHANGE,
           description: "Application closed",
         },
       },
@@ -324,7 +324,7 @@ export async function reopenApplication(id: string) {
       closedAt: null,
       activities: {
         create: {
-          type: ActivityType.STATUS_CHANGED,
+          type: ActivityType.OUTCOME_CHANGE,
           description: "Application reopened",
         },
       },
@@ -363,7 +363,7 @@ export async function markOffered(id: string) {
       offeredAt: new Date(),
       activities: {
         create: {
-          type: ActivityType.STATUS_CHANGED,
+          type: ActivityType.OUTCOME_CHANGE,
           description: "Got offered",
         },
       },
@@ -394,7 +394,7 @@ export async function unmarkOffered(id: string) {
       offeredAt: null,
       activities: {
         create: {
-          type: ActivityType.STATUS_CHANGED,
+          type: ActivityType.OUTCOME_CHANGE,
           description: "Offer removed",
         },
       },

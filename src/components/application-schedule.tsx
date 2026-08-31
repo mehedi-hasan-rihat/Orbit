@@ -9,7 +9,7 @@ import {
   setFollowUpDone,
   deleteFollowUp,
 } from "@/lib/actions/follow-ups";
-import { INTERVIEW_OUTCOMES, ROUND_CATEGORIES, MAX_ACTIVE_FOLLOW_UPS, SCHEDULING_STAGE_NAMES } from "@/lib/validations";
+import { ROUND_CATEGORIES, MAX_ACTIVE_FOLLOW_UPS, SCHEDULING_STAGE_NAMES } from "@/lib/validations";
 import { outcomeDisplay } from "@/lib/outcome-display";
 import { resolveStageLabel } from "@/lib/stage-label";
 import { roundBucket } from "@/lib/interview-summary";
@@ -126,8 +126,7 @@ function EntryForm({ applicationId, stageTypes, entry, nextRound, onClose }: Ent
             </p>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
+          <div className="space-y-2">
               <label className="text-sm font-medium">Type *</label>
               <select
                 name="stageTypeId"
@@ -149,19 +148,6 @@ function EntryForm({ applicationId, stageTypes, entry, nextRound, onClose }: Ent
                 </Link>
               </p>
             </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Outcome</label>
-              <select
-                name="outcome"
-                defaultValue={entry?.outcome || "PENDING"}
-                className="flex h-9 w-full rounded-md border bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-              >
-                {INTERVIEW_OUTCOMES.map((o) => (
-                  <option key={o} value={o}>{outcomeDisplay(o).label}</option>
-                ))}
-              </select>
-            </div>
-          </div>
 
           <div className="space-y-2">
             <label className="text-sm font-medium">Notes</label>

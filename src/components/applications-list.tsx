@@ -10,7 +10,7 @@ import { useRouter } from "next/navigation";
 import clsx from "clsx";
 import { resolveStage } from "@/lib/stage-display";
 
-// Human-readable label + semantic colour for a stageStatus value.
+// Human-readable label + semantic colour for a stageOutcome value.
 const OUTCOME_DISPLAY: Record<string, { label: string; color: string }> = {
   SCHEDULED: { label: "Scheduled", color: "#3b82f6" },
   COMPLETED: { label: "Completed", color: "#a855f7" },
@@ -22,7 +22,7 @@ const OUTCOME_DISPLAY: Record<string, { label: string; color: string }> = {
 function resolveStageStatus(app: Application): { label: string; color: string } | null {
   if (app.offered) return { label: "Got Offer", color: "#22c55e" };
   if (app.closed)  return { label: "Closed",    color: "#6b7280" };
-  if (app.stageStatus) return OUTCOME_DISPLAY[app.stageStatus] ?? { label: app.stageStatus, color: "#6b7280" };
+  if (app.stageOutcome) return OUTCOME_DISPLAY[app.stageOutcome] ?? { label: app.stageOutcome, color: "#6b7280" };
   return null;
 }
 
@@ -42,7 +42,7 @@ interface Application {
   stage: { name: string; color: string; category: string } | null;
   appliedDate: Date | null;
   followUpDate: Date | null;
-  stageStatus: string | null;
+  stageOutcome: string | null;
   notes: string | null;
   archived: boolean;
   closed: boolean;
@@ -253,7 +253,7 @@ export function ApplicationsList({
             <span className="text-xs font-medium text-muted-foreground">Company</span>
             <span className="text-xs font-medium text-muted-foreground">Role</span>
             <span className="text-xs font-medium text-muted-foreground">Stage</span>
-            <span className="text-xs font-medium text-muted-foreground">Status</span>
+            <span className="text-xs font-medium text-muted-foreground">Outcome</span>
             <span className="text-xs font-medium text-muted-foreground">Applied</span>
             <span className="text-xs font-medium text-muted-foreground text-right">Actions</span>
           </div>

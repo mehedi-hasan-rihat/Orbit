@@ -21,7 +21,7 @@ interface ApplicationFormProps {
     jobUrl: string | null;
     stageId: string | null;
     appliedDate: Date | null;
-    stageStatus: string | null;
+    stageOutcome: string | null;
     notes: string | null;
     tags?: { tag: Tag }[];
   };
@@ -87,8 +87,8 @@ export function ApplicationForm({ application, availableTags, stages, onClose }:
 
     const formData = new FormData(e.currentTarget);
     formData.set("tags", selectedTags.join(","));
-    // Clear stageStatus when the selected stage doesn't support it.
-    if (!showStatus) formData.set("stageStatus", "");
+    // Clear stageOutcome when the selected stage doesn't support it.
+    if (!showStatus) formData.set("stageOutcome", "");
 
     try {
       let result;
@@ -245,13 +245,13 @@ export function ApplicationForm({ application, availableTags, stages, onClose }:
           {/* Status: only for Screening / Assessment / Interview */}
           {showStatus && (
             <div className="space-y-2">
-              <label htmlFor="stageStatus" className="text-sm font-medium">
+              <label htmlFor="stageOutcome" className="text-sm font-medium">
                 {selectedStage?.name} Status *
               </label>
               <select
-                id="stageStatus"
-                name="stageStatus"
-                defaultValue={application?.stageStatus ?? "SCHEDULED"}
+                id="stageOutcome"
+                name="stageOutcome"
+                defaultValue={application?.stageOutcome ?? "SCHEDULED"}
                 className="flex h-10 w-full rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
               >
                 {STATUS_OPTIONS.map((o) => (
@@ -260,7 +260,7 @@ export function ApplicationForm({ application, availableTags, stages, onClose }:
                   </option>
                 ))}
               </select>
-              {errors.stageStatus && <p className="text-xs text-destructive">{errors.stageStatus[0]}</p>}
+              {errors.stageOutcome && <p className="text-xs text-destructive">{errors.stageOutcome[0]}</p>}
             </div>
           )}
 
