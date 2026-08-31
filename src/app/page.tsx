@@ -1,10 +1,14 @@
 import Link from "next/link";
 import { Logo } from "@/components/landing/logo";
 import { HeroSection } from "@/components/landing/hero";
+import { StatsSection } from "@/components/landing/stats";
 import { FeaturesSection } from "@/components/landing/features";
+import { PipelinePreviewSection } from "@/components/landing/pipeline-preview";
 import { HowItWorks } from "@/components/landing/how-it-works";
-import { TestimonialsSection } from "@/components/landing/testimonials";
+import { RemindersSection } from "@/components/landing/reminders";
 import { ComparisonSection } from "@/components/landing/comparison";
+import { PrivacySection } from "@/components/landing/privacy";
+import { TestimonialsSection } from "@/components/landing/testimonials";
 import { FAQSection } from "@/components/landing/faq";
 import { CTASection } from "@/components/landing/cta";
 
@@ -36,9 +40,13 @@ export default function Home() {
       </header>
 
       <HeroSection />
+      <StatsSection />
       <FeaturesSection />
-      <ComparisonSection />
+      <PipelinePreviewSection />
       <HowItWorks />
+      <RemindersSection />
+      <ComparisonSection />
+      <PrivacySection />
       <TestimonialsSection />
       <FAQSection />
       <CTASection />

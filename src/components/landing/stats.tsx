@@ -7,10 +7,10 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 gsap.registerPlugin(ScrollTrigger);
 
 const stats = [
-  { value: "8", label: "Pipeline Stages" },
-  { value: "∞", label: "Applications" },
-  { value: "7", label: "Interview Types" },
-  { value: "100%", label: "Free Forever" },
+  { value: "100%", label: "Free forever", sub: "No hidden tiers or paywalls" },
+  { value: "8", label: "Pipeline stages", sub: "Fully customisable to your flow" },
+  { value: "2×", label: "Faster follow-ups", sub: "Automated reminders on every deadline" },
+  { value: "0", label: "Spreadsheets needed", sub: "Replace the chaos with one view" },
 ];
 
 export function StatsSection() {
@@ -29,22 +29,24 @@ export function StatsSection() {
           ease: "power2.out",
           scrollTrigger: {
             trigger: containerRef.current,
-            start: "top 85%",
+            start: "top 80%",
           },
         }
       );
     }, containerRef);
-
     return () => ctx.revert();
   }, []);
 
   return (
-    <section ref={containerRef} className="border-t border-b py-16 px-6 bg-muted/20">
-      <div className="max-w-4xl mx-auto grid grid-cols-2 sm:grid-cols-4 gap-8">
-        {stats.map((stat) => (
-          <div key={stat.label} className="stat-item text-center space-y-1 opacity-0">
-            <p className="text-3xl sm:text-4xl font-bold tracking-tight">{stat.value}</p>
-            <p className="text-xs sm:text-sm text-muted-foreground">{stat.label}</p>
+    <section ref={containerRef} className="py-20 px-6 border-t border-b bg-muted/10">
+      <div className="max-w-6xl mx-auto grid grid-cols-2 lg:grid-cols-4 gap-8">
+        {stats.map((s) => (
+          <div key={s.label} className="stat-item opacity-0 text-center space-y-1.5">
+            <p className="text-4xl font-black tracking-tight bg-gradient-to-r from-indigo-500 to-purple-500 bg-clip-text text-transparent">
+              {s.value}
+            </p>
+            <p className="text-sm font-semibold">{s.label}</p>
+            <p className="text-xs text-muted-foreground">{s.sub}</p>
           </div>
         ))}
       </div>
