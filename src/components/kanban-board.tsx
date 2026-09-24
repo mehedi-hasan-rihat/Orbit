@@ -19,6 +19,7 @@ import { KanbanColumn } from "./kanban-column";
 import { KanbanCard } from "./kanban-card";
 import { updateApplicationStage } from "@/lib/actions/applications";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 interface Application {
   id: string;
@@ -35,14 +36,38 @@ export interface BoardStage {
   color: string;
 }
 
+export interface BoardColumnData {
+  stageId: string;
+  count: number;
+  applications: Application[];
+}
+
+// Normalise the incoming data into a flat map for DnD state management.
+// We keep a "displayed" set per stage (the initial preview slice) and the
+// total count for each stage so we can show "+X more".
+function buildState(columns: BoardColumnData[]) {
+  const items: Application[] = [];
+  const totalByStage: Record<string, number> = {};
+  for (const col of columns) {
+    items.push(...col.applications);
+    totalByStage[col.stageId] = col.count;
+  }
+  return { items, totalByStage };
+}
+
 export function KanbanBoard({
-  applications,
+  columns,
   stages,
 }: {
-  applications: Application[];
+  columns: BoardColumnData[];
   stages: BoardStage[];
 }) {
-  const [items, setItems] = useState(applications);
+  const initial = buildState(columns);
+  const [items, setItems] = useState<Application[]>(initial.items);
+  // totalByStage tracks the *true* total per stage, updated optimistically on drag.
+  const [totalByStage, setTotalByStage] = useState<Record<string, number>>(
+    initial.totalByStage
+  );
   const [activeId, setActiveId] = useState<string | null>(null);
   const mounted = useSyncExternalStore(
     () => () => {},
@@ -51,8 +76,6 @@ export function KanbanBoard({
   );
   const router = useRouter();
 
-  // Use delay-based activation so touch-hold initiates drag
-  // while normal scroll/tap still works
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: { delay: 200, tolerance: 5 },
@@ -89,11 +112,19 @@ export function KanbanBoard({
 
     if (activeApp.stageId === targetStageId) return;
 
+    const fromStageId = activeApp.stageId;
+
+    // Optimistically update the displayed items and totals.
     setItems((prev) =>
       prev.map((item) =>
         item.id === active.id ? { ...item, stageId: targetStageId } : item
       )
     );
+    setTotalByStage((prev) => ({
+      ...prev,
+      ...(fromStageId ? { [fromStageId]: Math.max(0, (prev[fromStageId] ?? 0) - 1) } : {}),
+      [targetStageId]: (prev[targetStageId] ?? 0) + 1,
+    }));
 
     await updateApplicationStage(active.id as string, targetStageId);
     router.refresh();
@@ -102,16 +133,18 @@ export function KanbanBoard({
   // Pre-hydration: static cards without DnD attributes
   if (!mounted) {
     return (
-      <div className="flex gap-3 pb-4 overflow-x-auto snap-x snap-mandatory md:snap-none">
+      <div className="flex flex-wrap gap-3 pb-4">
         {stages.map((column) => {
           const columnItems = items.filter((item) => item.stageId === column.id);
+          const total = totalByStage[column.id] ?? columnItems.length;
+          const more = total - columnItems.length;
           return (
             <KanbanColumn
               key={column.id}
               id={column.id}
               title={column.name}
               color={column.color}
-              count={columnItems.length}
+              count={total}
             >
               {columnItems.map((item) => (
                 <div
@@ -124,6 +157,14 @@ export function KanbanBoard({
                   </p>
                 </div>
               ))}
+              {more > 0 && (
+                <Link
+                  href="/dashboard/applications"
+                  className="block text-xs text-muted-foreground text-center py-1.5 rounded-md border border-dashed hover:border-solid hover:text-foreground transition-colors"
+                >
+                  +{more} more
+                </Link>
+              )}
             </KanbanColumn>
           );
         })}
@@ -138,11 +179,13 @@ export function KanbanBoard({
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-      <div className="flex gap-3 pb-4 overflow-x-auto snap-x snap-mandatory md:snap-none">
+      <div className="flex flex-wrap gap-3 pb-4">
         {stages.map((column) => {
           const columnItems = items.filter(
             (item) => item.stageId === column.id
           );
+          const total = totalByStage[column.id] ?? columnItems.length;
+          const more = total - columnItems.length;
           return (
             <SortableContext
               key={column.id}
@@ -153,11 +196,19 @@ export function KanbanBoard({
                 id={column.id}
                 title={column.name}
                 color={column.color}
-                count={columnItems.length}
+                count={total}
               >
                 {columnItems.map((item) => (
                   <KanbanCard key={item.id} application={item} />
                 ))}
+                {more > 0 && (
+                  <Link
+                    href="/dashboard/applications"
+                    className="block text-xs text-muted-foreground text-center py-1.5 rounded-md border border-dashed hover:border-solid hover:text-foreground transition-colors"
+                  >
+                    +{more} more
+                  </Link>
+                )}
               </KanbanColumn>
             </SortableContext>
           );

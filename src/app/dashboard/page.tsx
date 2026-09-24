@@ -1,14 +1,14 @@
-import { getApplications, getApplicationStats, getFollowUps } from "@/lib/actions/applications";
+import { getApplications, getApplicationStats, getFollowUps, getKanbanData } from "@/lib/actions/applications";
 import { AnalyticsCharts } from "@/components/analytics-charts";
 import { KanbanBoard } from "@/components/kanban-board";
 import { FollowUps } from "@/components/follow-ups";
 import { getStageTypes } from "@/lib/actions/pipeline";
 import { StatusBadge } from "@/components/status-badge";
 import Link from "next/link";
-import { MobileNav } from "@/components/mobile-nav";
 
 export default async function DashboardPage() {
-  const [applications, stats, followUps, stages] = await Promise.all([
+  const [kanbanData, recentApps, stats, followUps, stages] = await Promise.all([
+    getKanbanData(),
     getApplications(),
     getApplicationStats(),
     getFollowUps(),
@@ -21,7 +21,10 @@ export default async function DashboardPage() {
     .filter((s) => s.enabled)
     .map((s) => ({ id: s.id, name: s.name, color: s.color }));
 
-  const recentApplications = applications.slice(0, 5);
+  const recentApplications = recentApps.slice(0, 5);
+
+  // Total active applications across all stages (for the board subtitle).
+  const totalOnBoard = kanbanData.reduce((sum, col) => sum + col.count, 0);
 
   return (
     <>
@@ -59,12 +62,10 @@ export default async function DashboardPage() {
             <div>
               <h2 className="text-xl font-bold">Pipeline</h2>
               <p className="text-sm text-muted-foreground">
-                {applications.length > 20
-                  ? "Showing 20 most recent — drag and drop to update status"
-                  : "Drag and drop to update application status"}
+                Drag and drop to update application status
               </p>
             </div>
-            {applications.length > 20 && (
+            {totalOnBoard > 0 && (
               <Link
                 href="/dashboard/applications"
                 className="text-sm font-medium hover:underline"
@@ -74,7 +75,7 @@ export default async function DashboardPage() {
             )}
           </div>
           <KanbanBoard
-            applications={JSON.parse(JSON.stringify(applications.slice(0, 20)))}
+            columns={JSON.parse(JSON.stringify(kanbanData))}
             stages={boardStages}
           />
         </section>

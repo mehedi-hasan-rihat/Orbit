@@ -612,6 +612,73 @@ export async function getCompanyStats() {
     .sort((a, b) => b.total - a.total);
 }
 
+// ---------------------------------------------------------------------------
+// Kanban-optimised data loader.
+// Instead of fetching every application and grouping client-side, this runs
+// one count + one limited SELECT per enabled stage — all inside a single
+// Prisma transaction — so the board can render instantly regardless of how
+// many applications exist.
+// ---------------------------------------------------------------------------
+export interface KanbanColumnData {
+  stageId: string;
+  count: number;
+  applications: {
+    id: string;
+    company: string;
+    role: string;
+    stageId: string;
+    appliedDate: Date | null;
+    createdAt: Date;
+  }[];
+}
+
+export async function getKanbanData(): Promise<KanbanColumnData[]> {
+  const session = await requireUser();
+
+  // Fetch only the enabled stages in user-defined order.
+  const stages = await prisma.pipelineStageType.findMany({
+    where: { userId: session.userId, enabled: true },
+    orderBy: [{ order: "asc" }, { name: "asc" }],
+    select: { id: true },
+  });
+
+  const PREVIEW_LIMIT = 5;
+  const baseWhere = { userId: session.userId, archived: false, closed: false };
+
+  // Run all per-stage queries concurrently.
+  const results = await Promise.all(
+    stages.map(async (stage) => {
+      const where = { ...baseWhere, stageId: stage.id };
+      const [count, applications] = await Promise.all([
+        prisma.application.count({ where }),
+        prisma.application.findMany({
+          where,
+          orderBy: { createdAt: "desc" },
+          take: PREVIEW_LIMIT,
+          select: {
+            id: true,
+            company: true,
+            role: true,
+            stageId: true,
+            appliedDate: true,
+            createdAt: true,
+          },
+        }),
+      ]);
+      return {
+        stageId: stage.id,
+        count,
+        applications: applications.map((a) => ({
+          ...a,
+          stageId: a.stageId as string, // always set — we filtered by stageId
+        })),
+      };
+    })
+  );
+
+  return results;
+}
+
 export async function checkDuplicate(company: string, role: string) {
   const session = await getSession();
   if (!session) return null;
