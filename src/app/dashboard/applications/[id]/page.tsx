@@ -91,6 +91,16 @@ export default async function ApplicationDetailPage({ params }: Props) {
     application.followUpDate &&
     new Date(application.followUpDate) < new Date(now);
 
+  // Highlight when the stage is scheduled today or is overdue.
+  const scheduledDate = application.stageScheduledAt ? new Date(application.stageScheduledAt) : null;
+  const isScheduledOpen = scheduledDate &&
+    !application.closed &&
+    ["SCHEDULED", "PENDING", null].includes(application.stageOutcome);
+  const scheduledIsToday = isScheduledOpen &&
+    scheduledDate.getTime() <= now + 24 * 60 * 60 * 1000 &&
+    scheduledDate.getTime() > now;
+  const scheduledIsOverdue = isScheduledOpen && scheduledDate.getTime() < now;
+
   const enabledStages = JSON.parse(JSON.stringify(stageTypes.filter((s) => s.enabled)));
 
   return (
@@ -105,14 +115,41 @@ export default async function ApplicationDetailPage({ params }: Props) {
         <span className="text-foreground font-medium truncate">{application.company}</span>
       </div>
 
-      {/* Closed banner — the only place a closed application can be reopened,
-          so it doesn't become a dead end once it leaves the Active tab. */}
+      {/* Closed banner */}
       {application.closed && (
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border bg-muted/40 px-4 py-3">
           <p className="text-sm text-muted-foreground">
             <span className="font-medium text-foreground">This application is closed.</span>{" "}
             Its stage, notes, tags and interview rounds are kept exactly as they were
             {application.closedAt && <> — closed {formatDate(application.closedAt)}</>}.
+          </p>
+        </div>
+      )}
+
+      {/* Scheduled today banner */}
+      {scheduledIsToday && (
+        <div className="flex items-center gap-3 rounded-xl border border-primary/30 bg-primary/5 px-4 py-3">
+          <div className="w-2 h-2 rounded-full bg-primary shrink-0" />
+          <p className="text-sm">
+            <span className="font-medium">{application.stage?.name} today</span>
+            {scheduledDate && (
+              <span className="text-muted-foreground ml-1.5">
+                at {scheduledDate.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+              </span>
+            )}
+          </p>
+        </div>
+      )}
+
+      {/* Scheduled overdue banner */}
+      {scheduledIsOverdue && (
+        <div className="flex items-center gap-3 rounded-xl border border-destructive/30 bg-destructive/5 px-4 py-3">
+          <div className="w-2 h-2 rounded-full bg-destructive shrink-0" />
+          <p className="text-sm">
+            <span className="font-medium text-destructive">{application.stage?.name} overdue</span>
+            <span className="text-muted-foreground ml-1.5">
+              was scheduled for {scheduledDate && formatDate(scheduledDate)}
+            </span>
           </p>
         </div>
       )}

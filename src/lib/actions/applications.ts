@@ -160,9 +160,11 @@ export async function updateApplication(id: string, formData: FormData) {
     return { error: { _form: ["Application not found"] } };
   }
 
+  const stageChanged = existing.stageId !== stage.id;
+
   // Track stage change.
   const activities: { type: ActivityType; description: string; metadata?: string }[] = [];
-  if (existing.stageId !== stage.id) {
+  if (stageChanged) {
     const fromLabel = existing.stage?.name ?? existing.status ?? "Unassigned";
     activities.push({
       type: ActivityType.OUTCOME_CHANGE,
@@ -177,45 +179,73 @@ export async function updateApplication(id: string, formData: FormData) {
   const scheduledAtChanged =
     newScheduledAt?.toISOString() !== (oldScheduledAt?.toISOString() ?? undefined);
 
-  if (isSchedulingStage && newScheduledAt && scheduledAtChanged) {
-    const dateStr = newScheduledAt.toLocaleString("en-US", {
+  // Clear stageScheduledAt when:
+  // 1. The stage itself changed (scheduled date belonged to the old stage), OR
+  // 2. The outcome moved away from SCHEDULED/PENDING (stage is now done).
+  const outcomeWasScheduled = existing.stageOutcome === "SCHEDULED" || existing.stageOutcome === null;
+  const outcomeIsNowDone =
+    data.stageOutcome &&
+    !["SCHEDULED", "PENDING"].includes(data.stageOutcome) &&
+    data.stageOutcome !== existing.stageOutcome;
+
+  const resolvedScheduledAt =
+    stageChanged || (isSchedulingStage && outcomeWasScheduled && outcomeIsNowDone)
+      ? null
+      : newScheduledAt;
+
+  if (isSchedulingStage && resolvedScheduledAt && scheduledAtChanged) {
+    const dateStr = resolvedScheduledAt.toLocaleString("en-US", {
       month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit",
     });
     activities.push({
       type: ActivityType.INTERVIEW_SCHEDULED,
       description: `${stage.name} scheduled for ${dateStr}`,
-      metadata: JSON.stringify({ stageType: stage.name, stageId: stage.id, scheduledAt: newScheduledAt.toISOString() }),
+      metadata: JSON.stringify({ stageType: stage.name, stageId: stage.id, scheduledAt: resolvedScheduledAt.toISOString() }),
     });
   }
 
-  if (isOutcomeStage && newScheduledAt && scheduledAtChanged) {
-    const dateStr = newScheduledAt.toLocaleDateString("en-US", {
+  if (isOutcomeStage && resolvedScheduledAt && scheduledAtChanged) {
+    const dateStr = resolvedScheduledAt.toLocaleDateString("en-US", {
       month: "short", day: "numeric", year: "numeric",
     });
     activities.push({
       type: ActivityType.OUTCOME_CHANGE,
       description: `${stage.name} on ${dateStr}`,
-      metadata: JSON.stringify({ stageType: stage.name, stageId: stage.id, scheduledAt: newScheduledAt.toISOString() }),
+      metadata: JSON.stringify({ stageType: stage.name, stageId: stage.id, scheduledAt: resolvedScheduledAt.toISOString() }),
     });
   }
 
   const tagIds = data.tags ? data.tags.split(",").filter(Boolean) : [];
 
-  await prisma.application.update({
-    where: { id },
-    data: {
-      company: data.company,
-      role: data.role,
-      jobUrl: data.jobUrl || null,
-      stage: { connect: { id: stage.id } },
-      appliedDate: data.appliedDate ? new Date(data.appliedDate) : null,
-      stageOutcome: data.stageOutcome || null,
-      stageScheduledAt: newScheduledAt,
-      activities: activities.length > 0 ? { create: activities } : undefined,
-      tags: tagIds.length > 0 ? {
-        create: tagIds.map((tagId) => ({ tagId })),
-      } : undefined,
-    },
+  await prisma.$transaction(async (tx) => {
+    // If the stage changed or the date needs clearing, null it out first before
+    // any other writes so the calendar and cron see a clean state immediately.
+    if (stageChanged || resolvedScheduledAt === null) {
+      await tx.application.update({
+        where: { id },
+        data: { stageScheduledAt: null, stageOutcome: stageChanged ? null : undefined },
+      });
+    }
+
+    // Delete existing tags, then re-create atomically.
+    await tx.applicationTag.deleteMany({ where: { applicationId: id } });
+
+    await tx.application.update({
+      where: { id },
+      data: {
+        company: data.company,
+        role: data.role,
+        jobUrl: data.jobUrl || null,
+        stage: { connect: { id: stage.id } },
+        appliedDate: data.appliedDate ? new Date(data.appliedDate) : null,
+        stageOutcome: data.stageOutcome || null,
+        stageScheduledAt: resolvedScheduledAt,
+        activities: activities.length > 0 ? { create: activities } : undefined,
+        tags: tagIds.length > 0 ? {
+          create: tagIds.map((tagId) => ({ tagId })),
+        } : undefined,
+      },
+    });
   });
 
   revalidatePath("/dashboard");
@@ -783,4 +813,73 @@ export async function exportApplicationsCsv() {
 
   const csv = [headers.join(","), ...rows.map((r) => r.map((v) => `"${v}"`).join(","))].join("\n");
   return csv;
+}
+
+// Returns scheduled applications and open reminders that are due today or
+// overdue. Used by the dashboard "Due today" section and the detail page banners.
+export async function getDueItems() {
+  const session = await requireUser();
+  const now = new Date();
+  const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+
+  const [scheduled, reminders] = await Promise.all([
+    // Applications with a stage scheduled date that is today or in the past
+    // and still in an open/scheduled outcome state.
+    prisma.application.findMany({
+      where: {
+        userId: session.userId,
+        archived: false,
+        closed: false,
+        stageScheduledAt: { lte: todayEnd },
+        OR: [
+          { stageOutcome: { in: ["SCHEDULED", "PENDING"] } },
+          { stageOutcome: null },
+        ],
+      },
+      select: {
+        id: true,
+        company: true,
+        role: true,
+        stageScheduledAt: true,
+        stageOutcome: true,
+        stage: { select: { name: true, color: true } },
+      },
+      orderBy: { stageScheduledAt: "asc" },
+    }),
+
+    // Open reminders due today or overdue
+    prisma.followUp.findMany({
+      where: {
+        done: false,
+        dueAt: { lte: todayEnd },
+        application: { userId: session.userId, archived: false, closed: false },
+      },
+      select: {
+        id: true,
+        title: true,
+        dueAt: true,
+        application: { select: { id: true, company: true, role: true } },
+      },
+      orderBy: { dueAt: "asc" },
+    }),
+  ]);
+
+  return {
+    scheduled: scheduled.map((a) => ({
+      id: a.id,
+      company: a.company,
+      role: a.role,
+      date: a.stageScheduledAt!,
+      stageName: a.stage?.name ?? "Stage",
+      stageColor: a.stage?.color ?? "#6366f1",
+    })),
+    reminders: reminders.map((f) => ({
+      id: f.application.id,
+      reminderId: f.id,
+      company: f.application.company,
+      role: f.application.role,
+      title: f.title,
+      date: f.dueAt,
+    })),
+  };
 }

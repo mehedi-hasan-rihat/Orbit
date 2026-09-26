@@ -45,7 +45,8 @@ function isPast(date: Date) {
   return new Date(date) < today;
 }
 
-function eventStyle(type: "SCHEDULED" | "REMINDER") {
+function eventStyle(type: "SCHEDULED" | "REMINDER", overdue = false) {
+  if (overdue) return "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300";
   return type === "SCHEDULED"
     ? "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300"
     : "bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300";
@@ -81,10 +82,12 @@ export function CalendarView({ events }: CalendarViewProps) {
 
   const selectedEvents = selectedDate ? getEventsForDate(selectedDate) : [];
 
-  const upcoming = events.filter((e) => {
-    const diff = (new Date(e.date).getTime() - today.getTime()) / (1000 * 60 * 60 * 24);
-    return diff >= 0 && diff <= 7;
-  });
+  const dueAndUpcoming = events
+    .filter((e) => {
+      const diff = (new Date(e.date).getTime() - today.getTime()) / (1000 * 60 * 60 * 24);
+      return diff <= 7; // includes overdue (negative diff) and next 7 days
+    })
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -119,6 +122,7 @@ export function CalendarView({ events }: CalendarViewProps) {
             const dayEvents = getEventsForDate(date);
             const isSelected = selectedDate && isSameDay(date, selectedDate);
             const past = isPast(date) && !isToday(date);
+            const hasOverdue = past && dayEvents.length > 0;
 
             return (
               <button
@@ -127,18 +131,19 @@ export function CalendarView({ events }: CalendarViewProps) {
                 className={clsx(
                   "bg-background h-16 sm:h-20 p-1.5 text-left transition-colors hover:bg-accent/50 flex flex-col",
                   isSelected && "ring-2 ring-inset ring-primary",
-                  past && "opacity-50"
+                  past && !hasOverdue && "opacity-50"
                 )}
               >
                 <span className={clsx(
                   "text-xs font-medium w-6 h-6 flex items-center justify-center rounded-full",
-                  isToday(date) && "bg-primary text-primary-foreground"
+                  isToday(date) && "bg-primary text-primary-foreground",
+                  hasOverdue && "text-destructive font-bold"
                 )}>
                   {date.getDate()}
                 </span>
                 <div className="flex flex-col gap-0.5 mt-0.5 overflow-hidden">
                   {dayEvents.slice(0, 2).map((e) => (
-                    <div key={e.id} className={clsx("rounded px-1 text-[10px] font-medium truncate leading-4", eventStyle(e.type))}>
+                    <div key={e.id} className={clsx("rounded px-1 text-[10px] font-medium truncate leading-4", eventStyle(e.type, past))}>
                       {e.company}
                     </div>
                   ))}
@@ -153,12 +158,16 @@ export function CalendarView({ events }: CalendarViewProps) {
 
         <div className="flex gap-4 text-xs text-muted-foreground">
           <div className="flex items-center gap-1.5">
-            <div className="w-3 h-3 rounded bg-indigo-100 dark:bg-indigo-900/50" />
+            <div className="w-3 h-3 rounded bg-indigo-200 dark:bg-indigo-700" />
             Scheduled
           </div>
           <div className="flex items-center gap-1.5">
-            <div className="w-3 h-3 rounded bg-amber-100 dark:bg-amber-900/50" />
+            <div className="w-3 h-3 rounded bg-amber-200 dark:bg-amber-700" />
             Reminder
+          </div>
+          <div className="flex items-center gap-1.5">
+            <div className="w-3 h-3 rounded bg-red-200 dark:bg-red-700" />
+            Overdue
           </div>
         </div>
       </div>
@@ -175,16 +184,24 @@ export function CalendarView({ events }: CalendarViewProps) {
               <p className="text-xs text-muted-foreground">No events on this day.</p>
             ) : (
               <div className="space-y-2">
-                {selectedEvents.map((e) => (
+                {selectedEvents.map((e) => {
+                  const overdue = isPast(new Date(e.date)) && !isToday(new Date(e.date));
+                  return (
                   <Link
                     key={e.id}
                     href={`/dashboard/applications/${e.applicationId}`}
-                    className="block border rounded-lg p-3 hover:bg-accent transition-colors"
+                    className={clsx(
+                      "block border rounded-lg p-3 hover:bg-accent transition-colors",
+                      overdue && "border-red-200 dark:border-red-800/40 bg-red-50/50 dark:bg-red-900/10"
+                    )}
                   >
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className={clsx("inline-flex rounded-full px-2 py-0.5 text-xs font-medium", eventStyle(e.type))}>
+                      <span className={clsx("inline-flex rounded-full px-2 py-0.5 text-xs font-medium", eventStyle(e.type, overdue))}>
                         {e.type === "SCHEDULED" ? (e.stageName ?? "Scheduled") : "Reminder"}
                       </span>
+                      {overdue && (
+                        <span className="text-[10px] font-semibold text-destructive uppercase tracking-wide">Overdue</span>
+                      )}
                       {e.outcome && e.outcome !== "PENDING" && (
                         <span className={clsx("inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium", outcomeDisplay(e.outcome).className)}>
                           {outcomeDisplay(e.outcome).label}
@@ -202,7 +219,8 @@ export function CalendarView({ events }: CalendarViewProps) {
                       <p className="text-xs text-muted-foreground mt-0.5 truncate">{e.title}</p>
                     )}
                   </Link>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
@@ -210,12 +228,14 @@ export function CalendarView({ events }: CalendarViewProps) {
 
         {/* Upcoming 7 days */}
         <div className="border rounded-xl p-4 space-y-3">
-          <h3 className="text-sm font-semibold">Upcoming (7 days)</h3>
-          {upcoming.length === 0 ? (
-            <p className="text-xs text-muted-foreground">Nothing in the next 7 days.</p>
+          <h3 className="text-sm font-semibold">Due &amp; upcoming (7 days)</h3>
+          {dueAndUpcoming.length === 0 ? (
+            <p className="text-xs text-muted-foreground">Nothing due in the next 7 days.</p>
           ) : (
             <div className="space-y-2">
-              {upcoming.map((e) => (
+              {dueAndUpcoming.map((e) => {
+                const overdue = isPast(new Date(e.date)) && !isToday(new Date(e.date));
+                return (
                 <Link
                   key={e.id}
                   href={`/dashboard/applications/${e.applicationId}`}
@@ -225,17 +245,20 @@ export function CalendarView({ events }: CalendarViewProps) {
                     <p className="text-xs text-muted-foreground">
                       {new Date(e.date).toLocaleDateString([], { month: "short" })}
                     </p>
-                    <p className="text-base font-bold leading-none">{new Date(e.date).getDate()}</p>
+                    <p className={clsx("text-base font-bold leading-none", overdue && "text-destructive")}>
+                      {new Date(e.date).getDate()}
+                    </p>
                   </div>
                   <div className="min-w-0">
                     <p className="text-xs font-medium truncate">{e.company}</p>
                     <p className="text-xs text-muted-foreground truncate">{e.role}</p>
-                    <span className={clsx("inline-flex rounded-full px-1.5 py-0.5 text-[10px] font-medium mt-0.5", eventStyle(e.type))}>
-                      {e.type === "SCHEDULED" ? (e.stageName ?? "Scheduled") : "Reminder"}
+                    <span className={clsx("inline-flex rounded-full px-1.5 py-0.5 text-[10px] font-medium mt-0.5", eventStyle(e.type, overdue))}>
+                      {overdue ? "Overdue" : e.type === "SCHEDULED" ? (e.stageName ?? "Scheduled") : "Reminder"}
                     </span>
                   </div>
                 </Link>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>

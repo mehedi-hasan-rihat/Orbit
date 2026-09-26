@@ -1,86 +1,126 @@
-import { getApplications, getApplicationStats, getFollowUps, getKanbanData } from "@/lib/actions/applications";
+import { getApplications, getApplicationStats, getKanbanData, getDueItems } from "@/lib/actions/applications";
 import { AnalyticsCharts } from "@/components/analytics-charts";
 import { KanbanBoard } from "@/components/kanban-board";
-import { FollowUps } from "@/components/follow-ups";
 import { getStageTypes } from "@/lib/actions/pipeline";
 import { StatusBadge } from "@/components/status-badge";
 import Link from "next/link";
 
 export default async function DashboardPage() {
-  const [kanbanData, recentApps, stats, followUps, stages] = await Promise.all([
+  const [kanbanData, recentApps, stats, stages, dueItems] = await Promise.all([
     getKanbanData(),
     getApplications(),
     getApplicationStats(),
-    getFollowUps(),
     getStageTypes(),
+    getDueItems(),
   ]);
 
-  // Only enabled stages become board columns; disabled ones stay assignable
-  // but stop taking up horizontal space.
   const boardStages = stages
     .filter((s) => s.enabled)
     .map((s) => ({ id: s.id, name: s.name, color: s.color }));
 
   const recentApplications = recentApps.slice(0, 5);
-
-  // Total active applications across all stages (for the board subtitle).
   const totalOnBoard = kanbanData.reduce((sum, col) => sum + col.count, 0);
+  const hasDueItems = dueItems.scheduled.length > 0 || dueItems.reminders.length > 0;
 
   return (
     <>
       <div className="space-y-10">
-        {/* Analytics Section */}
+        {/* Analytics */}
         <section>
           <div className="mb-4">
             <h1 className="text-2xl font-bold">Dashboard</h1>
             <p className="text-sm text-muted-foreground">
               Overview of your job search progress
-              {stats.thisWeek > 0 && (
-                <span> · {stats.thisWeek} added this week</span>
-              )}
+              {stats.thisWeek > 0 && <span> · {stats.thisWeek} added this week</span>}
             </p>
           </div>
           <AnalyticsCharts stats={stats} />
         </section>
 
-        {/* Reminders Section */}
-        {followUps.length > 0 && (
+        {/* Due today — scheduled stages + overdue/today reminders only */}
+        {hasDueItems && (
           <section>
-            <div className="mb-4">
-              <h2 className="text-xl font-bold">Reminders</h2>
+            <div className="mb-3">
+              <h2 className="text-xl font-bold">Due today</h2>
               <p className="text-sm text-muted-foreground">
-                Upcoming and overdue reminders
+                Stages and follow-ups that need your attention
               </p>
             </div>
-            <FollowUps applications={JSON.parse(JSON.stringify(followUps))} />
+            <div className="space-y-2">
+              {dueItems.scheduled.map((item) => {
+                const isPast = new Date(item.date) < new Date();
+                return (
+                  <Link
+                    key={item.id}
+                    href={`/dashboard/applications/${item.id}`}
+                    className="flex items-center justify-between gap-4 rounded-xl border px-4 py-3 hover:bg-accent transition-colors"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: item.stageColor }} />
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium truncate">{item.company} — {item.role}</p>
+                        <p className="text-xs text-muted-foreground">{item.stageName}</p>
+                      </div>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <p className={`text-xs font-medium ${isPast ? "text-destructive" : "text-primary"}`}>
+                        {new Date(item.date).toLocaleDateString([], { month: "short", day: "numeric" })}
+                        {new Date(item.date).getHours() !== 0 && (
+                          <span className="ml-1">
+                            {new Date(item.date).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                          </span>
+                        )}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground">{isPast ? "overdue" : "today"}</p>
+                    </div>
+                  </Link>
+                );
+              })}
+              {dueItems.reminders.map((item) => {
+                const isPast = new Date(item.date) < new Date();
+                return (
+                  <Link
+                    key={item.reminderId}
+                    href={`/dashboard/applications/${item.id}`}
+                    className="flex items-center justify-between gap-4 rounded-xl border border-amber-200 dark:border-amber-800/40 bg-amber-50/50 dark:bg-amber-900/10 px-4 py-3 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-2 h-2 rounded-full shrink-0 bg-amber-500" />
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium truncate">{item.company} — {item.role}</p>
+                        <p className="text-xs text-muted-foreground truncate">{item.title}</p>
+                      </div>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <p className={`text-xs font-medium ${isPast ? "text-destructive" : "text-amber-600 dark:text-amber-400"}`}>
+                        {new Date(item.date).toLocaleDateString([], { month: "short", day: "numeric" })}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground">{isPast ? "overdue" : "today"}</p>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
           </section>
         )}
 
-        {/* Kanban Section */}
+        {/* Pipeline */}
         <section>
           <div className="flex items-center justify-between mb-4">
             <div>
               <h2 className="text-xl font-bold">Pipeline</h2>
-              <p className="text-sm text-muted-foreground">
-                Drag and drop to update application status
-              </p>
+              <p className="text-sm text-muted-foreground">Drag and drop to update application status</p>
             </div>
             {totalOnBoard > 0 && (
-              <Link
-                href="/dashboard/applications"
-                className="text-sm font-medium hover:underline"
-              >
+              <Link href="/dashboard/applications" className="text-sm font-medium hover:underline">
                 View all →
               </Link>
             )}
           </div>
-          <KanbanBoard
-            columns={JSON.parse(JSON.stringify(kanbanData))}
-            stages={boardStages}
-          />
+          <KanbanBoard columns={JSON.parse(JSON.stringify(kanbanData))} stages={boardStages} />
         </section>
 
-        {/* Recent Applications Section */}
+        {/* Recent Applications */}
         <section>
           <div className="flex items-center justify-between mb-4">
             <div>
@@ -89,10 +129,7 @@ export default async function DashboardPage() {
                 Your latest {recentApplications.length} applications
               </p>
             </div>
-            <Link
-              href="/dashboard/applications"
-              className="text-sm font-medium hover:underline"
-            >
+            <Link href="/dashboard/applications" className="text-sm font-medium hover:underline">
               View all →
             </Link>
           </div>
@@ -129,9 +166,7 @@ export default async function DashboardPage() {
                         <StatusBadge application={app} />
                       </td>
                       <td className="py-3 px-4 text-muted-foreground hidden sm:table-cell">
-                        {app.appliedDate
-                          ? new Date(app.appliedDate).toLocaleDateString()
-                          : "—"}
+                        {app.appliedDate ? new Date(app.appliedDate).toLocaleDateString() : "—"}
                       </td>
                       <td className="py-3 px-4 text-right">
                         <Link
