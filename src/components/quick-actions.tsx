@@ -220,37 +220,7 @@ export function QuickActions({
               </form>
             )}
 
-            {/* Schedule Interview */}
-            <Link
-              href={`/dashboard/applications/${applicationId}#interviews`}
-              onClick={() => setOpen(false)}
-              className="flex w-full items-center gap-2 px-4 py-2 text-sm hover:bg-accent transition-colors"
-            >
-                Schedule Interview
-            </Link>
-
             <div className="border-t my-1" />
-
-            {/* Got offered — an outcome flag, not a stage move and not an
-                ending, so it sits above Close rather than replacing it. */}
-            {offered ? (
-              <button
-                onClick={() => run(() => unmarkOffered(applicationId))}
-                disabled={loading}
-                className="flex w-full items-center gap-2 px-4 py-2 text-sm text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
-              >
-                Remove offer
-              </button>
-            ) : (
-              <button
-                onClick={() => run(() => markOffered(applicationId))}
-                disabled={loading}
-                className="flex w-full items-center gap-2 px-4 py-2 text-sm text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
-                title="Records that you got an offer. Doesn't close the application."
-              >
-                Got offered
-              </button>
-            )}
 
             {/* Close — ends the process but keeps the stage and history as-is */}
             {closed ? (
