@@ -9,7 +9,7 @@ export default async function CalendarPage() {
       <div>
         <h1 className="text-2xl font-bold">Calendar</h1>
         <p className="text-sm text-muted-foreground">
-          Interviews and follow-ups at a glance
+          Interviews and reminders at a glance
         </p>
       </div>
       <CalendarView events={JSON.parse(JSON.stringify(events))} />

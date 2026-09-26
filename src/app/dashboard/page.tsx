@@ -43,13 +43,13 @@ export default async function DashboardPage() {
           <AnalyticsCharts stats={stats} />
         </section>
 
-        {/* Follow-ups Section */}
+        {/* Reminders Section */}
         {followUps.length > 0 && (
           <section>
             <div className="mb-4">
-              <h2 className="text-xl font-bold">Follow-ups</h2>
+              <h2 className="text-xl font-bold">Reminders</h2>
               <p className="text-sm text-muted-foreground">
-                Upcoming and overdue follow-ups
+                Upcoming and overdue reminders
               </p>
             </div>
             <FollowUps applications={JSON.parse(JSON.stringify(followUps))} />

@@ -285,13 +285,13 @@ export async function sendReminderEmail(opts: {
     opts.daysUntil === 0 ? "DUE TODAY" : opts.daysUntil === 1 ? "TOMORROW" : dateStr.toUpperCase();
 
   const html = baseTemplate({
-    title: isInterview ? "Interview Reminder" : "Follow-up Reminder",
-    subtitle: `${opts.company} — ${isInterview ? "Interview" : opts.followUpTitle ?? "Follow-up"}`,
+    title: isInterview ? "Interview Reminder" : "Reminder",
+    subtitle: `${opts.company} — ${isInterview ? "Interview" : opts.followUpTitle ?? "Reminder"}`,
     body: `
       ${blocks.greeting(
         opts.userName,
         opts.daysUntil === 0
-          ? `${opts.followUpTitle ?? "Your follow-up"} is due today.`
+          ? `${opts.followUpTitle ?? "Your reminder"} is due today.`
           : opts.daysUntil === 1
             ? "Your event is tomorrow."
             : `This is a reminder for ${dateStr}.`
@@ -309,7 +309,7 @@ export async function sendReminderEmail(opts: {
           : [
               { label: "Company", value: opts.company },
               { label: "Role", value: opts.role },
-              ...(opts.followUpTitle ? [{ label: "Follow-up", value: opts.followUpTitle }] : []),
+              ...(opts.followUpTitle ? [{ label: "Reminder", value: opts.followUpTitle }] : []),
               { label: "Date", value: dateStr },
             ]
       )}
@@ -337,7 +337,7 @@ export async function sendReminderEmail(opts: {
     to: opts.to,
     subject: isInterview
       ? `Interview Reminder: ${opts.company}`
-      : `Due today: ${opts.followUpTitle ?? "Follow-up"} — ${opts.company}`,
+      : `Due today: ${opts.followUpTitle ?? "Reminder"} — ${opts.company}`,
     html,
   });
 }

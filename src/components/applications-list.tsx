@@ -43,6 +43,7 @@ interface Application {
   appliedDate: Date | null;
   followUpDate: Date | null;
   stageOutcome: string | null;
+  stageScheduledAt: Date | null;
   notes: string | null;
   archived: boolean;
   closed: boolean;
@@ -207,7 +208,7 @@ export function ApplicationsList({
             <option value="updatedAt">Recently updated</option>
             <option value="company">Company A–Z</option>
             <option value="appliedDate">Applied date</option>
-            <option value="followUpDate">Follow-up date</option>
+            <option value="followUpDate">Reminder date</option>
           </select>
         </div>
       </div>

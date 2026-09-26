@@ -114,7 +114,7 @@ export function ApplicationActions({
         </select>
 
         <button onClick={() => setEditing(true)} disabled={pending} className={BUTTON}>
-          Edit
+          Update
         </button>
 
         {closed ? (

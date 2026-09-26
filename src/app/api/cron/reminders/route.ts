@@ -134,6 +134,50 @@ export async function GET(req: NextRequest) {
           }),
       });
     }
+
+    // Also notify for applications where the stage itself is scheduled (set
+    // from the Edit / Update Application modal) — these share the same email
+    // template as interview entries.
+    const stageScheduled = await prisma.application.findMany({
+      where: {
+        stageScheduledAt: { gte: targetDay, lt: nextDay },
+        archived: false,
+        closed: false,
+      },
+      include: {
+        user: { select: { id: true, name: true, email: true } },
+        stage: { select: { name: true } },
+      },
+    });
+
+    console.log(`[cron] Found ${stageScheduled.length} stage-scheduled application(s) for +${daysUntil}d`);
+
+    for (const app of stageScheduled) {
+      const { user } = app;
+      const label = app.stage?.name ?? "Stage";
+
+      await notify({
+        userId: user.id,
+        email: user.email,
+        userName: user.name,
+        applicationId: app.id,
+        dedupeKey: `stage-scheduled-${app.id}-${daysUntil}d`,
+        type: "INTERVIEW_REMINDER",
+        title: `${label} at ${app.company}`,
+        send: () =>
+          sendReminderEmail({
+            to: user.email,
+            userName: user.name,
+            company: app.company,
+            role: app.role,
+            daysUntil,
+            type: "interview",
+            date: app.stageScheduledAt!,
+            interviewLabel: label,
+            applicationUrl: `${APP_URL}/dashboard/applications/${app.id}`,
+          }),
+      });
+    }
   }
 
   // --- Follow-ups: on the day they are due ---

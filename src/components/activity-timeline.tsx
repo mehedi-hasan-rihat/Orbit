@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import clsx from "clsx";
+import { INTERVIEW_OUTCOMES } from "@/lib/validations";
 
 interface Activity {
   id: string;
@@ -29,12 +30,12 @@ const typeConfig: Record<string, { color: string; label: string; className: stri
   },
   FOLLOW_UP_SET: {
     color: "#22c55e",
-    label: "Follow-up",
+    label: "Reminder",
     className: "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300",
   },
   INTERVIEW_SCHEDULED: {
     color: "#6366f1",
-    label: "Interview",
+    label: "Scheduled",
     className: "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300",
   },
 };
@@ -44,9 +45,51 @@ const filterOptions = [
   { value: "CREATED", label: "Created" },
   { value: "OUTCOME_CHANGE", label: "Outcomes" },
   { value: "NOTE_ADDED", label: "Notes" },
-  { value: "INTERVIEW_SCHEDULED", label: "Interviews" },
-  { value: "FOLLOW_UP_SET", label: "Follow-ups" },
+  { value: "INTERVIEW_SCHEDULED", label: "Scheduled" },
+  { value: "FOLLOW_UP_SET", label: "Reminders" },
 ];
+
+// Converts any SCREAMING_SNAKE outcome key to Title Case at runtime.
+// Driven entirely by INTERVIEW_OUTCOMES — no manual list to maintain.
+const OUTCOME_LABELS: Record<string, string> = Object.fromEntries(
+  INTERVIEW_OUTCOMES.map((o) => [o, o.charAt(0) + o.slice(1).toLowerCase()])
+);
+
+/**
+ * Normalises INTERVIEW_SCHEDULED activity descriptions:
+ *
+ * 1. Old format:  "Round 1 Technical interview: PASSED"
+ *    → "Round 1 Technical interview: Scheduled → Passed"
+ *
+ * 2. New outcome-change format already has "from → to" — returned as-is.
+ *
+ * 3. Stage-scheduled entries from the Update Application modal
+ *    (metadata has `stageId`, not `stageTypeId`) are returned as-is because
+ *    their description already reads naturally ("Screening scheduled for …").
+ */
+function formatActivityDescription(activity: Activity): string {
+  if (activity.type !== "INTERVIEW_SCHEDULED") return activity.description;
+
+  try {
+    const meta = JSON.parse(activity.metadata ?? "{}") as Record<string, string>;
+
+    // New stage-scheduled entries and new outcome-change entries are already readable.
+    if (meta.fromOutcome || meta.stageId) return activity.description;
+
+    // Old entries: description ends with a raw uppercase outcome keyword.
+    if (meta.outcome) {
+      const rawSuffix = new RegExp(`: ${meta.outcome}$`);
+      if (rawSuffix.test(activity.description)) {
+        const toLabel = OUTCOME_LABELS[meta.outcome] ?? meta.outcome;
+        return activity.description.replace(rawSuffix, `: Scheduled → ${toLabel}`);
+      }
+    }
+  } catch {
+    // ignore
+  }
+
+  return activity.description;
+}
 
 export function ActivityTimeline({ activities }: { activities: Activity[] }) {
   const [filter, setFilter] = useState("ALL");
@@ -81,7 +124,7 @@ export function ActivityTimeline({ activities }: { activities: Activity[] }) {
           No activity{filter !== "ALL" ? " of this type" : ""} recorded yet.
         </p>
       ) : (
-        <div className="space-y-0">
+        <div className="max-h-128 overflow-y-auto scrollbar-thin space-y-0 pr-1">
           {filtered.map((activity, index) => {
             const config = typeConfig[activity.type] || {
               color: "#6b7280",
@@ -116,7 +159,7 @@ export function ActivityTimeline({ activities }: { activities: Activity[] }) {
                           {config.label}
                         </span>
                       </div>
-                      <p className="text-sm">{activity.description}</p>
+                      <p className="text-sm">{formatActivityDescription(activity)}</p>
                     </div>
                     <time className="text-xs text-muted-foreground shrink-0 pt-0.5">
                       {new Date(activity.createdAt).toLocaleDateString([], {

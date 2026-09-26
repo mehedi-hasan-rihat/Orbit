@@ -2,7 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
-import { applicationSchema, updateStageSchema } from "@/lib/validations";
+import { applicationSchema, updateStageSchema, OUTCOME_STAGE_NAMES, INTERVIEW_OUTCOMES } from "@/lib/validations";
 import { revalidatePath } from "next/cache";
 import { resolveStage } from "@/lib/stage-display";
 import { ActivityType, StageCategory } from "@/generated/prisma/enums";
@@ -27,6 +27,7 @@ export async function createApplication(formData: FormData) {
     stageId: formData.get("stageId") as string,
     appliedDate: formData.get("appliedDate") as string,
     stageOutcome: formData.get("stageOutcome") as string,
+    stageScheduledAt: formData.get("stageScheduledAt") as string,
     notes: formData.get("notes") as string,
     tags: formData.get("tags") as string,
   };
@@ -51,6 +52,20 @@ export async function createApplication(formData: FormData) {
   if (isSchedulingStage && !data.stageOutcome) {
     return { error: { stageOutcome: ["Status is required for this stage"] } };
   }
+  if (isSchedulingStage && data.stageOutcome && !(INTERVIEW_OUTCOMES as readonly string[]).includes(data.stageOutcome)) {
+    return { error: { stageOutcome: ["Invalid status value"] } };
+  }
+
+  // stageScheduledAt is required for scheduling stages (date mandatory, time optional).
+  if (isSchedulingStage && !data.stageScheduledAt) {
+    return { error: { stageScheduledAt: ["Scheduled date is required for this stage"] } };
+  }
+
+  // stageScheduledAt (date) is required for outcome stages.
+  const isOutcomeStage = OUTCOME_STAGE_NAMES.includes(stage.name);
+  if (isOutcomeStage && !data.stageScheduledAt) {
+    return { error: { stageScheduledAt: ["Date is required for this stage"] } };
+  }
 
   const tagIds = data.tags ? data.tags.split(",").filter(Boolean) : [];
 
@@ -63,12 +78,19 @@ export async function createApplication(formData: FormData) {
       stageId: stage.id,
       appliedDate: data.appliedDate ? new Date(data.appliedDate) : null,
       stageOutcome: data.stageOutcome || null,
-      notes: data.notes || null,
+      stageScheduledAt: data.stageScheduledAt ? new Date(data.stageScheduledAt) : null,
       activities: {
-        create: {
-          type: ActivityType.CREATED,
-          description: `Application created for ${data.role} at ${data.company}`,
-        },
+        create: [
+          {
+            type: ActivityType.CREATED,
+            description: `Application created for ${data.role} at ${data.company}`,
+          },
+          ...(isSchedulingStage && data.stageScheduledAt ? [{
+            type: ActivityType.INTERVIEW_SCHEDULED,
+            description: `${stage.name} scheduled for ${new Date(data.stageScheduledAt).toLocaleString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" })}`,
+            metadata: JSON.stringify({ stageType: stage.name, stageId: stage.id, scheduledAt: data.stageScheduledAt }),
+          }] : []),
+        ],
       },
       tags: tagIds.length > 0 ? {
         create: tagIds.map((tagId) => ({ tagId })),
@@ -90,7 +112,7 @@ export async function updateApplication(id: string, formData: FormData) {
     stageId: formData.get("stageId") as string,
     appliedDate: formData.get("appliedDate") as string,
     stageOutcome: formData.get("stageOutcome") as string,
-    notes: formData.get("notes") as string,
+    stageScheduledAt: formData.get("stageScheduledAt") as string,
     tags: formData.get("tags") as string,
   };
 
@@ -114,6 +136,20 @@ export async function updateApplication(id: string, formData: FormData) {
   if (isSchedulingStage && !data.stageOutcome) {
     return { error: { stageOutcome: ["Status is required for this stage"] } };
   }
+  if (isSchedulingStage && data.stageOutcome && !(INTERVIEW_OUTCOMES as readonly string[]).includes(data.stageOutcome)) {
+    return { error: { stageOutcome: ["Invalid status value"] } };
+  }
+
+  // stageScheduledAt is required for scheduling stages (date mandatory, time optional).
+  if (isSchedulingStage && !data.stageScheduledAt) {
+    return { error: { stageScheduledAt: ["Scheduled date is required for this stage"] } };
+  }
+
+  // stageScheduledAt (date) is required for outcome stages.
+  const isOutcomeStage = OUTCOME_STAGE_NAMES.includes(stage.name);
+  if (isOutcomeStage && !data.stageScheduledAt) {
+    return { error: { stageScheduledAt: ["Date is required for this stage"] } };
+  }
 
   const existing = await prisma.application.findFirst({
     where: { id, userId: session.userId },
@@ -124,8 +160,7 @@ export async function updateApplication(id: string, formData: FormData) {
     return { error: { _form: ["Application not found"] } };
   }
 
-  // Track stage change. The description keeps the same "from X to Y" shape it
-  // has always had, now with stage names in place of enum values.
+  // Track stage change.
   const activities: { type: ActivityType; description: string; metadata?: string }[] = [];
   if (existing.stageId !== stage.id) {
     const fromLabel = existing.stage?.name ?? existing.status ?? "Unassigned";
@@ -136,17 +171,35 @@ export async function updateApplication(id: string, formData: FormData) {
     });
   }
 
-  if (data.notes && data.notes !== existing.notes) {
+  // Track when a scheduled date is set or changed for the current stage.
+  const newScheduledAt = data.stageScheduledAt ? new Date(data.stageScheduledAt) : null;
+  const oldScheduledAt = existing.stageScheduledAt;
+  const scheduledAtChanged =
+    newScheduledAt?.toISOString() !== (oldScheduledAt?.toISOString() ?? undefined);
+
+  if (isSchedulingStage && newScheduledAt && scheduledAtChanged) {
+    const dateStr = newScheduledAt.toLocaleString("en-US", {
+      month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit",
+    });
     activities.push({
-      type: ActivityType.NOTE_ADDED,
-      description: "Notes updated",
+      type: ActivityType.INTERVIEW_SCHEDULED,
+      description: `${stage.name} scheduled for ${dateStr}`,
+      metadata: JSON.stringify({ stageType: stage.name, stageId: stage.id, scheduledAt: newScheduledAt.toISOString() }),
+    });
+  }
+
+  if (isOutcomeStage && newScheduledAt && scheduledAtChanged) {
+    const dateStr = newScheduledAt.toLocaleDateString("en-US", {
+      month: "short", day: "numeric", year: "numeric",
+    });
+    activities.push({
+      type: ActivityType.OUTCOME_CHANGE,
+      description: `${stage.name} on ${dateStr}`,
+      metadata: JSON.stringify({ stageType: stage.name, stageId: stage.id, scheduledAt: newScheduledAt.toISOString() }),
     });
   }
 
   const tagIds = data.tags ? data.tags.split(",").filter(Boolean) : [];
-
-  // Remove existing tags and re-create
-  await prisma.applicationTag.deleteMany({ where: { applicationId: id } });
 
   await prisma.application.update({
     where: { id },
@@ -157,7 +210,7 @@ export async function updateApplication(id: string, formData: FormData) {
       stage: { connect: { id: stage.id } },
       appliedDate: data.appliedDate ? new Date(data.appliedDate) : null,
       stageOutcome: data.stageOutcome || null,
-      notes: data.notes || null,
+      stageScheduledAt: newScheduledAt,
       activities: activities.length > 0 ? { create: activities } : undefined,
       tags: tagIds.length > 0 ? {
         create: tagIds.map((tagId) => ({ tagId })),
@@ -198,6 +251,7 @@ export async function updateApplicationStage(id: string, stageId: string) {
     data: {
       stage: { connect: { id: stage.id } },
       stageOutcome: null, // clear sub-status when moving to a new stage
+      stageScheduledAt: null, // clear scheduled date when moving to a new stage
       activities: {
         create: {
           type: ActivityType.OUTCOME_CHANGE,
@@ -490,6 +544,7 @@ export async function getApplication(id: string) {
       activities: { orderBy: { createdAt: "desc" } },
       tags: { include: { tag: true } },
       stage: { select: { id: true, name: true, color: true, category: true } },
+      notes_list: { orderBy: { createdAt: "desc" } },
     },
   });
 
@@ -699,36 +754,6 @@ export async function checkDuplicate(company: string, role: string) {
       stage: { select: { name: true, color: true } },
     },
   });
-}
-
-export async function addQuickNote(id: string, note: string) {
-  const session = await requireUser();
-
-  const existing = await prisma.application.findFirst({
-    where: { id, userId: session.userId },
-  });
-  if (!existing) return { error: "Not found" };
-
-  const newNotes = existing.notes
-    ? `${existing.notes}\n\n[${new Date().toLocaleDateString()}] ${note}`
-    : `[${new Date().toLocaleDateString()}] ${note}`;
-
-  await prisma.application.update({
-    where: { id },
-    data: {
-      notes: newNotes,
-      activities: {
-        create: {
-          type: ActivityType.NOTE_ADDED,
-          description: `Note added: ${note.slice(0, 60)}${note.length > 60 ? "..." : ""}`,
-        },
-      },
-    },
-  });
-
-  revalidatePath("/dashboard");
-  revalidatePath(`/dashboard/applications/${id}`);
-  return { success: true };
 }
 
 export async function exportApplicationsCsv() {

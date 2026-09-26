@@ -1,9 +1,7 @@
 import { getApplication } from "@/lib/actions/applications";
-import { getInterviews } from "@/lib/actions/interviews";
 import { getStageTypes } from "@/lib/actions/pipeline";
 import { getFollowUpsFor } from "@/lib/actions/follow-ups";
 import { getTags } from "@/lib/actions/tags";
-import { summariseRounds, BUCKET_DOT, BUCKET_LABELS } from "@/lib/interview-summary";
 import { relativeDay, renderTimestamp } from "@/lib/relative-time";
 import { ActivityTimeline } from "@/components/activity-timeline";
 import { ApplicationSchedule } from "@/components/application-schedule";
@@ -77,9 +75,8 @@ function Stat({
 export default async function ApplicationDetailPage({ params }: Props) {
   const { id } = await params;
 
-  const [application, interviews, stageTypes, tags, followUps] = await Promise.all([
+  const [application, stageTypes, tags, followUps] = await Promise.all([
     getApplication(id),
-    getInterviews(id),
     getStageTypes(),
     getTags(),
     getFollowUpsFor(id),
@@ -87,18 +84,13 @@ export default async function ApplicationDetailPage({ params }: Props) {
 
   if (!application) notFound();
 
-  // Rendered once on the server and handed to the tracker, so both halves of the
-  // page agree on "now" and the client hydrates to identical markup.
   const now = renderTimestamp();
 
-  // A closed application isn't chasing anything, so the overdue nag goes away
-  // even though the follow-up date itself is preserved.
   const isOverdue =
     !application.closed &&
     application.followUpDate &&
     new Date(application.followUpDate) < new Date(now);
 
-  const rounds = summariseRounds(interviews, now);
   const enabledStages = JSON.parse(JSON.stringify(stageTypes.filter((s) => s.enabled)));
 
   return (
@@ -144,7 +136,7 @@ export default async function ApplicationDetailPage({ params }: Props) {
               )}
               {isOverdue && (
                 <span className="inline-flex items-center rounded-full bg-red-100 text-red-600 dark:bg-red-900/40 dark:text-red-400 px-2.5 py-0.5 text-xs font-medium">
-                  Follow-up overdue
+                  Reminder overdue
                 </span>
               )}
             </div>
@@ -163,7 +155,7 @@ export default async function ApplicationDetailPage({ params }: Props) {
               </div>
             )}
           </div>
-          <div className="flex flex-wrap items-center gap-2 shrink-0">
+          <div className="flex flex-wrap gap-2 shrink-0">
             {application.jobUrl && (
               <a
                 href={application.jobUrl}
@@ -180,7 +172,10 @@ export default async function ApplicationDetailPage({ params }: Props) {
               stages={enabledStages}
               closed={application.closed}
               archived={application.archived}
-              application={JSON.parse(JSON.stringify(application))}
+              application={JSON.parse(JSON.stringify({
+                ...application,
+                stageScheduledAt: application.stageScheduledAt ?? null,
+              }))}
               availableTags={JSON.parse(JSON.stringify(tags))}
             />
           </div>
@@ -191,59 +186,46 @@ export default async function ApplicationDetailPage({ params }: Props) {
           <Stat
             label="Applied"
             value={application.appliedDate ? formatDate(application.appliedDate) : "—"}
-            hint={
-              application.appliedDate ? relativeDay(application.appliedDate, now) : undefined
-            }
+            hint={application.appliedDate ? relativeDay(application.appliedDate, now) : undefined}
           />
 
-          {/* No Follow-up tile: it is an editable row at the top of the section
-              below, and repeating the same date read-only up here was the exact
-              duplication this strip is meant to avoid. The overdue flag still
-              shows next to the title. */}
           <Stat
-            label="Next up"
+            label="Stage"
+            value={application.stage?.name ?? "—"}
+            hint={application.stageOutcome
+              ? application.stageOutcome.charAt(0) + application.stageOutcome.slice(1).toLowerCase()
+              : undefined}
+          />
+
+          <Stat
+            label="Scheduled"
             value={
-              rounds.next?.scheduledAt ? (
-                new Date(rounds.next.scheduledAt).toLocaleString([], {
-                  month: "short",
-                  day: "numeric",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })
-              ) : rounds.unscheduled > 0 ? (
-                "Not scheduled"
-              ) : (
-                "—"
-              )
+              application.stageScheduledAt
+                ? new Date(application.stageScheduledAt).toLocaleDateString([], {
+                    month: "short",
+                    day: "numeric",
+                    year: "numeric",
+                  })
+                : "—"
             }
-            tone={rounds.next ? "primary" : undefined}
             hint={
-              rounds.next?.scheduledAt ? (
-                <Link href="#interviews" className="hover:text-foreground transition-colors">
-                  {relativeDay(rounds.next.scheduledAt, now)}
-                </Link>
-              ) : rounds.unscheduled > 0 ? (
-                `${rounds.unscheduled} entr${rounds.unscheduled === 1 ? "y" : "ies"} without a date`
-              ) : undefined
+              application.stageScheduledAt
+                ? (() => {
+                    const d = new Date(application.stageScheduledAt);
+                    const hasTime = d.getHours() !== 0 || d.getMinutes() !== 0;
+                    return hasTime
+                      ? d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) +
+                          " · " +
+                          relativeDay(application.stageScheduledAt, now)
+                      : relativeDay(application.stageScheduledAt, now);
+                  })()
+                : undefined
             }
-          />
-
-          {/* Complete breakdown: the buckets always sum to the total, so this
-              can't disagree with the list further down the page. */}
-          <Stat
-            label="Entries"
-            value={rounds.total === 0 ? "None yet" : rounds.total}
-            hint={
-              rounds.total > 0 ? (
-                <span className="flex items-center gap-2 flex-wrap">
-                  {rounds.breakdown.map(({ bucket, count }) => (
-                    <span key={bucket} className="inline-flex items-center gap-1">
-                      <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${BUCKET_DOT[bucket]}`} />
-                      {count} {BUCKET_LABELS[bucket]}
-                    </span>
-                  ))}
-                </span>
-              ) : undefined
+            tone={
+              application.stageScheduledAt &&
+              new Date(application.stageScheduledAt).getTime() > now
+                ? "primary"
+                : undefined
             }
           />
 
@@ -261,9 +243,7 @@ export default async function ApplicationDetailPage({ params }: Props) {
             <ApplicationSchedule
               applicationId={application.id}
               followUps={JSON.parse(JSON.stringify(followUps))}
-              notes={application.notes}
-              entries={JSON.parse(JSON.stringify(interviews))}
-              stageTypes={JSON.parse(JSON.stringify(stageTypes))}
+              notes={JSON.parse(JSON.stringify(application.notes_list))}
               now={now}
             />
           </Card>

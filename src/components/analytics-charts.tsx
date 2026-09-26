@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useSyncExternalStore } from "react";
 import {
   BarChart,
   Bar,
@@ -35,12 +35,17 @@ interface StatsProps {
   };
 }
 
-export function AnalyticsCharts({ stats }: StatsProps) {
-  const [mounted, setMounted] = useState(false);
+// Hook to check if we're on the client (avoids SSR hydration issues with charts)
+function useIsClient() {
+  return useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
+}
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+export function AnalyticsCharts({ stats }: StatsProps) {
+  const isClient = useIsClient();
 
   // Stages with nothing in them are dropped from the bar chart too — with a
   // fully custom pipeline the axis would otherwise fill with empty columns.
@@ -77,7 +82,7 @@ export function AnalyticsCharts({ stats }: StatsProps) {
       </div>
 
       {/* Charts */}
-      {stats.total > 0 && mounted ? (
+      {stats.total > 0 && isClient ? (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Bar Chart */}
           <div className="rounded-lg border p-4 space-y-4">

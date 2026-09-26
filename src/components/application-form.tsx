@@ -4,7 +4,7 @@ import { useState, useRef } from "react";
 import { createApplication, updateApplication, checkDuplicate } from "@/lib/actions/applications";
 import { DatePicker } from "./date-picker";
 import { useRouter } from "next/navigation";
-import { SCHEDULING_STAGE_NAMES } from "@/lib/validations";
+import { SCHEDULING_STAGE_NAMES, OUTCOME_STAGE_NAMES } from "@/lib/validations";
 import { outcomeDisplay } from "@/lib/outcome-display";
 
 interface Tag {
@@ -22,7 +22,7 @@ interface ApplicationFormProps {
     stageId: string | null;
     appliedDate: Date | null;
     stageOutcome: string | null;
-    notes: string | null;
+    stageScheduledAt: Date | null;
     tags?: { tag: Tag }[];
   };
   availableTags: Tag[];
@@ -59,12 +59,9 @@ export function ApplicationForm({ application, availableTags, stages, onClose }:
   const router = useRouter();
 
   const selectedStage = stages.find((s) => s.id === selectedStageId);
-  // Applied Date is required once the application has moved past Wishlist.
   const isWishlist = selectedStage?.name === "Wishlist";
-  // Status dropdown appears only for stages that represent active process steps.
-  const showStatus = selectedStage
-    ? SCHEDULING_STAGE_NAMES.includes(selectedStage.name)
-    : false;
+  const showStatus = selectedStage ? SCHEDULING_STAGE_NAMES.includes(selectedStage.name) : false;
+  const showOutcomeDate = selectedStage ? OUTCOME_STAGE_NAMES.includes(selectedStage.name) : false;
 
   // Debounced duplicate check
   function handleFieldChange(company: string, role: string) {
@@ -87,8 +84,13 @@ export function ApplicationForm({ application, availableTags, stages, onClose }:
 
     const formData = new FormData(e.currentTarget);
     formData.set("tags", selectedTags.join(","));
-    // Clear stageOutcome when the selected stage doesn't support it.
-    if (!showStatus) formData.set("stageOutcome", "");
+    // Clear stageOutcome and stageScheduledAt when the selected stage doesn't support them.
+    if (!showStatus) {
+      formData.set("stageOutcome", "");
+    }
+    if (!showStatus && !showOutcomeDate) {
+      formData.set("stageScheduledAt", "");
+    }
 
     try {
       let result;
@@ -124,7 +126,7 @@ export function ApplicationForm({ application, availableTags, stages, onClose }:
       <div className="w-full max-w-lg rounded-lg border bg-background p-6 shadow-lg mx-4 max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-lg font-semibold">
-            {application ? "Edit Application" : "New Application"}
+            {application ? "Update Application" : "New Application"}
           </h2>
           <button onClick={onClose} className="text-muted-foreground hover:text-foreground" aria-label="Close">
             ✕
@@ -242,25 +244,71 @@ export function ApplicationForm({ application, availableTags, stages, onClose }:
             )}
           </div>
 
-          {/* Status: only for Screening / Assessment / Interview */}
+          {/* Status + schedule: only for Screening / Assessment / Interview */}
           {showStatus && (
+            <div className="space-y-3">
+              <div className="space-y-2">
+                <label htmlFor="stageOutcome" className="text-sm font-medium">
+                  {selectedStage?.name} Status *
+                </label>
+                <select
+                  id="stageOutcome"
+                  name="stageOutcome"
+                  defaultValue={application?.stageOutcome ?? "SCHEDULED"}
+                  className="flex h-10 w-full rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                >
+                  {STATUS_OPTIONS.map((o) => (
+                    <option key={o} value={o}>
+                      {outcomeDisplay(o).label}
+                    </option>
+                  ))}
+                </select>
+                {errors.stageOutcome && <p className="text-xs text-destructive">{errors.stageOutcome[0]}</p>}
+              </div>
+
+              <div className="space-y-2">
+                <label htmlFor="stageScheduledAt" className="text-sm font-medium">
+                  Scheduled Date <span className="text-destructive">*</span>{" "}
+                  <span className="text-muted-foreground font-normal">(time optional)</span>
+                </label>
+                <DatePicker
+                  id="stageScheduledAt"
+                  name="stageScheduledAt"
+                  includeTime
+                  placeholder="Pick date (and time)"
+                  required
+                  value={
+                    application?.stageScheduledAt
+                      ? new Date(application.stageScheduledAt).toISOString().slice(0, 16)
+                      : ""
+                  }
+                />
+                <p className="text-xs text-muted-foreground">
+                  You&apos;ll get a reminder email 2 days and 1 day before.
+                </p>
+                {errors.stageScheduledAt && <p className="text-xs text-destructive">{errors.stageScheduledAt[0]}</p>}
+              </div>
+            </div>
+          )}
+
+          {/* Outcome date: required for Get Offer / Hired / Rejected */}
+          {showOutcomeDate && (
             <div className="space-y-2">
-              <label htmlFor="stageOutcome" className="text-sm font-medium">
-                {selectedStage?.name} Status *
+              <label htmlFor="stageScheduledAt" className="text-sm font-medium">
+                {selectedStage?.name} Date *
               </label>
-              <select
-                id="stageOutcome"
-                name="stageOutcome"
-                defaultValue={application?.stageOutcome ?? "SCHEDULED"}
-                className="flex h-10 w-full rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-              >
-                {STATUS_OPTIONS.map((o) => (
-                  <option key={o} value={o}>
-                    {outcomeDisplay(o).label}
-                  </option>
-                ))}
-              </select>
-              {errors.stageOutcome && <p className="text-xs text-destructive">{errors.stageOutcome[0]}</p>}
+              <DatePicker
+                id="stageScheduledAt"
+                name="stageScheduledAt"
+                placeholder="Pick date"
+                required
+                value={
+                  application?.stageScheduledAt
+                    ? new Date(application.stageScheduledAt).toISOString().slice(0, 10)
+                    : ""
+                }
+              />
+              {errors.stageScheduledAt && <p className="text-xs text-destructive">{errors.stageScheduledAt[0]}</p>}
             </div>
           )}
 
@@ -287,18 +335,6 @@ export function ApplicationForm({ application, availableTags, stages, onClose }:
               </div>
             </div>
           )}
-
-          <div className="space-y-2">
-            <label htmlFor="notes" className="text-sm font-medium">Notes</label>
-            <textarea
-              id="notes"
-              name="notes"
-              rows={3}
-              defaultValue={application?.notes || ""}
-              placeholder="Add any notes about this application..."
-              className="flex w-full rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring resize-none"
-            />
-          </div>
 
           <div className="flex justify-end gap-3 pt-2">
             <button

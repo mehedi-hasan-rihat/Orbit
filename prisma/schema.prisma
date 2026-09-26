@@ -49,7 +49,7 @@ model Application {
   stage         PipelineStageType? @relation(fields: [stageId], references: [id], onDelete: Restrict)
   status        ApplicationStatus? // Legacy — pre-pipeline rows only
   appliedDate   DateTime?
-  notes         String?
+  notes         String?           // Legacy — migrated to Note rows; kept for reference only
   // Mirror of the soonest open FollowUp, kept in sync by the follow-up actions.
   // Denormalised on purpose: the list sort, the board and the dashboard all read
   // one date off the application, and a real follow-up now carries a title and
@@ -70,11 +70,13 @@ model Application {
   offered       Boolean           @default(false)
   offeredAt     DateTime?
   stageOutcome   String?           // Optional sub-status for the current stage (e.g. Scheduled, Passed)
+  stageScheduledAt DateTime?        // Optional datetime for when the current stage step is scheduled
   createdAt     DateTime          @default(now())
   updatedAt     DateTime          @updatedAt
   activities    Activity[]
   interviews    Interview[]
   followUps     FollowUp[]
+  notes_list    Note[]
   tags          ApplicationTag[]
 
   @@index([userId])
@@ -230,4 +232,18 @@ model ApplicationTag {
   @@unique([applicationId, tagId])
   @@index([applicationId])
   @@index([tagId])
+}
+
+// Structured notes — one row per entry. The legacy `notes String?` column on
+// Application is kept read-only for reference; all new writes go here.
+model Note {
+  id            String      @id @default(cuid())
+  applicationId String
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  content       String
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@index([applicationId])
+  @@index([applicationId, createdAt])
 }

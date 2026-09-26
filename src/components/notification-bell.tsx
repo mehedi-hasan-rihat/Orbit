@@ -119,7 +119,7 @@ export function NotificationBell() {
               <BellOff className="w-8 h-8 text-muted-foreground/40" />
               <p className="text-sm font-medium">No new notifications</p>
               <p className="text-xs text-muted-foreground">
-                You'll be notified before interviews & follow-ups
+                You'll be notified before scheduled actions &amp; reminders
               </p>
             </div>
           ) : (

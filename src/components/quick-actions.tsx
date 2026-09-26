@@ -7,10 +7,10 @@ import {
   unarchiveApplication,
   closeApplication,
   reopenApplication,
-  addQuickNote,
   markOffered,
   unmarkOffered,
 } from "@/lib/actions/applications";
+import { createNote } from "@/lib/actions/notes";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createPortal } from "react-dom";
@@ -128,7 +128,9 @@ export function QuickActions({
     e.preventDefault();
     if (!note.trim()) return;
     setLoading(true);
-    await addQuickNote(applicationId, note.trim());
+    const formData = new FormData();
+    formData.set("content", note.trim());
+    await createNote(applicationId, formData);
     setNote("");
     setShowNoteInput(false);
     setOpen(false);

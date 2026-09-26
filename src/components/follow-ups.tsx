@@ -25,7 +25,7 @@ export function FollowUps({ applications }: { applications: Application[] }) {
     return (
       <div className="text-center py-8 border rounded-lg">
         <p className="text-sm text-muted-foreground">
-          No follow-ups scheduled. Add follow-up dates to your applications.
+          No reminders set. Add reminders to your applications to get email alerts.
         </p>
       </div>
     );

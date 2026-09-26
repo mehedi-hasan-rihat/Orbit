@@ -7,9 +7,11 @@ export const applicationSchema = z.object({
   stageId: z.string().min(1, "Stage is required"),
   appliedDate: z.string().optional().or(z.literal("")),
   stageOutcome: z.string().optional().or(z.literal("")),
-  notes: z.string().max(5000).optional().or(z.literal("")),
-  tags: z.string().optional().or(z.literal("")), // comma-separated tag ids
+  stageScheduledAt: z.string().optional().or(z.literal("")),
+  tags: z.string().optional().or(z.literal("")),
 });
+
+export type ApplicationFormData = z.infer<typeof applicationSchema>;
 
 export const tagSchema = z.object({
   name: z.string().min(1, "Tag name is required").max(50),
@@ -35,7 +37,6 @@ export const followUpEntrySchema = z.object({
 
 export type FollowUpEntryData = z.infer<typeof followUpEntrySchema>;
 
-export type ApplicationFormData = z.infer<typeof applicationSchema>;
 export type TagFormData = z.infer<typeof tagSchema>;
 
 // ─── Interview pipeline ──────────────────────────────────────────────────────
@@ -90,6 +91,14 @@ export const SCHEDULING_STAGE_NAMES: readonly string[] = [
   "Screening",
   "Assessment",
   "Interview",
+];
+
+// Stages that record a date of when the outcome was reached.
+// Date is required, time is not collected.
+export const OUTCOME_STAGE_NAMES: readonly string[] = [
+  "Get Offer",
+  "Hired",
+  "Rejected",
 ];
 
 // Seeded for every user on first read of their pipeline. Order here is the

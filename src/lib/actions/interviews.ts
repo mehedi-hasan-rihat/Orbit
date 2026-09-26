@@ -170,15 +170,20 @@ export async function updateInterview(id: string, applicationId: string, formDat
   // Log outcome change and auto-update application status. PENDING and
   // SCHEDULED are states on the way to an outcome, not outcomes themselves.
   if (existing.outcome !== outcome && !isOpen(outcome)) {
+    const toLabel = (o: string) => o.charAt(0).toUpperCase() + o.slice(1).toLowerCase();
+    const fromLabel = toLabel(existing.outcome ?? "PENDING");
+    const toLabel2 = toLabel(outcome);
+
     await prisma.activity.create({
       data: {
         applicationId,
         type: ActivityType.INTERVIEW_SCHEDULED,
-        description: `Round ${data.round} ${stageType.name} interview: ${outcome}`,
+        description: `Round ${data.round} ${stageType.name}: ${fromLabel} → ${toLabel2}`,
         metadata: JSON.stringify({
           stageTypeId: stageType.id,
           stageType: stageType.name,
           round: data.round,
+          fromOutcome: existing.outcome,
           outcome,
         }),
       },
