@@ -56,8 +56,10 @@ export async function createApplication(formData: FormData) {
     return { error: { stageOutcome: ["Invalid status value"] } };
   }
 
-  // stageScheduledAt is required for scheduling stages (date mandatory, time optional).
-  if (isSchedulingStage && !data.stageScheduledAt) {
+  // stageScheduledAt is required only when outcome is SCHEDULED (future appointment).
+  // For other terminal outcomes the date is optional but still stored.
+  const isScheduled = data.stageOutcome === "SCHEDULED" || data.stageOutcome === "PENDING";
+  if (isSchedulingStage && isScheduled && !data.stageScheduledAt) {
     return { error: { stageScheduledAt: ["Scheduled date is required for this stage"] } };
   }
 
@@ -87,8 +89,10 @@ export async function createApplication(formData: FormData) {
           },
           ...(isSchedulingStage && data.stageScheduledAt ? [{
             type: ActivityType.INTERVIEW_SCHEDULED,
-            description: `${stage.name} scheduled for ${new Date(data.stageScheduledAt).toLocaleString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" })}`,
-            metadata: JSON.stringify({ stageType: stage.name, stageId: stage.id, scheduledAt: data.stageScheduledAt }),
+            description: data.stageOutcome && !["SCHEDULED", "PENDING"].includes(data.stageOutcome)
+              ? `${stage.name} ${data.stageOutcome.toLowerCase()} on ${new Date(data.stageScheduledAt).toLocaleString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" })}`
+              : `${stage.name} scheduled for ${new Date(data.stageScheduledAt).toLocaleString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" })}`,
+            metadata: JSON.stringify({ stageType: stage.name, stageId: stage.id, scheduledAt: data.stageScheduledAt, outcome: data.stageOutcome }),
           }] : []),
         ],
       },
@@ -140,8 +144,10 @@ export async function updateApplication(id: string, formData: FormData) {
     return { error: { stageOutcome: ["Invalid status value"] } };
   }
 
-  // stageScheduledAt is required for scheduling stages (date mandatory, time optional).
-  if (isSchedulingStage && !data.stageScheduledAt) {
+  // stageScheduledAt is required only when outcome is SCHEDULED (future appointment).
+  // For other terminal outcomes the date is optional but still stored.
+  const isScheduled = data.stageOutcome === "SCHEDULED" || data.stageOutcome === "PENDING";
+  if (isSchedulingStage && isScheduled && !data.stageScheduledAt) {
     return { error: { stageScheduledAt: ["Scheduled date is required for this stage"] } };
   }
 
@@ -179,28 +185,25 @@ export async function updateApplication(id: string, formData: FormData) {
   const scheduledAtChanged =
     newScheduledAt?.toISOString() !== (oldScheduledAt?.toISOString() ?? undefined);
 
-  // Clear stageScheduledAt when:
-  // 1. The stage itself changed (scheduled date belonged to the old stage), OR
-  // 2. The outcome moved away from SCHEDULED/PENDING (stage is now done).
-  const outcomeWasScheduled = existing.stageOutcome === "SCHEDULED" || existing.stageOutcome === null;
-  const outcomeIsNowDone =
-    data.stageOutcome &&
-    !["SCHEDULED", "PENDING"].includes(data.stageOutcome) &&
-    data.stageOutcome !== existing.stageOutcome;
-
-  const resolvedScheduledAt =
-    stageChanged || (isSchedulingStage && outcomeWasScheduled && outcomeIsNowDone)
-      ? null
-      : newScheduledAt;
+  // Clear stageScheduledAt only when the stage itself changed (the scheduled
+  // date belonged to the old stage). When the outcome changes within the same
+  // stage (e.g. SCHEDULED → FAILED), the date transitions from a "scheduled
+  // for" date to a "completed/failed on" date — it stays in the DB so the
+  // detail page can show when the stage concluded.
+  const resolvedScheduledAt = stageChanged ? null : newScheduledAt;
 
   if (isSchedulingStage && resolvedScheduledAt && scheduledAtChanged) {
     const dateStr = resolvedScheduledAt.toLocaleString("en-US", {
       month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit",
     });
+    const isTerminalOutcome = data.stageOutcome && !["SCHEDULED", "PENDING"].includes(data.stageOutcome);
+    const description = isTerminalOutcome
+      ? `${stage.name} ${data.stageOutcome!.toLowerCase()} on ${dateStr}`
+      : `${stage.name} scheduled for ${dateStr}`;
     activities.push({
       type: ActivityType.INTERVIEW_SCHEDULED,
-      description: `${stage.name} scheduled for ${dateStr}`,
-      metadata: JSON.stringify({ stageType: stage.name, stageId: stage.id, scheduledAt: resolvedScheduledAt.toISOString() }),
+      description,
+      metadata: JSON.stringify({ stageType: stage.name, stageId: stage.id, scheduledAt: resolvedScheduledAt.toISOString(), outcome: data.stageOutcome }),
     });
   }
 

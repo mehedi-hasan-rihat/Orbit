@@ -40,12 +40,35 @@ const typeConfig: Record<string, { color: string; label: string; className: stri
   },
 };
 
+// Badge config per terminal outcome — overrides the default "Scheduled" badge
+// on INTERVIEW_SCHEDULED activities that recorded a non-open outcome.
+const OUTCOME_BADGE: Record<string, { color: string; label: string; className: string }> = {
+  PASSED:    { color: "#22c55e", label: "Passed",    className: "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300" },
+  FAILED:    { color: "#ef4444", label: "Failed",    className: "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300" },
+  COMPLETED: { color: "#6366f1", label: "Completed", className: "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300" },
+  CANCELLED: { color: "#64748b", label: "Cancelled", className: "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400" },
+};
+
+function resolveActivityBadge(activity: Activity) {
+  const base = typeConfig[activity.type] ?? { color: "#6b7280", label: activity.type, className: "bg-gray-100 text-gray-700" };
+
+  if (activity.type !== "INTERVIEW_SCHEDULED") return base;
+
+  try {
+    const meta = JSON.parse(activity.metadata ?? "{}") as Record<string, string>;
+    // Only override for terminal outcomes — SCHEDULED/PENDING keep the default badge.
+    if (meta.outcome && OUTCOME_BADGE[meta.outcome]) return OUTCOME_BADGE[meta.outcome];
+  } catch { /* ignore */ }
+
+  return base;
+}
+
 const filterOptions = [
   { value: "ALL", label: "All" },
   { value: "CREATED", label: "Created" },
   { value: "OUTCOME_CHANGE", label: "Outcomes" },
   { value: "NOTE_ADDED", label: "Notes" },
-  { value: "INTERVIEW_SCHEDULED", label: "Scheduled" },
+  { value: "INTERVIEW_SCHEDULED", label: "Stage" },
   { value: "FOLLOW_UP_SET", label: "Reminders" },
 ];
 
@@ -126,11 +149,7 @@ export function ActivityTimeline({ activities }: { activities: Activity[] }) {
       ) : (
         <div className="max-h-128 overflow-y-auto scrollbar-thin space-y-0 pr-1">
           {filtered.map((activity, index) => {
-            const config = typeConfig[activity.type] || {
-              color: "#6b7280",
-              label: activity.type,
-              className: "bg-gray-100 text-gray-700",
-            };
+            const config = resolveActivityBadge(activity);
 
             return (
               <div key={activity.id} className="flex gap-3">

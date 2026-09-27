@@ -7,6 +7,7 @@ import { ActivityTimeline } from "@/components/activity-timeline";
 import { ApplicationSchedule } from "@/components/application-schedule";
 import { StatusBadge } from "@/components/status-badge";
 import { ApplicationActions } from "@/components/application-actions";
+import { outcomeDisplay } from "@/lib/outcome-display";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -103,6 +104,22 @@ export default async function ApplicationDetailPage({ params }: Props) {
 
   const enabledStages = JSON.parse(JSON.stringify(stageTypes.filter((s) => s.enabled)));
 
+  // Outcome-based accent for the hero header and stats strip.
+  const outcome = outcomeDisplay(application.stageOutcome);
+  // Only apply accent when there's a meaningful (non-pending) outcome on a scheduling stage.
+  const hasOutcomeAccent =
+    application.stageOutcome &&
+    !["PENDING"].includes(application.stageOutcome) &&
+    !application.closed &&
+    !application.offered;
+  const accentColor = hasOutcomeAccent ? outcome.color : null;
+
+  // Derived label for the date column in the stats strip.
+  const dateStatLabel =
+    !application.stageOutcome || application.stageOutcome === "SCHEDULED" || application.stageOutcome === "PENDING"
+      ? "Scheduled"
+      : "Stage Date";
+
   return (
     <div className="max-w-5xl space-y-6 pb-16 md:pb-0">
 
@@ -155,12 +172,30 @@ export default async function ApplicationDetailPage({ params }: Props) {
       )}
 
       {/* Hero */}
-      <div className="border rounded-xl p-6">
+      <div
+        className="border rounded-xl p-6"
+        style={accentColor ? {
+          borderColor: `${accentColor}40`,
+          background: `linear-gradient(to bottom right, ${accentColor}08, transparent)`,
+        } : undefined}
+      >
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div className="space-y-2 min-w-0">
             <div className="flex items-center gap-2.5 flex-wrap">
               <h1 className="text-2xl font-bold tracking-tight">{application.company}</h1>
               <StatusBadge application={application} />
+              {/* Stage outcome badge — shows when a scheduling stage has a non-pending outcome */}
+              {application.stageOutcome && !application.offered && !application.closed && (
+                <span
+                  className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ${outcome.className}`}
+                >
+                  <span
+                    className="w-1.5 h-1.5 rounded-full shrink-0"
+                    style={{ backgroundColor: outcome.color }}
+                  />
+                  {outcome.label}
+                </span>
+              )}
               {application.closed && (
                 <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
                   Closed
@@ -230,12 +265,16 @@ export default async function ApplicationDetailPage({ params }: Props) {
             label="Stage"
             value={application.stage?.name ?? "—"}
             hint={application.stageOutcome
-              ? application.stageOutcome.charAt(0) + application.stageOutcome.slice(1).toLowerCase()
+              ? <span
+                  className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${outcome.className}`}
+                >
+                  {outcome.label}
+                </span>
               : undefined}
           />
 
           <Stat
-            label="Scheduled"
+            label={dateStatLabel}
             value={
               application.stageScheduledAt
                 ? new Date(application.stageScheduledAt).toLocaleDateString([], {
@@ -259,7 +298,9 @@ export default async function ApplicationDetailPage({ params }: Props) {
                 : undefined
             }
             tone={
+              // Future scheduled dates get primary accent; past outcome dates are neutral
               application.stageScheduledAt &&
+              (!application.stageOutcome || application.stageOutcome === "SCHEDULED") &&
               new Date(application.stageScheduledAt).getTime() > now
                 ? "primary"
                 : undefined

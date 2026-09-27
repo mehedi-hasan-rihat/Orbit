@@ -8,13 +8,21 @@ export async function getCalendarEvents() {
   if (!session) return [];
 
   const [scheduled, reminders] = await Promise.all([
-    // Stage-scheduled events: set from the Update Application modal
+    // Stage-scheduled events: only show appointments that are still open
+    // (outcome is SCHEDULED, PENDING, or not yet set). Terminal outcomes
+    // (FAILED, PASSED, COMPLETED, CANCELLED) keep the date in the DB for
+    // history but must not appear on the calendar.
     prisma.application.findMany({
       where: {
         userId: session.userId,
         archived: false,
         closed: false,
         stageScheduledAt: { not: null },
+        OR: [
+          { stageOutcome: null },
+          { stageOutcome: "SCHEDULED" },
+          { stageOutcome: "PENDING" },
+        ],
       },
       select: {
         id: true,

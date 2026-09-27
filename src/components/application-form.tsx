@@ -39,6 +39,22 @@ const STATUS_OPTIONS = [
   "CANCELLED",
 ] as const;
 
+// Label for the date field changes with the outcome.
+function dateFieldLabel(outcome: string | null | undefined, stageName: string | undefined): string {
+  switch (outcome) {
+    case "COMPLETED": return `${stageName ?? "Stage"} Completion Date`;
+    case "PASSED":    return `${stageName ?? "Stage"} Date (Passed)`;
+    case "FAILED":    return `${stageName ?? "Stage"} Date (Failed)`;
+    case "CANCELLED": return `${stageName ?? "Stage"} Cancellation Date`;
+    default:          return "Scheduled Date";
+  }
+}
+
+function dateFieldHint(outcome: string | null | undefined): string | null {
+  if (!outcome || outcome === "SCHEDULED") return "You'll get a reminder email 2 days and 1 day before.";
+  return null;
+}
+
 export function ApplicationForm({ application, availableTags, stages, onClose }: ApplicationFormProps) {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string[]>>({});
@@ -54,6 +70,9 @@ export function ApplicationForm({ application, availableTags, stages, onClose }:
   );
   const [selectedStageId, setSelectedStageId] = useState(
     application?.stageId ?? stages[0]?.id ?? ""
+  );
+  const [selectedOutcome, setSelectedOutcome] = useState<string>(
+    application?.stageOutcome ?? "SCHEDULED"
   );
   const duplicateCheckTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const router = useRouter();
@@ -254,7 +273,8 @@ export function ApplicationForm({ application, availableTags, stages, onClose }:
                 <select
                   id="stageOutcome"
                   name="stageOutcome"
-                  defaultValue={application?.stageOutcome ?? "SCHEDULED"}
+                  value={selectedOutcome}
+                  onChange={(e) => setSelectedOutcome(e.target.value)}
                   className="flex h-10 w-full rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                 >
                   {STATUS_OPTIONS.map((o) => (
@@ -268,24 +288,30 @@ export function ApplicationForm({ application, availableTags, stages, onClose }:
 
               <div className="space-y-2">
                 <label htmlFor="stageScheduledAt" className="text-sm font-medium">
-                  Scheduled Date <span className="text-destructive">*</span>{" "}
-                  <span className="text-muted-foreground font-normal">(time optional)</span>
+                  {dateFieldLabel(selectedOutcome, selectedStage?.name)}{" "}
+                  {selectedOutcome === "SCHEDULED" && (
+                    <><span className="text-destructive">*</span>{" "}
+                    <span className="text-muted-foreground font-normal">(time optional)</span></>
+                  )}
+                  {selectedOutcome !== "SCHEDULED" && (
+                    <span className="text-muted-foreground font-normal">(optional)</span>
+                  )}
                 </label>
                 <DatePicker
                   id="stageScheduledAt"
                   name="stageScheduledAt"
                   includeTime
                   placeholder="Pick date (and time)"
-                  required
+                  required={selectedOutcome === "SCHEDULED"}
                   value={
                     application?.stageScheduledAt
                       ? new Date(application.stageScheduledAt).toISOString().slice(0, 16)
                       : ""
                   }
                 />
-                <p className="text-xs text-muted-foreground">
-                  You&apos;ll get a reminder email 2 days and 1 day before.
-                </p>
+                {dateFieldHint(selectedOutcome) && (
+                  <p className="text-xs text-muted-foreground">{dateFieldHint(selectedOutcome)}</p>
+                )}
                 {errors.stageScheduledAt && <p className="text-xs text-destructive">{errors.stageScheduledAt[0]}</p>}
               </div>
             </div>
