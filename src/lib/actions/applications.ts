@@ -596,8 +596,6 @@ export async function getApplications(params?: {
   if (params?.sort === "company") orderBy = { company: "asc" };
   if (params?.sort === "appliedDate") orderBy = { appliedDate: "desc" };
   if (params?.sort === "updatedAt") orderBy = { updatedAt: "desc" };
-  if (params?.sort === "followUpDate") orderBy = { followUpDate: "asc" };
-
   const applications = await prisma.application.findMany({
     where,
     orderBy,
@@ -702,16 +700,14 @@ export async function getFollowUps() {
       userId: session.userId,
       archived: false,
       closed: false,
-      followUpDate: { not: null },
-      // Closed stages are the pipeline equivalent of the old
-      // REJECTED / WITHDRAWN / ARCHIVED exclusion. A closed application is
-      // excluded too, whatever stage it kept.
+      followUps: { some: { done: false } },
       stage: { category: { not: StageCategory.CLOSED } },
     },
-    orderBy: { followUpDate: "asc" },
+    orderBy: { updatedAt: "desc" },
     include: {
       tags: { include: { tag: true } },
       stage: { select: { id: true, name: true, color: true, category: true } },
+      followUps: { where: { done: false }, orderBy: { dueAt: "asc" }, take: 1 },
     },
   });
 
@@ -842,14 +838,13 @@ export async function exportApplicationsCsv() {
 
   // "Status" is the stage the application kept, which a closed row preserves —
   // so the export needs its own column to tell a live row from a finished one.
-  const headers = ["Company", "Role", "Status", "Closed", "Applied Date", "Follow-up Date", "Job URL", "Tags", "Notes", "Created"];
+  const headers = ["Company", "Role", "Status", "Closed", "Applied Date", "Job URL", "Tags", "Notes", "Created"];
   const rows = applications.map((app) => [
     app.company,
     app.role,
     resolveStage(app).name,
     app.closed ? (app.closedAt?.toISOString().split("T")[0] ?? "Yes") : "",
     app.appliedDate ? app.appliedDate.toISOString().split("T")[0] : "",
-    app.followUpDate ? app.followUpDate.toISOString().split("T")[0] : "",
     app.jobUrl || "",
     app.tags.map((t) => t.tag.name).join("; "),
     (app.notes || "").replace(/,/g, ";"),

@@ -2,13 +2,13 @@
 
 import { useState } from "react";
 import {
-  createFollowUp,
-  updateFollowUp,
-  setFollowUpDone,
-  deleteFollowUp,
-} from "@/lib/actions/follow-ups";
+  createReminder,
+  updateReminder,
+  setReminderDone,
+  deleteReminder,
+} from "@/lib/actions/reminders";
 import { createNote, updateNote, deleteNote } from "@/lib/actions/notes";
-import { MAX_ACTIVE_FOLLOW_UPS } from "@/lib/validations";
+import { MAX_ACTIVE_REMINDERS } from "@/lib/validations";
 import { relativeDay } from "@/lib/relative-time";
 import { DatePicker } from "./date-picker";
 import { useRouter } from "next/navigation";
@@ -55,8 +55,8 @@ function FollowUpForm({
 
     const formData = new FormData(e.currentTarget);
     const result = followUp
-      ? await updateFollowUp(followUp.id, applicationId, formData)
-      : await createFollowUp(applicationId, formData);
+      ? await updateReminder(followUp.id, applicationId, formData)
+      : await createReminder(applicationId, formData);
 
     if (typeof result.error === "string") {
       setFormError(result.error);
@@ -233,7 +233,7 @@ export function ApplicationSchedule({
 
   const open = followUps.filter((f) => !f.done);
   const done = followUps.filter((f) => f.done);
-  const atLimit = open.length >= MAX_ACTIVE_FOLLOW_UPS;
+  const atLimit = open.length >= MAX_ACTIVE_REMINDERS;
 
   async function runFollowUp(id: string, action: () => Promise<{ error?: unknown }>) {
     setFollowUpPending(id);
@@ -259,13 +259,13 @@ export function ApplicationSchedule({
         <div>
           <h2 className="text-sm font-semibold tracking-tight">Reminders</h2>
           <p className="text-xs text-muted-foreground mt-0.5">
-            {open.length} of {MAX_ACTIVE_FOLLOW_UPS} open · emailed to you on the day each one is due
+            {open.length} of {MAX_ACTIVE_REMINDERS} open · emailed to you on the day each one is due
           </p>
         </div>
         <button
           onClick={() => { setLimitError(null); setCreatingFollowUp(true); }}
           disabled={atLimit}
-          title={atLimit ? `Complete one first — ${MAX_ACTIVE_FOLLOW_UPS} open at a time.` : undefined}
+          title={atLimit ? `Complete one first — ${MAX_ACTIVE_REMINDERS} open at a time.` : undefined}
           className="h-8 px-3 rounded-md border text-xs font-medium hover:bg-accent transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
         >
           + Add reminder
@@ -308,7 +308,7 @@ export function ApplicationSchedule({
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
                     <button
-                      onClick={() => runFollowUp(followUp.id, () => setFollowUpDone(followUp.id, applicationId, !followUp.done))}
+                      onClick={() => runFollowUp(followUp.id, () => setReminderDone(followUp.id, applicationId, !followUp.done))}
                       disabled={followUpPending === followUp.id}
                       className="text-xs text-muted-foreground hover:text-foreground disabled:opacity-50"
                     >
@@ -320,7 +320,7 @@ export function ApplicationSchedule({
                       </button>
                     )}
                     <button
-                      onClick={() => runFollowUp(followUp.id, () => deleteFollowUp(followUp.id, applicationId))}
+                      onClick={() => runFollowUp(followUp.id, () => deleteReminder(followUp.id, applicationId))}
                       disabled={followUpPending === followUp.id}
                       className="text-xs text-destructive hover:text-destructive/80 disabled:opacity-50"
                     >

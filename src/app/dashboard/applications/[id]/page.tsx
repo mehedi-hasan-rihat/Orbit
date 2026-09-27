@@ -1,6 +1,6 @@
 import { getApplication } from "@/lib/actions/applications";
 import { getStageTypes } from "@/lib/actions/pipeline";
-import { getFollowUpsFor } from "@/lib/actions/follow-ups";
+import { getRemindersFor } from "@/lib/actions/reminders";
 import { getTags } from "@/lib/actions/tags";
 import { relativeDay, renderTimestamp } from "@/lib/relative-time";
 import { ActivityTimeline } from "@/components/activity-timeline";
@@ -76,21 +76,16 @@ function Stat({
 export default async function ApplicationDetailPage({ params }: Props) {
   const { id } = await params;
 
-  const [application, stageTypes, tags, followUps] = await Promise.all([
+  const [application, stageTypes, tags, reminders] = await Promise.all([
     getApplication(id),
     getStageTypes(),
     getTags(),
-    getFollowUpsFor(id),
+    getRemindersFor(id),
   ]);
 
   if (!application) notFound();
 
   const now = renderTimestamp();
-
-  const isOverdue =
-    !application.closed &&
-    application.followUpDate &&
-    new Date(application.followUpDate) < new Date(now);
 
   // Highlight when the stage is scheduled today or is overdue.
   const scheduledDate = application.stageScheduledAt ? new Date(application.stageScheduledAt) : null;
@@ -206,11 +201,6 @@ export default async function ApplicationDetailPage({ params }: Props) {
                   Archived
                 </span>
               )}
-              {isOverdue && (
-                <span className="inline-flex items-center rounded-full bg-red-100 text-red-600 dark:bg-red-900/40 dark:text-red-400 px-2.5 py-0.5 text-xs font-medium">
-                  Reminder overdue
-                </span>
-              )}
             </div>
             <p className="text-lg text-muted-foreground font-normal">{application.role}</p>
             {application.tags.length > 0 && (
@@ -320,7 +310,7 @@ export default async function ApplicationDetailPage({ params }: Props) {
           <Card id="interviews">
             <ApplicationSchedule
               applicationId={application.id}
-              followUps={JSON.parse(JSON.stringify(followUps))}
+              followUps={JSON.parse(JSON.stringify(reminders))}
               notes={JSON.parse(JSON.stringify(application.notes_list))}
               now={now}
             />

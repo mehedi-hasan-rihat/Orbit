@@ -18,24 +18,18 @@ export const tagSchema = z.object({
   color: z.string().regex(/^#[0-9a-fA-F]{6}$/, "Must be a valid hex color"),
 });
 
-// The follow-up date is editable on its own from the detail page, without
-// round-tripping the whole application form.
-export const followUpSchema = z.object({
-  followUpDate: z.string().optional().or(z.literal("")),
-});
-
-// How many open follow-ups one application may carry. A cap rather than a
+// How many open reminders one application may carry. A cap rather than a
 // schema constraint: it is a rule about what is useful to track, and completed
 // ones never count against it.
-export const MAX_ACTIVE_FOLLOW_UPS = 2;
+export const MAX_ACTIVE_REMINDERS = 2;
 
-export const followUpEntrySchema = z.object({
+export const reminderEntrySchema = z.object({
   title: z.string().min(1, "Title is required").max(120),
   details: z.string().max(2000).optional().or(z.literal("")),
   dueAt: z.string().min(1, "A date is required"),
 });
 
-export type FollowUpEntryData = z.infer<typeof followUpEntrySchema>;
+export type ReminderEntryData = z.infer<typeof reminderEntrySchema>;
 
 export type TagFormData = z.infer<typeof tagSchema>;
 

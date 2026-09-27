@@ -41,7 +41,6 @@ interface Application {
   status: string | null;
   stage: { name: string; color: string; category: string } | null;
   appliedDate: Date | null;
-  followUpDate: Date | null;
   stageOutcome: string | null;
   stageScheduledAt: Date | null;
   notes: string | null;
@@ -100,10 +99,6 @@ export function ApplicationsList({
     await deleteApplication(id);
     router.refresh();
   }
-
-
-  const isOverdue = (date: Date | null) =>
-    date ? new Date(date) < new Date() : false;
 
   return (
     <div className="space-y-6">
@@ -208,7 +203,6 @@ export function ApplicationsList({
             <option value="updatedAt">Recently updated</option>
             <option value="company">Company A–Z</option>
             <option value="appliedDate">Applied date</option>
-            <option value="followUpDate">Reminder date</option>
           </select>
         </div>
       </div>
@@ -275,11 +269,6 @@ export function ApplicationsList({
                     >
                       {app.company}
                     </Link>
-                    {app.followUpDate && !app.closed && isOverdue(app.followUpDate) && (
-                      <span className="inline-flex items-center rounded-full bg-red-100 text-red-600 dark:bg-red-900/40 dark:text-red-400 px-1.5 py-0.5 text-[10px] font-medium shrink-0">
-                        Overdue
-                      </span>
-                    )}
                   </div>
                   {app.tags.length > 0 && (
                     <div className="flex gap-1 mt-1 flex-wrap">
@@ -350,11 +339,6 @@ export function ApplicationsList({
                       ? new Date(app.appliedDate).toLocaleDateString([], { month: "short", day: "numeric", year: "numeric" })
                       : "—"}
                   </p>
-                  {app.followUpDate && !app.closed && (
-                    <p className={clsx("text-[10px] mt-0.5", isOverdue(app.followUpDate) ? "text-destructive" : "text-muted-foreground")}>
-                      ↻ {new Date(app.followUpDate).toLocaleDateString([], { month: "short", day: "numeric" })}
-                    </p>
-                  )}
                   {app.closed && app.closedAt && (
                     <p className="text-[10px] mt-0.5 text-muted-foreground">
                       🚪 {new Date(app.closedAt).toLocaleDateString([], { month: "short", day: "numeric" })}

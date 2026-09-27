@@ -50,11 +50,6 @@ model Application {
   status        ApplicationStatus? // Legacy — pre-pipeline rows only
   appliedDate   DateTime?
   notes         String?           // Legacy — migrated to Note rows; kept for reference only
-  // Mirror of the soonest open FollowUp, kept in sync by the follow-up actions.
-  // Denormalised on purpose: the list sort, the board and the dashboard all read
-  // one date off the application, and a real follow-up now carries a title and
-  // details of its own. Never written by hand — see src/lib/actions/follow-ups.ts.
-  followUpDate  DateTime?
   resumeUrl     String?
   coverLetterUrl String?
   archived      Boolean           @default(false)
@@ -75,6 +70,7 @@ model Application {
   updatedAt     DateTime          @updatedAt
   activities    Activity[]
   interviews    Interview[]
+  // followups means here reminders
   followUps     FollowUp[]
   notes_list    Note[]
   tags          ApplicationTag[]

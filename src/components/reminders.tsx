@@ -2,26 +2,35 @@
 
 import { StatusBadge } from "./status-badge";
 
+interface FollowUpItem {
+  id: string;
+  dueAt: Date;
+  done: boolean;
+}
+
 interface Application {
   id: string;
   company: string;
   role: string;
   status: string | null;
   stage: { name: string; color: string } | null;
-  followUpDate: Date | null;
+  followUps: FollowUpItem[];
 }
 
 export function FollowUps({ applications }: { applications: Application[] }) {
   const now = new Date();
 
-  const overdue = applications.filter(
-    (app) => app.followUpDate && new Date(app.followUpDate) < now
-  );
-  const upcoming = applications.filter(
-    (app) => app.followUpDate && new Date(app.followUpDate) >= now
-  );
+  // Derive overdue/upcoming from the actual FollowUp rows, not the mirror field.
+  const withSoonest = applications.map((app) => {
+    const open = app.followUps.filter((f) => !f.done);
+    const soonest = open.sort((a, b) => new Date(a.dueAt).getTime() - new Date(b.dueAt).getTime())[0];
+    return { ...app, soonestDue: soonest ? new Date(soonest.dueAt) : null };
+  }).filter((app) => app.soonestDue !== null);
 
-  if (applications.length === 0) {
+  const overdue  = withSoonest.filter((app) => app.soonestDue! < now);
+  const upcoming = withSoonest.filter((app) => app.soonestDue! >= now);
+
+  if (withSoonest.length === 0) {
     return (
       <div className="text-center py-8 border rounded-lg">
         <p className="text-sm text-muted-foreground">
@@ -35,15 +44,10 @@ export function FollowUps({ applications }: { applications: Application[] }) {
     <div className="space-y-4">
       {overdue.length > 0 && (
         <div className="space-y-2">
-          <h4 className="text-sm font-medium text-destructive">
-            Overdue ({overdue.length})
-          </h4>
+          <h4 className="text-sm font-medium text-destructive">Overdue ({overdue.length})</h4>
           <div className="space-y-2">
             {overdue.map((app) => (
-              <div
-                key={app.id}
-                className="flex items-center justify-between p-3 border border-destructive/30 rounded-lg bg-destructive/5"
-              >
+              <div key={app.id} className="flex items-center justify-between p-3 border border-destructive/30 rounded-lg bg-destructive/5">
                 <div>
                   <p className="text-sm font-medium">{app.company}</p>
                   <p className="text-xs text-muted-foreground">{app.role}</p>
@@ -51,7 +55,7 @@ export function FollowUps({ applications }: { applications: Application[] }) {
                 <div className="text-right">
                   <StatusBadge application={app} />
                   <p className="text-xs text-destructive mt-1">
-                    {app.followUpDate && new Date(app.followUpDate).toLocaleDateString()}
+                    {app.soonestDue!.toLocaleDateString()}
                   </p>
                 </div>
               </div>
@@ -65,10 +69,7 @@ export function FollowUps({ applications }: { applications: Application[] }) {
           <h4 className="text-sm font-medium">Upcoming ({upcoming.length})</h4>
           <div className="space-y-2">
             {upcoming.map((app) => (
-              <div
-                key={app.id}
-                className="flex items-center justify-between p-3 border rounded-lg"
-              >
+              <div key={app.id} className="flex items-center justify-between p-3 border rounded-lg">
                 <div>
                   <p className="text-sm font-medium">{app.company}</p>
                   <p className="text-xs text-muted-foreground">{app.role}</p>
@@ -76,7 +77,7 @@ export function FollowUps({ applications }: { applications: Application[] }) {
                 <div className="text-right">
                   <StatusBadge application={app} />
                   <p className="text-xs text-muted-foreground mt-1">
-                    {app.followUpDate && new Date(app.followUpDate).toLocaleDateString()}
+                    {app.soonestDue!.toLocaleDateString()}
                   </p>
                 </div>
               </div>
