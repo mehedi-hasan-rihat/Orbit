@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { createApplication, updateApplication, checkDuplicate } from "@/lib/actions/applications";
+import { createApplication, updateApplication, checkDuplicate, moveToRejectedStage } from "@/lib/actions/applications";
 import { DatePicker } from "./date-picker";
 import { useRouter } from "next/navigation";
 import { SCHEDULING_STAGE_NAMES, OUTCOME_STAGE_NAMES } from "@/lib/validations";
@@ -74,6 +74,8 @@ export function ApplicationForm({ application, availableTags, stages, onClose }:
   const [selectedOutcome, setSelectedOutcome] = useState<string>(
     application?.stageOutcome ?? "SCHEDULED"
   );
+  const [suggestRejected, setSuggestRejected] = useState(false);
+  const [markRejected, setMarkRejected] = useState(false);
   const duplicateCheckTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const router = useRouter();
 
@@ -122,6 +124,9 @@ export function ApplicationForm({ application, availableTags, stages, onClose }:
       if (result.error) {
         setErrors(result.error as Record<string, string[]>);
       } else {
+        if (markRejected && application) {
+          await moveToRejectedStage(application.id);
+        }
         router.refresh();
         onClose();
       }
@@ -274,7 +279,16 @@ export function ApplicationForm({ application, availableTags, stages, onClose }:
                   id="stageOutcome"
                   name="stageOutcome"
                   value={selectedOutcome}
-                  onChange={(e) => setSelectedOutcome(e.target.value)}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setSelectedOutcome(val);
+                    if (application && (val === "FAILED")) {
+                      setSuggestRejected(true);
+                    } else {
+                      setSuggestRejected(false);
+                      setMarkRejected(false);
+                    }
+                  }}
                   className="flex h-10 w-full rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                 >
                   {STATUS_OPTIONS.map((o) => (
@@ -285,6 +299,22 @@ export function ApplicationForm({ application, availableTags, stages, onClose }:
                 </select>
                 {errors.stageOutcome && <p className="text-xs text-destructive">{errors.stageOutcome[0]}</p>}
               </div>
+
+              {/* Close suggestion — appears when outcome is Failed or Cancelled on an existing application */}
+              {suggestRejected && (
+                <label className="flex items-start gap-3 rounded-md border border-amber-300 bg-amber-50 dark:bg-amber-900/20 dark:border-amber-700 px-3 py-2.5 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={markRejected}
+                    onChange={(e) => setMarkRejected(e.target.checked)}
+                    className="mt-0.5 h-4 w-4 shrink-0 accent-amber-600"
+                  />
+                  <span className="text-xs text-amber-800 dark:text-amber-300 leading-relaxed">
+                    <span className="font-medium">Also move this application to Rejected.</span>{" "}
+                    Since the stage {selectedOutcome === "FAILED" ? "failed" : "was cancelled"}, the application is likely over.
+                  </span>
+                </label>
+              )}
 
               <div className="space-y-2">
                 <label htmlFor="stageScheduledAt" className="text-sm font-medium">

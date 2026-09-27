@@ -299,6 +299,48 @@ export async function updateApplicationStage(id: string, stageId: string) {
   return { success: true };
 }
 
+// Moves the application to the user's "Rejected" pipeline stage.
+// Used when a stage outcome is Failed/Cancelled and the user opts in.
+// Returns { alreadyRejected: true } if the app is already on that stage,
+// or { noStage: true } if the user hasn't defined a Rejected stage yet.
+export async function moveToRejectedStage(id: string) {
+  const session = await requireUser();
+
+  const existing = await prisma.application.findFirst({
+    where: { id, userId: session.userId },
+    include: { stage: true },
+  });
+  if (!existing) return { error: "Application not found" };
+
+  const rejectedStage = await prisma.pipelineStageType.findFirst({
+    where: { userId: session.userId, name: "Rejected" },
+  });
+  if (!rejectedStage) return { noStage: true };
+
+  if (existing.stageId === rejectedStage.id) return { alreadyRejected: true };
+
+  const fromLabel = existing.stage?.name ?? "Unknown";
+
+  await prisma.application.update({
+    where: { id },
+    data: {
+      stage: { connect: { id: rejectedStage.id } },
+      stageOutcome: null,
+      stageScheduledAt: null,
+      activities: {
+        create: {
+          type: ActivityType.OUTCOME_CHANGE,
+          description: `Status changed from ${fromLabel} to Rejected`,
+          metadata: JSON.stringify({ from: fromLabel, to: "Rejected", toStageId: rejectedStage.id }),
+        },
+      },
+    },
+  });
+
+  revalidatePath("/dashboard");
+  return { success: true };
+}
+
 export async function archiveApplication(id: string) {
   const session = await requireUser();
 
