@@ -35,7 +35,7 @@ export function MobileNav() {
       {/* Top bar — visible only on mobile */}
       <header className="md:hidden flex items-center justify-between px-4 py-3 border-b bg-background shrink-0">
         <Link href="/dashboard" className="flex items-center gap-2">
-          <Logo className="w-5 h-5" />
+          {/* <Logo className="w-5 h-5" /> */}
           <span className="text-lg font-bold">Orbit</span>
         </Link>
         <div className="flex items-center gap-1">
@@ -68,7 +68,7 @@ export function MobileNav() {
         {/* Panel header */}
         <div className="flex items-center justify-between p-4 border-b">
           <div className="flex items-center gap-2">
-            <Logo className="w-5 h-5" />
+            {/* <Logo className="w-5 h-5" /> */}
             <span className="text-lg font-bold">Orbit</span>
           </div>
           <button

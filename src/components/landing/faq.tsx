@@ -9,19 +9,22 @@ import clsx from "clsx";
 gsap.registerPlugin(ScrollTrigger);
 
 const faqs = [
-  { question: "Is Orbit really free?", answer: "Yes. Orbit is completely free with no limits on applications, interviews, or features. No credit card required, no trial period." },
-  { question: "Can I import from a spreadsheet?", answer: "Not yet, but it's on the roadmap. For now you can add applications manually — most people find it takes just a few minutes to get set up." },
-  { question: "Is my data private?", answer: "Absolutely. Each account is fully isolated. We use HTTP-only cookies for authentication, and your data is never shared with third parties." },
-  { question: "Can I export my data?", answer: "Yes. You can export all your applications as a CSV file at any time from the Applications page." },
-  { question: "Does it work on mobile?", answer: "Yes. Orbit is fully responsive with a dedicated mobile navigation and touch-friendly drag-and-drop pipeline." },
-  { question: "What makes this different from Notion or Trello?", answer: "Orbit is purpose-built for job managment — interview round tracking, follow-up reminders, analytics, and a pipeline designed specifically for the application process. No setup required." },
+  { question: "Can you do anything for us?",     answer: "Yes. Orbit is completely free with no limits on applications, interviews, or features. No credit card required, no trial period." },
+  { question: "Does it work with BambooHR?",     answer: "Not yet, but import integrations are on the roadmap. For now you can add applications manually — most people find it takes just a few minutes." },
+  { question: "Can I get unlimited?",            answer: "Orbit is already unlimited and free — no tiers, no paywalls. Every feature is available to every user." },
+  { question: "Will my private data be secure?", answer: "Absolutely. Each account is fully isolated. We use HTTP-only cookies for authentication, and your data is never shared with third parties." },
+  { question: "Can you export my data?",         answer: "Yes. You can export all your applications as a CSV file at any time from the Applications page." },
+  { question: "Will you give me a discount?",    answer: "Orbit is free — there's nothing to discount. If that changes, early users will always be grandfathered." },
 ];
 
 function FAQItem({ question, answer }: { question: string; answer: string }) {
   const [open, setOpen] = useState(false);
   return (
     <div className="border-b last:border-b-0">
-      <button onClick={() => setOpen((o) => !o)} className="flex w-full items-center justify-between py-4 text-left gap-4">
+      <button
+        onClick={() => setOpen((o) => !o)}
+        className="flex w-full items-center justify-between py-4 text-left gap-4"
+      >
         <span className="text-sm font-medium">{question}</span>
         <ChevronDown className={clsx("w-4 h-4 shrink-0 text-muted-foreground transition-transform duration-200", open && "rotate-180")} />
       </button>
@@ -46,14 +49,28 @@ export function FAQSection() {
 
   return (
     <section ref={ref} className="py-24 px-6 border-t">
-      <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-12">
-        <div className="space-y-3">
-          <p className="text-sm text-muted-foreground uppercase tracking-widest">FAQ</p>
-          <h2 className="text-3xl font-bold tracking-tight">Common questions</h2>
-          <p className="text-sm text-muted-foreground">Can&apos;t find what you&apos;re looking for? <a href="mailto:support@orbit.app" className="underline hover:text-foreground transition-colors">Get in touch.</a></p>
+      <div className="max-w-6xl mx-auto space-y-12">
+        <div className="text-center space-y-3">
+          <p className="text-sm font-medium text-indigo-500 uppercase tracking-widest">FAQ</p>
+          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">Pricing &amp; Plans</h2>
+          <p className="text-sm text-muted-foreground">
+            Common questions about Orbit.{" "}
+            <a href="mailto:support@orbit.app" className="underline hover:text-foreground transition-colors">
+              Get in touch
+            </a>{" "}
+            if you need more.
+          </p>
         </div>
-        <div className="faq-wrap opacity-0 lg:col-span-2 border rounded-xl px-6">
-          {faqs.map((f) => <FAQItem key={f.question} {...f} />)}
+
+        <div className="faq-wrap opacity-0 max-w-3xl mx-auto grid grid-cols-1 sm:grid-cols-2 gap-x-12">
+          {/* Left column */}
+          <div className="border rounded-xl px-6">
+            {faqs.slice(0, 3).map((f) => <FAQItem key={f.question} {...f} />)}
+          </div>
+          {/* Right column */}
+          <div className="border rounded-xl px-6">
+            {faqs.slice(3).map((f) => <FAQItem key={f.question} {...f} />)}
+          </div>
         </div>
       </div>
     </section>

@@ -20,26 +20,27 @@ export function CTASection() {
   }, []);
 
   return (
-    <section ref={ref} className="py-24 px-6 border-t bg-muted/20">
-      <div className="cta-inner opacity-0 max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
-        <div className="space-y-4">
-          <p className="text-sm text-muted-foreground uppercase tracking-widest">Get started</p>
-          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">
-            Ready to take control of your job search?
-          </h2>
-          <p className="text-muted-foreground leading-relaxed">
-            Free forever. No credit card. Set up in minutes — not hours.
-          </p>
-        </div>
-
-        <div className="flex flex-col sm:flex-row lg:flex-col xl:flex-row gap-4 lg:justify-end">
-          <Link href="/register"
-            className="inline-flex h-11 items-center justify-center px-8 text-sm font-semibold bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition-opacity">
-            Create free account →
+    <section ref={ref} className="py-20 px-6 border-t bg-muted/20">
+      <div className="cta-inner opacity-0 max-w-2xl mx-auto text-center space-y-6">
+        <p className="text-sm font-medium text-indigo-500 uppercase tracking-widest">Get started</p>
+        <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">
+          Build a better landing page fast
+        </h2>
+        <p className="text-muted-foreground leading-relaxed">
+          Free forever. No credit card. Set up in minutes.
+        </p>
+        <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+          <Link
+            href="/register"
+            className="inline-flex h-11 items-center rounded-lg px-8 text-sm font-semibold bg-indigo-500 text-white hover:bg-indigo-600 transition-colors"
+          >
+            Learn more
           </Link>
-          <Link href="/login"
-            className="inline-flex h-11 items-center justify-center border rounded-lg px-8 text-sm font-medium hover:bg-accent transition-all">
-            Sign in
+          <Link
+            href="/login"
+            className="inline-flex h-11 items-center rounded-lg border px-8 text-sm font-medium hover:bg-accent transition-colors"
+          >
+            Get started
           </Link>
         </div>
       </div>

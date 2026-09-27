@@ -41,7 +41,7 @@ export function Sidebar({ user }: SidebarProps) {
     <aside className="hidden md:flex w-60 flex-col border-r bg-muted/30">
       <div className="p-4 border-b">
         <Link href="/dashboard" className="flex items-center gap-2">
-          <Logo className="w-6 h-6" />
+          {/* <Logo className="w-6 h-6" /> */}
           <span className="text-lg font-bold">Orbit</span>
         </Link>
       </div>

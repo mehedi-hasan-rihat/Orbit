@@ -3,10 +3,11 @@
 import { useEffect, useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { LayoutDashboard, BellRing, BarChart2 } from "lucide-react";
 
 gsap.registerPlugin(ScrollTrigger);
 
-// ─── Mockups ──────────────────────────────────────────────────────────────────
+// ─── Inline mockup ────────────────────────────────────────────────────────────
 
 function MockPipeline() {
   const cols = [
@@ -106,14 +107,34 @@ function MockReminder() {
   );
 }
 
-// ─── Data ─────────────────────────────────────────────────────────────────────
+// ─── Feature cards (top 3-col summary) ───────────────────────────────────────
+
+const featureCards = [
+  {
+    icon: LayoutDashboard,
+    title: "Project management",
+    description: "Visual kanban board across every stage of your job search. Drag cards, track progress, stay organised.",
+  },
+  {
+    icon: BellRing,
+    title: "Time tracking",
+    description: "Auto reminders 2 days and 1 day before every interview. Follow-up nudges on the due date.",
+  },
+  {
+    icon: BarChart2,
+    title: "Real-time analytics",
+    description: "Interview rate, offer rate, stage funnel — calculated live from your own data.",
+  },
+];
+
+// ─── Detailed feature rows ────────────────────────────────────────────────────
 
 const features = [
   {
     number: "01",
     title: "Every application, one board",
     description:
-      "Drag cards between stages as you progress. Eight default stages cover the full journey — Wishlist through Hired. Add your own, recolour them, or hide what you don't need. The board updates instantly.",
+      "Drag cards between stages as you progress. Eight default stages cover the full journey — Wishlist through Hired. Add your own, recolour them, or hide what you don't need.",
     bullets: ["8 pipeline stages out of the box", "Drag-and-drop between columns", "Custom colours and hidden stages"],
     mock: <MockPipeline />,
   },
@@ -130,7 +151,7 @@ const features = [
     number: "03",
     title: "Never miss an interview",
     description:
-      "Orbit sends email reminders automatically — 2 days before and 1 day before every interview. Follow-up tasks get a reminder on their due date. No calendar integration required.",
+      "Orbit sends email reminders automatically — 2 days before and 1 day before every interview. Follow-up tasks get a reminder on their due date.",
     bullets: ["2-day and 1-day interview reminders", "Follow-up email on the due date", "In-app notification bell"],
     mock: <MockReminder />,
   },
@@ -143,6 +164,10 @@ export function FeaturesSection() {
 
   useEffect(() => {
     const ctx = gsap.context(() => {
+      gsap.fromTo(".feat-card", { opacity: 0, y: 24 }, {
+        opacity: 1, y: 0, duration: 0.5, stagger: 0.1, ease: "power2.out",
+        scrollTrigger: { trigger: ".feat-cards-wrap", start: "top 80%" },
+      });
       ref.current?.querySelectorAll(".feat-row").forEach((el) => {
         gsap.fromTo(el, { opacity: 0, y: 40 }, {
           opacity: 1, y: 0, duration: 0.7, ease: "power2.out",
@@ -155,14 +180,33 @@ export function FeaturesSection() {
 
   return (
     <section ref={ref} className="py-24 px-6">
-      <div className="max-w-6xl mx-auto space-y-24">
-        <div className="space-y-3">
-          <p className="text-sm text-muted-foreground uppercase tracking-widest">Features</p>
+      <div className="max-w-6xl mx-auto space-y-20">
+
+        {/* Header */}
+        <div className="text-center space-y-4">
+          <p className="text-sm font-medium text-indigo-500 uppercase tracking-widest">Features</p>
           <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">
-            Built for the way job searching works
+            Manage your job search fast
           </h2>
+          <p className="text-muted-foreground max-w-md mx-auto text-sm">
+            Everything you need to run a focused, organised, data-driven job search.
+          </p>
         </div>
 
+        {/* 3-column summary cards */}
+        <div className="feat-cards-wrap grid grid-cols-1 md:grid-cols-3 gap-6">
+          {featureCards.map((f) => (
+            <div key={f.title} className="feat-card opacity-0 rounded-xl border bg-background p-6 space-y-3 hover:shadow-sm transition-shadow">
+              <div className="w-10 h-10 rounded-lg bg-indigo-500/10 flex items-center justify-center">
+                <f.icon className="w-5 h-5 text-indigo-500" />
+              </div>
+              <p className="font-semibold">{f.title}</p>
+              <p className="text-sm text-muted-foreground leading-relaxed">{f.description}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* Detailed rows */}
         {features.map((f) => (
           <div
             key={f.number}
@@ -170,9 +214,8 @@ export function FeaturesSection() {
               f.flip ? "lg:[&>*:first-child]:order-2" : ""
             }`}
           >
-            {/* Text */}
             <div className="space-y-5">
-              <p className="text-4xl font-bold text-muted-foreground/25 font-mono">{f.number}</p>
+              <p className="text-4xl font-bold text-muted-foreground/20 font-mono">{f.number}</p>
               <h3 className="text-2xl font-bold tracking-tight">{f.title}</h3>
               <p className="text-muted-foreground leading-relaxed">{f.description}</p>
               <ul className="space-y-2 pt-1">
@@ -184,11 +227,10 @@ export function FeaturesSection() {
                 ))}
               </ul>
             </div>
-
-            {/* Mockup */}
             <div>{f.mock}</div>
           </div>
         ))}
+
       </div>
     </section>
   );

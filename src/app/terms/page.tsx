@@ -15,7 +15,7 @@ export default function TermsPage() {
       <header className="border-b">
         <div className="max-w-3xl mx-auto px-6 h-14 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
-            <Logo className="w-5 h-5" />
+            {/* <Logo className="w-5 h-5" /> */}
             <span className="text-sm font-semibold">Orbit</span>
           </Link>
           <Link href="/" className="text-xs text-muted-foreground hover:text-foreground transition-colors">← Back to home</Link>

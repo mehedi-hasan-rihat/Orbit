@@ -100,58 +100,51 @@ export function HeroSection() {
       gsap.fromTo(
         ".hero-mockups > *",
         { opacity: 0, y: 24 },
-        { opacity: 1, y: 0, duration: 0.7, stagger: 0.12, delay: 0.2, ease: "power2.out" }
+        { opacity: 1, y: 0, duration: 0.7, stagger: 0.12, delay: 0.3, ease: "power2.out" }
       );
     }, ref);
     return () => ctx.revert();
   }, []);
 
   return (
-    <section ref={ref} className="pt-28 pb-20 px-6">
-      <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-14 lg:gap-20 items-center">
+    <section ref={ref} className="pt-32 pb-20 px-6">
+      <div className="max-w-3xl mx-auto text-center hero-text space-y-6">
+        <span className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-muted/50 px-3.5 py-1.5 text-xs text-muted-foreground">
+          <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+          Currently free · No credit card required
+        </span>
 
-        {/* Left — text */}
-        <div className="hero-text space-y-6">
-          <span className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-muted/50 px-3.5 py-1.5 text-xs text-muted-foreground">
-            <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-            Currently free · No credit card required
-          </span>
+        <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.1]">
+          Get your job search<br />
+          <span className="text-indigo-500">done right</span>
+        </h1>
 
-          <h1 className="text-4xl sm:text-5xl font-bold tracking-tight leading-[1.1]">
-            Your job search,<br />
-            <span className="text-muted-foreground">finally organized</span>
-          </h1>
+        <p className="text-base sm:text-lg text-muted-foreground leading-relaxed max-w-xl mx-auto">
+          Stop losing applications in spreadsheets. Orbit gives you a visual pipeline, automatic reminders, and real analytics — built for the way job searching actually works.
+        </p>
 
-          <p className="text-base text-muted-foreground leading-relaxed">
-            Stop losing applications in spreadsheets. Orbit gives you a visual pipeline, automatic reminders, and real analytics — built for the way job searching actually works.
-          </p>
-
-          <div className="flex flex-wrap gap-3 pt-1">
-            <Link
-              href="/register"
-              className="inline-flex h-10 items-center rounded-lg px-6 text-sm font-semibold bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
-            >
-              Start tracking free →
-            </Link>
-            <Link
-              href="/login"
-              className="inline-flex h-10 items-center rounded-lg border px-6 text-sm font-medium hover:bg-accent transition-colors"
-            >
-              Sign in
-            </Link>
-          </div>
-
-          <p className="text-xs text-muted-foreground">
-            Set up in minutes · Export your data anytime
-          </p>
+        <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+          <Link
+            href="/register"
+            className="inline-flex h-11 items-center rounded-lg px-7 text-sm font-semibold bg-indigo-500 text-white hover:bg-indigo-600 transition-colors"
+          >
+            Start for free →
+          </Link>
+          <Link
+            href="/login"
+            className="inline-flex h-11 items-center rounded-lg border px-7 text-sm font-medium hover:bg-accent transition-colors"
+          >
+            Sign in
+          </Link>
         </div>
 
-        {/* Right — stacked mockups */}
-        <div className="hero-mockups space-y-3">
-          <MockAppForm />
-          <MockPipelineBoard />
-        </div>
+        <p className="text-xs text-muted-foreground">Set up in minutes · Export your data anytime</p>
+      </div>
 
+      {/* Mockups below the headline */}
+      <div className="hero-mockups max-w-4xl mx-auto mt-14 grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <MockAppForm />
+        <MockPipelineBoard />
       </div>
     </section>
   );
