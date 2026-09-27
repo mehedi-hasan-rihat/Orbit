@@ -199,6 +199,7 @@ export function ApplicationActions({
 
       {editing && (
         <ApplicationForm
+          key={application?.id}
           application={application}
           availableTags={availableTags}
           stages={stages}

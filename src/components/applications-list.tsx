@@ -466,6 +466,7 @@ export function ApplicationsList({
       )}
       {editingApp && (
         <ApplicationForm
+          key={editingApp.id}
           application={editingApp}
           availableTags={availableTags}
           stages={stages}

@@ -185,12 +185,10 @@ export async function updateApplication(id: string, formData: FormData) {
   const scheduledAtChanged =
     newScheduledAt?.toISOString() !== (oldScheduledAt?.toISOString() ?? undefined);
 
-  // Clear stageScheduledAt only when the stage itself changed (the scheduled
-  // date belonged to the old stage). When the outcome changes within the same
-  // stage (e.g. SCHEDULED → FAILED), the date transitions from a "scheduled
-  // for" date to a "completed/failed on" date — it stays in the DB so the
-  // detail page can show when the stage concluded.
-  const resolvedScheduledAt = stageChanged ? null : newScheduledAt;
+  // Clear stageScheduledAt only when the stage changed AND the user didn't
+  // provide a new date for the new stage. If they set a date in the same
+  // submit, keep it — it belongs to the new stage.
+  const resolvedScheduledAt = (stageChanged && !newScheduledAt) ? null : newScheduledAt;
 
   if (isSchedulingStage && resolvedScheduledAt && scheduledAtChanged) {
     const dateStr = resolvedScheduledAt.toLocaleString("en-US", {
@@ -223,7 +221,7 @@ export async function updateApplication(id: string, formData: FormData) {
   await prisma.$transaction(async (tx) => {
     // If the stage changed or the date needs clearing, null it out first before
     // any other writes so the calendar and cron see a clean state immediately.
-    if (stageChanged || resolvedScheduledAt === null) {
+    if (resolvedScheduledAt === null) {
       await tx.application.update({
         where: { id },
         data: { stageScheduledAt: null, stageOutcome: stageChanged ? null : undefined },

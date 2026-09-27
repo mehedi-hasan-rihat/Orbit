@@ -79,8 +79,12 @@ export function DatePicker({
 }: DatePickerProps) {
   const [open, setOpen] = useState(false);
   const [position, setPosition] = useState<Position | null>(null);
-  const [selected, setSelected] = useState(value);      // "YYYY-MM-DD"
-  const [timeValue, setTimeValue] = useState("09:00");  // HH:MM
+  const [selected, setSelected] = useState(() => value ? value.slice(0, 10) : "");
+  const [timeValue, setTimeValue] = useState(() => {
+    if (value && value.length > 10) return value.slice(11, 16);
+    const now = new Date();
+    return `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+  });
   const [viewYear, setViewYear] = useState(() => {
     if (value) return new Date(value).getFullYear();
     return new Date().getFullYear();
@@ -127,18 +131,18 @@ export function DatePicker({
     };
   }, [open, includeTime]);
 
-  // Sync if value prop changes
+  // Sync if value prop changes (e.g. parent passes a new value after save)
   useEffect(() => {
-    if (value) {
-      setSelected(value.slice(0, 10));
-      if (includeTime && value.length > 10) {
-        setTimeValue(value.slice(11, 16));
-      }
-      const d = new Date(value);
-      if (!isNaN(d.getTime())) {
-        setViewYear(d.getFullYear());
-        setViewMonth(d.getMonth());
-      }
+    if (!value) return;
+    const datePart = value.slice(0, 10);
+    setSelected(datePart);
+    if (includeTime && value.length > 10) {
+      setTimeValue(value.slice(11, 16));
+    }
+    const d = new Date(value);
+    if (!isNaN(d.getTime())) {
+      setViewYear(d.getFullYear());
+      setViewMonth(d.getMonth());
     }
   }, [value, includeTime]);
 
