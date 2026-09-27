@@ -343,21 +343,50 @@ export function ApplicationForm({ application, availableTags, stages, onClose }:
             <div className="space-y-2">
               <label className="text-sm font-medium">Tags</label>
               <div className="flex flex-wrap gap-2">
-                {availableTags.map((tag) => (
-                  <button
-                    key={tag.id}
-                    type="button"
-                    onClick={() => toggleTag(tag.id)}
-                    className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium border transition-colors ${
-                      selectedTags.includes(tag.id)
-                        ? "border-transparent text-white"
-                        : "border-border text-muted-foreground hover:border-foreground"
-                    }`}
-                    style={selectedTags.includes(tag.id) ? { backgroundColor: tag.color } : undefined}
-                  >
-                    {tag.name}
-                  </button>
-                ))}
+                {availableTags.map((tag) => {
+                  const isSelected = selectedTags.includes(tag.id);
+                  return (
+                    <button
+                      key={tag.id}
+                      type="button"
+                      onClick={() => toggleTag(tag.id)}
+                      className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium border-2 transition-all ${
+                        isSelected
+                          ? "text-white shadow-sm"
+                          : "bg-background text-foreground hover:bg-muted"
+                      }`}
+                      style={
+                        isSelected
+                          ? { backgroundColor: tag.color, borderColor: tag.color }
+                          : { borderColor: tag.color }
+                      }
+                    >
+                      {/* Color dot when unselected, checkmark icon when selected */}
+                      {isSelected ? (
+                        <svg
+                          className="w-3 h-3 shrink-0"
+                          viewBox="0 0 12 12"
+                          fill="none"
+                          aria-hidden="true"
+                        >
+                          <path
+                            d="M2 6l3 3 5-5"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                      ) : (
+                        <span
+                          className="w-2 h-2 rounded-full shrink-0"
+                          style={{ backgroundColor: tag.color }}
+                        />
+                      )}
+                      {tag.name}
+                    </button>
+                  );
+                })}
               </div>
             </div>
           )}
