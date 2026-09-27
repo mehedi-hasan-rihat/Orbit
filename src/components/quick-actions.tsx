@@ -7,8 +7,6 @@ import {
   unarchiveApplication,
   closeApplication,
   reopenApplication,
-  markOffered,
-  unmarkOffered,
 } from "@/lib/actions/applications";
 import { createNote } from "@/lib/actions/notes";
 import { useRouter } from "next/navigation";
@@ -33,7 +31,6 @@ interface QuickActionsProps {
   company: string;
   closed?: boolean;
   archived?: boolean;
-  offered?: boolean;
 }
 
 export function QuickActions({
@@ -43,7 +40,6 @@ export function QuickActions({
   company,
   closed = false,
   archived = false,
-  offered = false,
 }: QuickActionsProps) {
   const [open, setOpen] = useState(false);
   const [showNoteInput, setShowNoteInput] = useState(false);

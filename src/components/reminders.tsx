@@ -14,7 +14,7 @@ interface Application {
   role: string;
   status: string | null;
   stage: { name: string; color: string } | null;
-  followUps: FollowUpItem[];
+  reminders: FollowUpItem[];
 }
 
 export function FollowUps({ applications }: { applications: Application[] }) {
@@ -22,7 +22,7 @@ export function FollowUps({ applications }: { applications: Application[] }) {
 
   // Derive overdue/upcoming from the actual FollowUp rows, not the mirror field.
   const withSoonest = applications.map((app) => {
-    const open = app.followUps.filter((f) => !f.done);
+    const open = app.reminders.filter((f) => !f.done);
     const soonest = open.sort((a, b) => new Date(a.dueAt).getTime() - new Date(b.dueAt).getTime())[0];
     return { ...app, soonestDue: soonest ? new Date(soonest.dueAt) : null };
   }).filter((app) => app.soonestDue !== null);

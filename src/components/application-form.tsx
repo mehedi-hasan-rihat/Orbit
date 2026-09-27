@@ -62,7 +62,6 @@ export function ApplicationForm({ application, availableTags, stages, onClose }:
     id: string;
     company: string;
     role: string;
-    status: string | null;
     stage: { name: string; color: string } | null;
   } | null>(null);
   const [selectedTags, setSelectedTags] = useState<string[]>(
@@ -162,7 +161,7 @@ export function ApplicationForm({ application, availableTags, stages, onClose }:
           <div className="mb-4 rounded-md border border-amber-300 bg-amber-50 dark:bg-amber-900/20 dark:border-amber-700 p-3 text-sm">
             <p className="font-medium text-amber-800 dark:text-amber-300">Possible duplicate</p>
             <p className="text-amber-700 dark:text-amber-400 text-xs mt-0.5">
-              You already have an application for <strong>{duplicate.company}</strong> — <strong>{duplicate.role}</strong> at stage <strong>{duplicate.stage?.name ?? duplicate.status ?? "Unassigned"}</strong>.
+              You already have an application for <strong>{duplicate.company}</strong> — <strong>{duplicate.role}</strong> at stage <strong>{duplicate.stage?.name ?? "Unassigned"}</strong>.
             </p>
             <button
               type="button"

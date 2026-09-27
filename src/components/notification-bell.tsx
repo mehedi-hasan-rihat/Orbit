@@ -8,9 +8,9 @@ import { markNotificationsRead } from "@/lib/actions/notifications";
 
 interface NotificationItem {
   id: string;
-  type: "interview" | "followup";
+  type: "scheduled" | "reminder";
   title: string;
-  body: string; // dedupeKey: "interview-<id>-1d" or "followup-<id>-2d"
+  body: string; // dedupeKey: "scheduled-<id>-1d" or "reminder-<id>-due"
   applicationId: string | null;
   createdAt: string;
 }
@@ -133,11 +133,11 @@ export function NotificationBell() {
                     {/* Icon */}
                     <span className={clsx(
                       "shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm",
-                      item.type === "interview"
+                      item.type === "scheduled"
                         ? "bg-blue-100 dark:bg-blue-900/30"
                         : "bg-amber-100 dark:bg-amber-900/30"
                     )}>
-                      {item.type === "interview" ? "🎤" : "📅"}
+                      {item.type === "scheduled" ? "🎤" : "📅"}
                     </span>
 
                     {/* Text */}

@@ -105,8 +105,7 @@ export default async function ApplicationDetailPage({ params }: Props) {
   const hasOutcomeAccent =
     application.stageOutcome &&
     !["PENDING"].includes(application.stageOutcome) &&
-    !application.closed &&
-    !application.offered;
+    !application.closed;
   const accentColor = hasOutcomeAccent ? outcome.color : null;
 
   // Derived label for the date column in the stats strip.
@@ -180,7 +179,7 @@ export default async function ApplicationDetailPage({ params }: Props) {
               <h1 className="text-2xl font-bold tracking-tight">{application.company}</h1>
               <StatusBadge application={application} />
               {/* Stage outcome badge — shows when a scheduling stage has a non-pending outcome */}
-              {application.stageOutcome && !application.offered && !application.closed && (
+              {application.stageOutcome && !application.closed && (
                 <span
                   className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ${outcome.className}`}
                 >
@@ -311,7 +310,7 @@ export default async function ApplicationDetailPage({ params }: Props) {
             <ApplicationSchedule
               applicationId={application.id}
               followUps={JSON.parse(JSON.stringify(reminders))}
-              notes={JSON.parse(JSON.stringify(application.notes_list))}
+              notes={JSON.parse(JSON.stringify(application.notes))}
               now={now}
             />
           </Card>

@@ -28,7 +28,7 @@ const typeConfig: Record<string, { color: string; label: string; className: stri
     label: "Note",
     className: "bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300",
   },
-  FOLLOW_UP_SET: {
+  REMINDER_SET: {
     color: "#22c55e",
     label: "Reminder",
     className: "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300",
@@ -69,7 +69,7 @@ const filterOptions = [
   { value: "OUTCOME_CHANGE", label: "Outcomes" },
   { value: "NOTE_ADDED", label: "Notes" },
   { value: "INTERVIEW_SCHEDULED", label: "Stage" },
-  { value: "FOLLOW_UP_SET", label: "Reminders" },
+  { value: "REMINDER_SET", label: "Reminders" },
 ];
 
 // Converts any SCREAMING_SNAKE outcome key to Title Case at runtime.

@@ -20,7 +20,6 @@ const OUTCOME_DISPLAY: Record<string, { label: string; color: string }> = {
 };
 
 function resolveStageStatus(app: Application): { label: string; color: string } | null {
-  if (app.offered) return { label: "Got Offer", color: "#22c55e" };
   if (app.closed)  return { label: "Closed",    color: "#6b7280" };
   if (app.stageOutcome) return OUTCOME_DISPLAY[app.stageOutcome] ?? { label: app.stageOutcome, color: "#6b7280" };
   return null;
@@ -47,7 +46,6 @@ interface Application {
   archived: boolean;
   closed: boolean;
   closedAt: Date | null;
-  offered: boolean;
   createdAt: Date;
   updatedAt: Date;
   tags: { tag: Tag }[];
@@ -373,7 +371,6 @@ export function ApplicationsList({
                     company={app.company}
                     closed={app.closed}
                     archived={app.archived}
-                    offered={app.offered}
                   />
                 </div>
               </div>
@@ -455,7 +452,6 @@ export function ApplicationsList({
                     company={app.company}
                     closed={app.closed}
                     archived={app.archived}
-                    offered={app.offered}
                   />
                 </div>
               </div>

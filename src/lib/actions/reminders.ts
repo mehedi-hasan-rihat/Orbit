@@ -30,7 +30,7 @@ export async function getRemindersFor(applicationId: string) {
   const application = await findOwnedApplication(applicationId, session.userId);
   if (!application) return [];
 
-  return prisma.followUp.findMany({
+  return prisma.reminder.findMany({
     where: { applicationId },
     orderBy: [{ done: "asc" }, { dueAt: "asc" }],
   });
@@ -48,7 +48,7 @@ export async function createReminder(applicationId: string, formData: FormData) 
   const dueAt = new Date(parsed.data.dueAt);
   if (isNaN(dueAt.getTime())) return { error: { dueAt: ["Invalid date"] } };
 
-  const active = await prisma.followUp.count({
+  const active = await prisma.reminder.count({
     where: { applicationId, done: false },
   });
   if (active >= MAX_ACTIVE_REMINDERS) {
@@ -57,7 +57,7 @@ export async function createReminder(applicationId: string, formData: FormData) 
     };
   }
 
-  await prisma.followUp.create({
+  await prisma.reminder.create({
     data: {
       applicationId,
       title: parsed.data.title.trim(),
@@ -69,7 +69,7 @@ export async function createReminder(applicationId: string, formData: FormData) 
   await prisma.activity.create({
     data: {
       applicationId,
-      type: ActivityType.FOLLOW_UP_SET,
+      type: ActivityType.REMINDER_SET,
       description: `Reminder added: ${parsed.data.title.trim()} (${dueAt.toLocaleDateString()})`,
       metadata: JSON.stringify({ title: parsed.data.title.trim(), dueAt: dueAt.toISOString() }),
     },
@@ -93,10 +93,10 @@ export async function updateReminder(id: string, applicationId: string, formData
   const dueAt = new Date(parsed.data.dueAt);
   if (isNaN(dueAt.getTime())) return { error: { dueAt: ["Invalid date"] } };
 
-  const existing = await prisma.followUp.findFirst({ where: { id, applicationId } });
+  const existing = await prisma.reminder.findFirst({ where: { id, applicationId } });
   if (!existing) return { error: "Reminder not found" };
 
-  await prisma.followUp.update({
+  await prisma.reminder.update({
     where: { id },
     data: {
       title: parsed.data.title.trim(),
@@ -117,11 +117,11 @@ export async function setReminderDone(id: string, applicationId: string, done: b
   const application = await findOwnedApplication(applicationId, session.userId);
   if (!application) return { error: "Application not found" };
 
-  const existing = await prisma.followUp.findFirst({ where: { id, applicationId } });
+  const existing = await prisma.reminder.findFirst({ where: { id, applicationId } });
   if (!existing) return { error: "Reminder not found" };
 
   if (!done) {
-    const active = await prisma.followUp.count({ where: { applicationId, done: false } });
+    const active = await prisma.reminder.count({ where: { applicationId, done: false } });
     if (active >= MAX_ACTIVE_REMINDERS) {
       return {
         error: `You already have ${MAX_ACTIVE_REMINDERS} open reminders. Complete or remove one first.`,
@@ -129,7 +129,7 @@ export async function setReminderDone(id: string, applicationId: string, done: b
     }
   }
 
-  await prisma.followUp.update({
+  await prisma.reminder.update({
     where: { id },
     data: { done, doneAt: done ? new Date() : null },
   });
@@ -138,7 +138,7 @@ export async function setReminderDone(id: string, applicationId: string, done: b
     await prisma.activity.create({
       data: {
         applicationId,
-        type: ActivityType.FOLLOW_UP_SET,
+        type: ActivityType.REMINDER_SET,
         description: `Reminder done: ${existing.title}`,
       },
     });
@@ -156,10 +156,10 @@ export async function deleteReminder(id: string, applicationId: string) {
   const application = await findOwnedApplication(applicationId, session.userId);
   if (!application) return { error: "Application not found" };
 
-  const existing = await prisma.followUp.findFirst({ where: { id, applicationId } });
+  const existing = await prisma.reminder.findFirst({ where: { id, applicationId } });
   if (!existing) return { error: "Reminder not found" };
 
-  await prisma.followUp.delete({ where: { id } });
+  await prisma.reminder.delete({ where: { id } });
 
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/applications");

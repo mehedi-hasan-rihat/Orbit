@@ -45,7 +45,7 @@ export async function GET(req: NextRequest) {
     userName: string;
     applicationId: string;
     dedupeKey: string;
-    type: "INTERVIEW_REMINDER" | "FOLLOW_UP_REMINDER";
+    type: "SCHEDULED" | "REMINDER";
     title: string;
     send: () => Promise<unknown>;
   }) {
@@ -118,7 +118,7 @@ export async function GET(req: NextRequest) {
         userName: user.name,
         applicationId: interview.applicationId,
         dedupeKey: `interview-${interview.id}-${daysUntil}d`,
-        type: "INTERVIEW_REMINDER",
+        type: "SCHEDULED",
         title: `Interview at ${interview.application.company}`,
         send: () =>
           sendReminderEmail({
@@ -162,7 +162,7 @@ export async function GET(req: NextRequest) {
         userName: user.name,
         applicationId: app.id,
         dedupeKey: `stage-scheduled-${app.id}-${daysUntil}d`,
-        type: "INTERVIEW_REMINDER",
+        type: "SCHEDULED",
         title: `${label} at ${app.company}`,
         send: () =>
           sendReminderEmail({
@@ -186,7 +186,7 @@ export async function GET(req: NextRequest) {
   // date that was set. One row per thing being chased, each with its own title
   // and details, and an application can have several due the same day, so the
   // dedupe key is per follow-up rather than per application.
-  const followUps = await prisma.followUp.findMany({
+  const followUps = await prisma.reminder.findMany({
     where: {
       dueAt: { gte: today, lt: day1 },
       done: false,
@@ -211,7 +211,7 @@ export async function GET(req: NextRequest) {
       userName: user.name,
       applicationId: app.id,
       dedupeKey: `followup-${followUp.id}-due`,
-      type: "FOLLOW_UP_REMINDER",
+      type: "REMINDER",
       title: `${followUp.title} — ${app.company}`,
       send: () =>
         sendReminderEmail({

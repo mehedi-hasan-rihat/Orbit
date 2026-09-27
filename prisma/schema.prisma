@@ -8,78 +8,53 @@ datasource db {
 }
 
 model User {
-  id                  String        @id @default(cuid())
+  id                  String              @id @default(cuid())
   name                String
-  email               String        @unique
+  email               String              @unique
   password            String
-  emailVerified       Boolean       @default(false)
-  verificationToken   String?       @unique
+  emailVerified       Boolean             @default(false)
+  verificationToken   String?             @unique
   verificationExpiry  DateTime?
-  passwordResetToken  String?       @unique
+  passwordResetToken  String?             @unique
   passwordResetExpiry DateTime?
-  theme               String        @default("system")
-  createdAt           DateTime      @default(now())
-  updatedAt           DateTime      @updatedAt
+  theme               String              @default("system")
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
   applications        Application[]
   tags                Tag[]
   notifications       Notification[]
   stageTypes          PipelineStageType[]
 }
 
-// Legacy application stage. Superseded by PipelineStageType.
-enum ApplicationStatus {
-  WISHLIST
-  APPLIED
-  SCREENING
-  INTERVIEW
-  OFFER
-  REJECTED
-  WITHDRAWN
-  ARCHIVED
-}
-
 model Application {
-  id            String            @id @default(cuid())
-  userId        String
-  user          User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  company       String
-  role          String
-  jobUrl        String?
-  stageId       String?
-  stage         PipelineStageType? @relation(fields: [stageId], references: [id], onDelete: Restrict)
-  status        ApplicationStatus? // Legacy — pre-pipeline rows only
-  appliedDate   DateTime?
-  notes         String?           // Legacy — migrated to Note rows; kept for reference only
-  resumeUrl     String?
-  coverLetterUrl String?
-  archived      Boolean           @default(false)
-  // Closing ends the process without rewriting history: stageId, notes, tags
-  // and interview rounds are all left exactly as they were, so a card that
-  // died at "Technical Interview" still says so. Orthogonal to `archived`,
-  // which is only about getting a row out of the list.
-  closed        Boolean           @default(false)
-  closedAt      DateTime?
-  // An offer is an outcome, not a place in the pipeline. Same shape as
-  // `closed`, but orthogonal to it: an offer you haven't answered is still a
-  // live application, so this does not imply closed.
-  offered       Boolean           @default(false)
-  offeredAt     DateTime?
-  stageOutcome   String?           // Optional sub-status for the current stage (e.g. Scheduled, Passed)
-  stageScheduledAt DateTime?        // Optional datetime for when the current stage step is scheduled
-  createdAt     DateTime          @default(now())
-  updatedAt     DateTime          @updatedAt
-  activities    Activity[]
-  interviews    Interview[]
-  // followups means here reminders
-  followUps     FollowUp[]
-  notes_list    Note[]
-  tags          ApplicationTag[]
+  id               String             @id @default(cuid())
+  userId           String
+  user             User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  company          String
+  role             String
+  jobUrl           String?
+  stageId          String?
+  stage            PipelineStageType? @relation(fields: [stageId], references: [id], onDelete: Restrict)
+  appliedDate      DateTime?
+  // archived: hidden from the active list, orthogonal to closed
+  archived         Boolean            @default(false)
+  // closed: process ended — keeps stageId intact so history is preserved
+  closed           Boolean            @default(false)
+  closedAt         DateTime?
+  stageOutcome     String?            // Sub-status of the current stage step (Scheduled/Passed/Failed/Cancelled)
+  stageScheduledAt DateTime?          // When the current stage step is scheduled
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  activities       Activity[]
+  interviews       Interview[]
+  reminders        Reminder[]
+  notes            Note[]
+  tags             ApplicationTag[]
 
   @@index([userId])
   @@index([userId, stageId])
   @@index([userId, archived])
   @@index([userId, closed])
-  @@index([userId, offered])
   @@index([company])
 }
 
@@ -87,7 +62,7 @@ enum ActivityType {
   CREATED
   OUTCOME_CHANGE
   NOTE_ADDED
-  FOLLOW_UP_SET
+  REMINDER_SET
   INTERVIEW_SCHEDULED
   OTHER
 }
@@ -98,7 +73,7 @@ model Activity {
   application   Application  @relation(fields: [applicationId], references: [id], onDelete: Cascade)
   type          ActivityType
   description   String
-  metadata      String?      // JSON string for extra data
+  metadata      String?
   createdAt     DateTime     @default(now())
 
   @@index([applicationId])
@@ -118,18 +93,16 @@ model Tag {
 }
 
 enum StageCategory {
-  OPEN          // not yet in process — Wishlist, Applied
-  INTERVIEWING  // actively progressing through rounds
-  SUCCESS       // Offer
-  CLOSED        // Rejected, Withdrawn, Archived
+  OPEN         // Not yet in process — Wishlist, Applied, Screening
+  INTERVIEWING // Actively progressing — Assessment, Interview
+  SUCCESS      // Final positive outcomes — Get Offer, Hired
+  CLOSED       // Terminal — Rejected
 }
 
-// User-owned catalogue of interview stage types. Seeded with defaults on first
-// read (see src/lib/actions/pipeline.ts) so existing users get a pipeline too.
 model PipelineStageType {
-  id         String      @id @default(cuid())
-  userId     String
-  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id           String        @id @default(cuid())
+  userId       String
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   name         String
   color        String        @default("#6b7280")
   category     StageCategory @default(INTERVIEWING)
@@ -144,41 +117,27 @@ model PipelineStageType {
   @@index([userId])
 }
 
-// Legacy stage type. Superseded by PipelineStageType; kept nullable so rows
-// written before the pipeline rework still render their original label.
-enum InterviewType {
-  PHONE_SCREEN
-  ONSITE
-  PANEL
-  ASSESSMENT
-  TASK
-  FINAL
-  OTHER
-}
-
 model Interview {
-  id            String        @id @default(cuid())
+  id            String             @id @default(cuid())
   applicationId String
-  application   Application   @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  application   Application        @relation(fields: [applicationId], references: [id], onDelete: Cascade)
   stageTypeId   String?
   stageType     PipelineStageType? @relation(fields: [stageTypeId], references: [id], onDelete: SetNull)
-  type          InterviewType?     // Legacy — pre-rework rows only
-  customType    String?            // Free-form label: legacy OTHER rows, and the
-                                   // snapshot taken when a stage type is deleted
-  round         Int           @default(1)
+  customType    String?            // Snapshot label when a stage type is deleted
+  round         Int                @default(1)
   scheduledAt   DateTime?
   notes         String?
-  outcome       String?       // One of INTERVIEW_OUTCOMES in src/lib/validations.ts
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
+  outcome       String?            // One of INTERVIEW_OUTCOMES in src/lib/validations.ts
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
 
   @@index([applicationId])
   @@index([stageTypeId])
 }
 
 enum NotificationType {
-  INTERVIEW_REMINDER
-  FOLLOW_UP_REMINDER
+  SCHEDULED
+  REMINDER
 }
 
 model Notification {
@@ -197,11 +156,7 @@ model Notification {
   @@index([userId, createdAt])
 }
 
-// A named thing to chase, with its own due date. Capped at MAX_ACTIVE_FOLLOW_UPS
-// open per application (enforced in the action, not the schema — the limit is a
-// product rule about what a person can usefully track, not an invariant the
-// database needs to guarantee).
-model FollowUp {
+model Reminder {
   id            String      @id @default(cuid())
   applicationId String
   application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
@@ -230,8 +185,6 @@ model ApplicationTag {
   @@index([tagId])
 }
 
-// Structured notes — one row per entry. The legacy `notes String?` column on
-// Application is kept read-only for reference; all new writes go here.
 model Note {
   id            String      @id @default(cuid())
   applicationId String

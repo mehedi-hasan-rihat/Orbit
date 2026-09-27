@@ -15,7 +15,7 @@ async function getNotifications(userId: string) {
     count: notifications.length,
     items: notifications.map((n) => ({
       id: n.id,
-      type: n.type === "INTERVIEW_REMINDER" ? "interview" : "followup",
+      type: n.type === "SCHEDULED" ? "scheduled" : "reminder",
       title: n.title,
       body: n.body,
       applicationId: n.applicationId,

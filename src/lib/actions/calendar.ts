@@ -36,7 +36,7 @@ export async function getCalendarEvents() {
     }),
 
     // Reminders: individual FollowUp rows set from the Reminders section
-    prisma.followUp.findMany({
+    prisma.reminder.findMany({
       where: {
         done: false,
         application: { userId: session.userId, archived: false, closed: false },

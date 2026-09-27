@@ -105,7 +105,7 @@ export async function createInterview(applicationId: string, formData: FormData)
     session.userId,
     {
       stageId: application.stageId,
-      stageName: application.stage?.name ?? application.status,
+      stageName: application.stage?.name ?? "Unassigned",
       category: application.stage?.category ?? null,
     },
     outcome,
@@ -156,10 +156,6 @@ export async function updateInterview(id: string, applicationId: string, formDat
     where: { id },
     data: {
       stageTypeId: stageType.id,
-      // Editing migrates a pre-rework row forward: once it points at a stage
-      // type, the legacy columns must stop shadowing it in resolveStageLabel.
-      type: null,
-      customType: null,
       round: data.round,
       scheduledAt: data.scheduledAt ? new Date(data.scheduledAt) : null,
       notes: data.notes || null,
@@ -194,7 +190,7 @@ export async function updateInterview(id: string, applicationId: string, formDat
     session.userId,
     {
       stageId: application.stageId,
-      stageName: application.stage?.name ?? application.status,
+      stageName: application.stage?.name ?? "Unassigned",
       category: application.stage?.category ?? null,
     },
     outcome,

@@ -36,12 +36,6 @@ export type TagFormData = z.infer<typeof tagSchema>;
 // ─── Interview pipeline ──────────────────────────────────────────────────────
 
 // Outcomes are a fixed vocabulary — only the stage *types* are user-editable.
-//
-// This describes one round, not the application. REJECTED and WITHDRAWN used to
-// live here too and were duplicates twice over: at the round level they said
-// nothing FAILED/CANCELLED didn't, and at the application level that meaning now
-// belongs to the `closed` and `offered` flags. Both were backfilled away in
-// 20260826150000_offered_flag_and_outcome_dedup.
 export const INTERVIEW_OUTCOMES = [
   "PENDING",
   "SCHEDULED",
@@ -60,12 +54,8 @@ export const OPEN_OUTCOMES: InterviewOutcome[] = ["PENDING", "SCHEDULED"];
 export const STAGE_CATEGORIES = ["OPEN", "INTERVIEWING", "SUCCESS", "CLOSED"] as const;
 export type StageCategoryValue = (typeof STAGE_CATEGORIES)[number];
 
-// What each category means for the aggregations that used to hard-code status
-// names: interview rate and follow-up eligibility.
-//
-// SUCCESS no longer drives the offer numbers — that is the `offered` flag on the
-// application, because an offer is an outcome and not a place you sit. The
-// category stays for users who had, or still want, a stage shaped that way.
+// What each category means for the aggregations.
+// SUCCESS drives the offer rate — applications in Get Offer / Hired stages.
 export const CATEGORY_LABELS: Record<StageCategoryValue, string> = {
   OPEN: "Not started",
   INTERVIEWING: "In process",
