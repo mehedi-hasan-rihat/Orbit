@@ -20,7 +20,6 @@ const OUTCOME_DISPLAY: Record<string, { label: string; color: string }> = {
 };
 
 function resolveStageStatus(app: Application): { label: string; color: string } | null {
-  if (app.closed)  return { label: "Closed",    color: "#6b7280" };
   if (app.stageOutcome) return OUTCOME_DISPLAY[app.stageOutcome] ?? { label: app.stageOutcome, color: "#6b7280" };
   return null;
 }
