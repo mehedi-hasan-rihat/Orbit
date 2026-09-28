@@ -88,7 +88,7 @@ export async function createApplication(formData: FormData) {
             description: `Application created for ${data.role} at ${data.company}`,
           },
           ...(isSchedulingStage && data.stageScheduledAt ? [{
-            type: ActivityType.INTERVIEW_SCHEDULED,
+            type: ActivityType.OUTCOME_CHANGE,
             description: data.stageOutcome && !["SCHEDULED", "PENDING"].includes(data.stageOutcome)
               ? `${stage.name} ${data.stageOutcome.toLowerCase()} on ${new Date(data.stageScheduledAt).toLocaleString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" })}`
               : `${stage.name} scheduled for ${new Date(data.stageScheduledAt).toLocaleString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" })}`,
@@ -199,7 +199,7 @@ export async function updateApplication(id: string, formData: FormData) {
       ? `${stage.name} ${data.stageOutcome!.toLowerCase()} on ${dateStr}`
       : `${stage.name} scheduled for ${dateStr}`;
     activities.push({
-      type: ActivityType.INTERVIEW_SCHEDULED,
+      type: ActivityType.OUTCOME_CHANGE,
       description,
       metadata: JSON.stringify({ stageType: stage.name, stageId: stage.id, scheduledAt: resolvedScheduledAt.toISOString(), outcome: data.stageOutcome }),
     });

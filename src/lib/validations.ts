@@ -18,9 +18,7 @@ export const tagSchema = z.object({
   color: z.string().regex(/^#[0-9a-fA-F]{6}$/, "Must be a valid hex color"),
 });
 
-// How many open reminders one application may carry. A cap rather than a
-// schema constraint: it is a rule about what is useful to track, and completed
-// ones never count against it.
+// How many open reminders one application may carry.
 export const MAX_ACTIVE_REMINDERS = 2;
 
 export const reminderEntrySchema = z.object({
@@ -30,12 +28,11 @@ export const reminderEntrySchema = z.object({
 });
 
 export type ReminderEntryData = z.infer<typeof reminderEntrySchema>;
-
 export type TagFormData = z.infer<typeof tagSchema>;
 
-// ─── Interview pipeline ──────────────────────────────────────────────────────
+// ─── Stage outcomes ───────────────────────────────────────────────────────────
 
-// Outcomes are a fixed vocabulary — only the stage *types* are user-editable.
+// Fixed vocabulary for the sub-status of the current stage step.
 export const INTERVIEW_OUTCOMES = [
   "PENDING",
   "SCHEDULED",
@@ -47,15 +44,28 @@ export const INTERVIEW_OUTCOMES = [
 
 export type InterviewOutcome = (typeof INTERVIEW_OUTCOMES)[number];
 
-// Outcomes that mean "this round has not happened yet" — these are the ones the
-// reminder cron still chases, and the ones that are not worth an activity entry.
+// Outcomes that mean the stage step hasn't happened yet — the cron chases these.
 export const OPEN_OUTCOMES: InterviewOutcome[] = ["PENDING", "SCHEDULED"];
+
+// Stages whose status dropdown appears on the application form.
+export const SCHEDULING_STAGE_NAMES: readonly string[] = [
+  "Screening",
+  "Assessment",
+  "Interview",
+];
+
+// Stages that record a date when the outcome was reached (no time).
+export const OUTCOME_STAGE_NAMES: readonly string[] = [
+  "Get Offer",
+  "Hired",
+  "Rejected",
+];
+
+// ─── Pipeline stage categories ────────────────────────────────────────────────
 
 export const STAGE_CATEGORIES = ["OPEN", "INTERVIEWING", "SUCCESS", "CLOSED"] as const;
 export type StageCategoryValue = (typeof STAGE_CATEGORIES)[number];
 
-// What each category means for the aggregations.
-// SUCCESS drives the offer rate — applications in Get Offer / Hired stages.
 export const CATEGORY_LABELS: Record<StageCategoryValue, string> = {
   OPEN: "Not started",
   INTERVIEWING: "In process",
@@ -63,39 +73,17 @@ export const CATEGORY_LABELS: Record<StageCategoryValue, string> = {
   CLOSED: "Closed",
 };
 
-// Stages an interview round can be filed under. OPEN and CLOSED stages are
-// application lifecycle states, not things you sit an interview for.
-export const ROUND_CATEGORIES: StageCategoryValue[] = ["INTERVIEWING", "SUCCESS"];
+// ─── Default pipeline stages ──────────────────────────────────────────────────
 
-// The subset of system stages that appear in the "Type" dropdown when
-// scheduling an interview entry on the detail page. Get Offer and Hired are
-// outcomes, not things you sit an interview for — only Screening, Assessment
-// and Interview are scheduling targets.
-export const SCHEDULING_STAGE_NAMES: readonly string[] = [
-  "Screening",
-  "Assessment",
-  "Interview",
-];
-
-// Stages that record a date of when the outcome was reached.
-// Date is required, time is not collected.
-export const OUTCOME_STAGE_NAMES: readonly string[] = [
-  "Get Offer",
-  "Hired",
-  "Rejected",
-];
-
-// Seeded for every user on first read of their pipeline. Order here is the
-// order stages appear on the board.
 export const DEFAULT_STAGE_TYPES = [
-  { name: "Wishlist",    color: "#6b7280", category: "OPEN",         enabled: true },
-  { name: "Applied",     color: "#3b82f6", category: "OPEN",         enabled: true },
-  { name: "Screening",   color: "#a855f7", category: "OPEN",         enabled: true },
-  { name: "Assessment",  color: "#f59e0b", category: "INTERVIEWING", enabled: true },
-  { name: "Interview",   color: "#f97316", category: "INTERVIEWING", enabled: true },
-  { name: "Get Offer",   color: "#22c55e", category: "SUCCESS",      enabled: true },
-  { name: "Hired",       color: "#10b981", category: "SUCCESS",      enabled: true },
-  { name: "Rejected",    color: "#ef4444", category: "CLOSED",       enabled: true },
+  { name: "Wishlist",   color: "#6b7280", category: "OPEN",         enabled: true },
+  { name: "Applied",    color: "#3b82f6", category: "OPEN",         enabled: true },
+  { name: "Screening",  color: "#a855f7", category: "OPEN",         enabled: true },
+  { name: "Assessment", color: "#f59e0b", category: "INTERVIEWING", enabled: true },
+  { name: "Interview",  color: "#f97316", category: "INTERVIEWING", enabled: true },
+  { name: "Get Offer",  color: "#22c55e", category: "SUCCESS",      enabled: true },
+  { name: "Hired",      color: "#10b981", category: "SUCCESS",      enabled: true },
+  { name: "Rejected",   color: "#ef4444", category: "CLOSED",       enabled: true },
 ] as const satisfies readonly {
   name: string;
   color: string;
@@ -103,10 +91,6 @@ export const DEFAULT_STAGE_TYPES = [
   enabled: boolean;
 }[];
 
-// The stages every pipeline is guaranteed to have. Seeded like the rest, but
-// locked afterwards: name, category, visibility and existence are fixed, and
-// they are restored if one ever goes missing. Everything else in
-// DEFAULT_STAGE_TYPES is only a starting suggestion the user owns outright.
 export const SYSTEM_STAGE_NAMES = [
   "Wishlist",
   "Applied",
@@ -120,32 +104,23 @@ export const SYSTEM_STAGE_NAMES = [
 
 export type SystemStageName = (typeof SYSTEM_STAGE_NAMES)[number];
 
-// Stages that were seeded once and shouldn't have been. "Archived" is not a
-// place in the pipeline — archiving is a flag on the application
-// (Application.archived) with its own tab and its own actions. "Technical
-// Interview" was replaced by the Assessment + Interview split. Both are cleared
-// on the next pipeline read if they were never used.
 export const RETIRED_STAGE_NAMES: readonly string[] = ["Archived", "Technical Interview"];
 
 export function isSystemStageName(name: string): name is SystemStageName {
   return (SYSTEM_STAGE_NAMES as readonly string[]).includes(name);
 }
 
-// Case-insensitive on purpose. @@unique([userId, name]) is case-sensitive, so
-// a second "wishlist" would be accepted next to the locked "Wishlist" and read
-// as a duplicate column on the board.
 export function isReservedStageName(name: string): boolean {
   const candidate = name.trim().toLowerCase();
   return SYSTEM_STAGE_NAMES.some((n) => n.toLowerCase() === candidate);
 }
 
-// Retired names stay unavailable rather than merely unseeded: the reconcile
-// pass clears an unused hidden "Archived", so letting one be recreated would
-// mean it vanished again the moment the user hid it.
 export function isRetiredStageName(name: string): boolean {
   const candidate = name.trim().toLowerCase();
   return RETIRED_STAGE_NAMES.some((n) => n.toLowerCase() === candidate);
 }
+
+// ─── Zod schemas ──────────────────────────────────────────────────────────────
 
 export const stageTypeSchema = z.object({
   name: z.string().min(1, "Name is required").max(100),
@@ -158,14 +133,5 @@ export const updateStageSchema = z.object({
   stageId: z.string().min(1, "Stage is required"),
 });
 
-export const interviewSchema = z.object({
-  stageTypeId: z.string().min(1, "Type is required"),
-  round: z.coerce.number().min(1).max(20),
-  scheduledAt: z.string().optional().or(z.literal("")),
-  notes: z.string().max(5000).optional().or(z.literal("")),
-  outcome: z.enum(INTERVIEW_OUTCOMES).optional(),
-});
-
 export type StageTypeFormData = z.infer<typeof stageTypeSchema>;
 export type UpdateStageData = z.infer<typeof updateStageSchema>;
-export type InterviewFormData = z.infer<typeof interviewSchema>;

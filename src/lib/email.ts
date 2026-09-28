@@ -257,7 +257,7 @@ export async function sendReminderEmail(opts: {
   company: string;
   role: string;
   daysUntil: number;
-  type: "interview" | "followup";
+  type: "scheduled" | "reminder";
   date: Date;
   interviewLabel?: string;
   // A follow-up now carries its own title and details — the reminder says what
@@ -266,7 +266,7 @@ export async function sendReminderEmail(opts: {
   followUpDetails?: string | null;
   applicationUrl: string;
 }) {
-  const isInterview = opts.type === "interview";
+  const isScheduled = opts.type === "scheduled";
 
   const dateStr = opts.date.toLocaleDateString("en-US", {
     weekday: "long",
@@ -285,8 +285,8 @@ export async function sendReminderEmail(opts: {
     opts.daysUntil === 0 ? "DUE TODAY" : opts.daysUntil === 1 ? "TOMORROW" : dateStr.toUpperCase();
 
   const html = baseTemplate({
-    title: isInterview ? "Interview Reminder" : "Reminder",
-    subtitle: `${opts.company} — ${isInterview ? "Interview" : opts.followUpTitle ?? "Reminder"}`,
+    title: isScheduled ? "Interview Reminder" : "Reminder",
+    subtitle: `${opts.company} — ${isScheduled ? "Interview" : opts.followUpTitle ?? "Reminder"}`,
     body: `
       ${blocks.greeting(
         opts.userName,
@@ -298,7 +298,7 @@ export async function sendReminderEmail(opts: {
       )}
 
       ${blocks.metaTable(
-        isInterview
+        isScheduled
           ? [
               { label: "Company", value: opts.company },
               { label: "Role", value: opts.role },
@@ -315,7 +315,7 @@ export async function sendReminderEmail(opts: {
       )}
 
       ${
-        !isInterview && opts.followUpDetails
+        !isScheduled && opts.followUpDetails
           ? `<div style="padding:0 24px 4px;font-size:14px;color:#374151;white-space:pre-wrap;">${escapeHtml(opts.followUpDetails)}</div>`
           : ""
       }
@@ -335,7 +335,7 @@ export async function sendReminderEmail(opts: {
   return sendMail({
     from: process.env.SMTP_FROM,
     to: opts.to,
-    subject: isInterview
+    subject: isScheduled
       ? `Interview Reminder: ${opts.company}`
       : `Due today: ${opts.followUpTitle ?? "Reminder"} — ${opts.company}`,
     html,

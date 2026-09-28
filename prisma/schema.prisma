@@ -46,7 +46,6 @@ model Application {
   createdAt        DateTime           @default(now())
   updatedAt        DateTime           @updatedAt
   activities       Activity[]
-  interviews       Interview[]
   reminders        Reminder[]
   notes            Note[]
   tags             ApplicationTag[]
@@ -63,7 +62,6 @@ enum ActivityType {
   OUTCOME_CHANGE
   NOTE_ADDED
   REMINDER_SET
-  INTERVIEW_SCHEDULED
   OTHER
 }
 
@@ -110,29 +108,10 @@ model PipelineStageType {
   enabled      Boolean       @default(true)
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
-  interviews   Interview[]
   applications Application[]
 
   @@unique([userId, name])
   @@index([userId])
-}
-
-model Interview {
-  id            String             @id @default(cuid())
-  applicationId String
-  application   Application        @relation(fields: [applicationId], references: [id], onDelete: Cascade)
-  stageTypeId   String?
-  stageType     PipelineStageType? @relation(fields: [stageTypeId], references: [id], onDelete: SetNull)
-  customType    String?            // Snapshot label when a stage type is deleted
-  round         Int                @default(1)
-  scheduledAt   DateTime?
-  notes         String?
-  outcome       String?            // One of INTERVIEW_OUTCOMES in src/lib/validations.ts
-  createdAt     DateTime           @default(now())
-  updatedAt     DateTime           @updatedAt
-
-  @@index([applicationId])
-  @@index([stageTypeId])
 }
 
 enum NotificationType {

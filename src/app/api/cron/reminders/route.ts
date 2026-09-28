@@ -1,8 +1,6 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { sendReminderEmail } from "@/lib/email";
-import { resolveStageLabel } from "@/lib/stage-label";
-import { OPEN_OUTCOMES } from "@/lib/validations";
 
 export const dynamic = "force-dynamic";
 
@@ -29,16 +27,13 @@ export async function GET(req: NextRequest) {
   const today = startOfDay(new Date());
   const day1 = startOfDay(addDays(today, 1));
   const day2 = startOfDay(addDays(today, 2));
-  console.log(
-    `[cron] Running at ${new Date().toISOString()} — interviews on ${day1.toDateString()} / ${day2.toDateString()}, follow-ups due ${today.toDateString()}`,
-  );
+  console.log(`[cron] Running at ${new Date().toISOString()} — scheduled on ${day1.toDateString()} / ${day2.toDateString()}, reminders due ${today.toDateString()}`);
 
   let created = 0;
   let emailed = 0;
   let skipped = 0;
   const logs: string[] = [];
 
-  // Sending is the same for both kinds; only what goes in the mail differs.
   async function notify(opts: {
     userId: string;
     email: string;
@@ -52,11 +47,7 @@ export async function GET(req: NextRequest) {
     const exists = await prisma.notification.findFirst({
       where: { userId: opts.userId, body: opts.dedupeKey },
     });
-    if (exists) {
-      console.log(`[cron] SKIP notification (already exists): ${opts.dedupeKey}`);
-      skipped++;
-      return;
-    }
+    if (exists) { skipped++; return; }
 
     const notification = await prisma.notification.create({
       data: {
@@ -68,81 +59,34 @@ export async function GET(req: NextRequest) {
       },
     });
     created++;
-    console.log(`[cron] Notification created: ${notification.id} — ${opts.dedupeKey}`);
     logs.push(`notification:created:${opts.dedupeKey}`);
 
     try {
       await opts.send();
-      await prisma.notification.update({
-        where: { id: notification.id },
-        data: { emailSent: true },
-      });
+      await prisma.notification.update({ where: { id: notification.id }, data: { emailSent: true } });
       emailed++;
-      console.log(`[cron] Email sent to ${opts.email} for ${opts.dedupeKey}`);
       logs.push(`email:sent:${opts.email}:${opts.dedupeKey}`);
     } catch (err) {
-      console.error(`[cron] Email FAILED for ${opts.dedupeKey} → ${opts.email}`, err);
+      console.error(`[cron] Email FAILED for ${opts.dedupeKey}`, err);
       logs.push(`email:failed:${opts.email}:${opts.dedupeKey}`);
     }
   }
 
-  // --- Interviews: 2 days out, then 1 day out ---
-  // An appointment you have to prepare for, so the warning comes early.
+  // --- Stage-scheduled applications: 2 days out, then 1 day out ---
   for (const daysUntil of [1, 2]) {
     const targetDay = daysUntil === 1 ? day1 : day2;
     const nextDay = addDays(targetDay, 1);
 
-    const interviews = await prisma.interview.findMany({
-      where: {
-        scheduledAt: { gte: targetDay, lt: nextDay },
-        outcome: { in: OPEN_OUTCOMES },
-        application: { archived: false, closed: false },
-      },
-      include: {
-        stageType: { select: { name: true } },
-        application: {
-          include: { user: { select: { id: true, name: true, email: true } } },
-        },
-      },
-    });
-
-    console.log(`[cron] Found ${interviews.length} interview(s) for +${daysUntil}d`);
-
-    for (const interview of interviews) {
-      const { user } = interview.application;
-      const label = resolveStageLabel(interview);
-
-      await notify({
-        userId: user.id,
-        email: user.email,
-        userName: user.name,
-        applicationId: interview.applicationId,
-        dedupeKey: `interview-${interview.id}-${daysUntil}d`,
-        type: "SCHEDULED",
-        title: `Interview at ${interview.application.company}`,
-        send: () =>
-          sendReminderEmail({
-            to: user.email,
-            userName: user.name,
-            company: interview.application.company,
-            role: interview.application.role,
-            daysUntil,
-            type: "interview",
-            date: interview.scheduledAt!,
-            interviewLabel: label,
-            applicationUrl: `${APP_URL}/dashboard/applications/${interview.applicationId}`,
-          }),
-      });
-    }
-
-    // Also notify for applications where the stage itself is scheduled (set
-    // from the Edit / Update Application modal) — these share the same email
-    // template as interview entries.
     const stageScheduled = await prisma.application.findMany({
       where: {
         stageScheduledAt: { gte: targetDay, lt: nextDay },
         archived: false,
         closed: false,
+        OR: [
+          { stageOutcome: null },
+          { stageOutcome: "SCHEDULED" },
+          { stageOutcome: "PENDING" },
+        ],
       },
       include: {
         user: { select: { id: true, name: true, email: true } },
@@ -171,7 +115,7 @@ export async function GET(req: NextRequest) {
             company: app.company,
             role: app.role,
             daysUntil,
-            type: "interview",
+            type: "scheduled",
             date: app.stageScheduledAt!,
             interviewLabel: label,
             applicationUrl: `${APP_URL}/dashboard/applications/${app.id}`,
@@ -180,13 +124,8 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  // --- Follow-ups: on the day they are due ---
-  // A follow-up is a task, not an appointment — there is nothing to prepare
-  // for, so warning about it days early would just be noise. It fires on the
-  // date that was set. One row per thing being chased, each with its own title
-  // and details, and an application can have several due the same day, so the
-  // dedupe key is per follow-up rather than per application.
-  const followUps = await prisma.reminder.findMany({
+  // --- Reminders: on the day they are due ---
+  const reminders = await prisma.reminder.findMany({
     where: {
       dueAt: { gte: today, lt: day1 },
       done: false,
@@ -199,10 +138,10 @@ export async function GET(req: NextRequest) {
     },
   });
 
-  console.log(`[cron] Found ${followUps.length} follow-up(s) due today`);
+  console.log(`[cron] Found ${reminders.length} reminder(s) due today`);
 
-  for (const followUp of followUps) {
-    const app = followUp.application;
+  for (const reminder of reminders) {
+    const app = reminder.application;
     const { user } = app;
 
     await notify({
@@ -210,9 +149,9 @@ export async function GET(req: NextRequest) {
       email: user.email,
       userName: user.name,
       applicationId: app.id,
-      dedupeKey: `followup-${followUp.id}-due`,
+      dedupeKey: `reminder-${reminder.id}-due`,
       type: "REMINDER",
-      title: `${followUp.title} — ${app.company}`,
+      title: `${reminder.title} — ${app.company}`,
       send: () =>
         sendReminderEmail({
           to: user.email,
@@ -220,10 +159,10 @@ export async function GET(req: NextRequest) {
           company: app.company,
           role: app.role,
           daysUntil: 0,
-          type: "followup",
-          date: followUp.dueAt,
-          followUpTitle: followUp.title,
-          followUpDetails: followUp.details,
+          type: "reminder",
+          date: reminder.dueAt,
+          followUpTitle: reminder.title,
+          followUpDetails: reminder.details,
           applicationUrl: `${APP_URL}/dashboard/applications/${app.id}`,
         }),
     });

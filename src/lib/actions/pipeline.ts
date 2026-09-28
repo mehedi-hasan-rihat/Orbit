@@ -86,11 +86,8 @@ async function reconcileStages(
   // deleting it would have to invent a stage to put them in.
   const retired = existing.filter((e) => RETIRED_STAGE_NAMES.includes(e.name));
   for (const stage of retired) {
-    const [applications, interviews] = await Promise.all([
-      prisma.application.count({ where: { stageId: stage.id } }),
-      prisma.interview.count({ where: { stageTypeId: stage.id } }),
-    ]);
-    if (applications > 0 || interviews > 0) continue;
+    const applications = await prisma.application.count({ where: { stageId: stage.id } });
+    if (applications > 0) continue;
 
     // Application.stageId is ON DELETE RESTRICT, so a card moved in between the
     // count and the delete makes this throw rather than strand anything. Leave
@@ -136,7 +133,7 @@ export async function getStageTypesWithUsage() {
   const types = await prisma.pipelineStageType.findMany({
     where: { userId: session.userId },
     orderBy: [{ order: "asc" }, { name: "asc" }],
-    include: { _count: { select: { interviews: true, applications: true } } },
+    include: { _count: { select: { applications: true } } },
   });
 
   return types.map((t) => ({
@@ -147,7 +144,7 @@ export async function getStageTypesWithUsage() {
     order: t.order,
     enabled: t.enabled,
     isSystem: isSystemStageName(t.name),
-    usageCount: t._count.interviews,
+    usageCount: t._count.applications,
     applicationCount: t._count.applications,
   }));
 }
@@ -312,21 +309,12 @@ export async function deleteStageType(id: string) {
 
   // Applications hold the FK with ON DELETE RESTRICT: a stage that still has
   // cards on the board cannot be dropped without silently stranding them.
-  // Refuse and let the user move or disable it instead.
   const inUse = await prisma.application.count({ where: { stageId: id } });
   if (inUse > 0) {
     return {
       error: `${existing.name} still holds ${inUse} application${inUse === 1 ? "" : "s"}. Move them to another stage, or disable this one instead.`,
     };
   }
-
-  // Interviews hold it with ON DELETE SET NULL, which would leave them with no
-  // label at all. Snapshot the name into customType first so they keep reading
-  // the way they did before the stage was removed.
-  await prisma.interview.updateMany({
-    where: { stageTypeId: id },
-    data: { customType: existing.name },
-  });
 
   await prisma.pipelineStageType.delete({ where: { id } });
 
