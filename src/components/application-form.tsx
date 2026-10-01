@@ -4,7 +4,7 @@ import { useState, useRef } from "react";
 import { createApplication, updateApplication, checkDuplicate, moveToRejectedStage } from "@/lib/actions/applications";
 import { DatePicker } from "./date-picker";
 import { useRouter } from "next/navigation";
-import { SCHEDULING_STAGE_NAMES, OUTCOME_STAGE_NAMES } from "@/lib/validations";
+import { SCHEDULING_STAGE_NAMES, OUTCOME_STAGE_NAMES, INTERVIEW_OUTCOMES } from "@/lib/validations";
 import { outcomeDisplay } from "@/lib/outcome-display";
 
 interface Tag {
@@ -30,14 +30,8 @@ interface ApplicationFormProps {
   onClose: () => void;
 }
 
-// Status options available per stage (Screening / Assessment / Interview).
-const STATUS_OPTIONS = [
-  "SCHEDULED",
-  "COMPLETED",
-  "PASSED",
-  "FAILED",
-  "CANCELLED",
-] as const;
+// User-selectable outcomes — excludes PENDING which is the silent default state.
+const STATUS_OPTIONS = INTERVIEW_OUTCOMES.filter((o) => o !== "PENDING");
 
 // Label for the date field changes with the outcome.
 function dateFieldLabel(outcome: string | null | undefined, stageName: string | undefined): string {
