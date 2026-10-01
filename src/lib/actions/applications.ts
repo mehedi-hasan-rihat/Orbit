@@ -5,7 +5,7 @@ import { getSession } from "@/lib/auth";
 import { applicationSchema, updateStageSchema, OUTCOME_STAGE_NAMES, INTERVIEW_OUTCOMES } from "@/lib/validations";
 import { revalidatePath } from "next/cache";
 import { resolveStage } from "@/lib/stage-display";
-import { ActivityType, StageCategory } from "@/generated/prisma/enums";
+import { ActivityType, StageCategory, StageOutcome } from "@/generated/prisma/enums";
 
 async function requireUser() {
   const session = await getSession();
@@ -79,7 +79,7 @@ export async function createApplication(formData: FormData) {
       jobUrl: data.jobUrl || null,
       stageId: stage.id,
       appliedDate: data.appliedDate ? new Date(data.appliedDate) : null,
-      stageOutcome: data.stageOutcome || null,
+      stageOutcome: (data.stageOutcome || null) as StageOutcome | null,
       stageScheduledAt: data.stageScheduledAt ? new Date(data.stageScheduledAt) : null,
       activities: {
         create: [
@@ -239,7 +239,7 @@ export async function updateApplication(id: string, formData: FormData) {
         jobUrl: data.jobUrl || null,
         stage: { connect: { id: stage.id } },
         appliedDate: data.appliedDate ? new Date(data.appliedDate) : null,
-        stageOutcome: data.stageOutcome || null,
+        stageOutcome: (data.stageOutcome || null) as StageOutcome | null,
         stageScheduledAt: resolvedScheduledAt,
         activities: activities.length > 0 ? { create: activities } : undefined,
         tags: tagIds.length > 0 ? {
