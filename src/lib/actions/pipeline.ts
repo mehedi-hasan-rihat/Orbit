@@ -105,6 +105,14 @@ export async function getStageTypes() {
   const session = await getSession();
   if (!session) return [];
 
+  // Guard against stale JWT cookies that outlive a DB reset: if the user row
+  // is gone the FK constraint on seedDefaults would throw rather than 404.
+  const userExists = await prisma.user.findUnique({
+    where: { id: session.userId },
+    select: { id: true },
+  });
+  if (!userExists) return [];
+
   const existing = await prisma.pipelineStageType.findMany({
     where: { userId: session.userId },
     orderBy: [{ order: "asc" }, { name: "asc" }],

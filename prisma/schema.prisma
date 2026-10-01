@@ -27,7 +27,6 @@ model User {
 }
 
 enum StageOutcome {
-  PENDING
   SCHEDULED
   ASSIGNED
   COMPLETED

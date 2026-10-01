@@ -85,7 +85,7 @@ export async function GET(req: NextRequest) {
         OR: [
           { stageOutcome: null },
           { stageOutcome: "SCHEDULED" },
-          { stageOutcome: "PENDING" },
+          { stageOutcome: "ASSIGNED" },
         ],
       },
       include: {

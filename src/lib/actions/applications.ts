@@ -58,7 +58,7 @@ export async function createApplication(formData: FormData) {
 
   // stageScheduledAt is required only when outcome is SCHEDULED (future appointment).
   // For other terminal outcomes the date is optional but still stored.
-  const isScheduled = data.stageOutcome === "SCHEDULED" || data.stageOutcome === "PENDING";
+  const isScheduled = data.stageOutcome === "SCHEDULED" || data.stageOutcome === "ASSIGNED";
   if (isSchedulingStage && isScheduled && !data.stageScheduledAt) {
     return { error: { stageScheduledAt: ["Scheduled date is required for this stage"] } };
   }
@@ -89,7 +89,7 @@ export async function createApplication(formData: FormData) {
           },
           ...(isSchedulingStage && data.stageScheduledAt ? [{
             type: ActivityType.OUTCOME_CHANGE,
-            description: data.stageOutcome && !["SCHEDULED", "PENDING"].includes(data.stageOutcome)
+            description: data.stageOutcome && !["SCHEDULED", "ASSIGNED"].includes(data.stageOutcome)
               ? `${stage.name} ${data.stageOutcome.toLowerCase()} on ${new Date(data.stageScheduledAt).toLocaleString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" })}`
               : `${stage.name} scheduled for ${new Date(data.stageScheduledAt).toLocaleString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" })}`,
             metadata: JSON.stringify({ stageType: stage.name, stageId: stage.id, scheduledAt: data.stageScheduledAt, outcome: data.stageOutcome }),
@@ -146,7 +146,7 @@ export async function updateApplication(id: string, formData: FormData) {
 
   // stageScheduledAt is required only when outcome is SCHEDULED (future appointment).
   // For other terminal outcomes the date is optional but still stored.
-  const isScheduled = data.stageOutcome === "SCHEDULED" || data.stageOutcome === "PENDING";
+  const isScheduled = data.stageOutcome === "SCHEDULED" || data.stageOutcome === "ASSIGNED";
   if (isSchedulingStage && isScheduled && !data.stageScheduledAt) {
     return { error: { stageScheduledAt: ["Scheduled date is required for this stage"] } };
   }
@@ -194,7 +194,7 @@ export async function updateApplication(id: string, formData: FormData) {
     const dateStr = resolvedScheduledAt.toLocaleString("en-US", {
       month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit",
     });
-    const isTerminalOutcome = data.stageOutcome && !["SCHEDULED", "PENDING"].includes(data.stageOutcome);
+    const isTerminalOutcome = data.stageOutcome && !["SCHEDULED", "ASSIGNED"].includes(data.stageOutcome);
     const description = isTerminalOutcome
       ? `${stage.name} ${data.stageOutcome!.toLowerCase()} on ${dateStr}`
       : `${stage.name} scheduled for ${dateStr}`;
@@ -793,7 +793,7 @@ export async function getDueItems() {
         closed: false,
         stageScheduledAt: { lte: todayEnd },
         OR: [
-          { stageOutcome: { in: ["SCHEDULED", "PENDING"] } },
+          { stageOutcome: { in: ["SCHEDULED", "ASSIGNED"] } },
           { stageOutcome: null },
         ],
       },

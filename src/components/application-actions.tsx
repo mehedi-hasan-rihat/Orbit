@@ -43,7 +43,7 @@ export function ApplicationActions({
   application,
   availableTags,
 }: Props) {
-  const [pending, setPending] = useState(false);
+  const [isSubmitting, setPending] = useState(false);
   const [editing, setEditing] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const router = useRouter();
@@ -81,14 +81,14 @@ export function ApplicationActions({
         </span>
         <button
           onClick={handleDelete}
-          disabled={pending}
+          disabled={isSubmitting}
           className="inline-flex h-8 items-center rounded-md bg-destructive px-3 text-xs font-medium text-white hover:opacity-90 transition-opacity disabled:opacity-50"
         >
-          {pending ? "Deleting…" : "Delete"}
+          {isSubmitting ? "Deleting…" : "Delete"}
         </button>
         <button
           onClick={() => setConfirmingDelete(false)}
-          disabled={pending}
+          disabled={isSubmitting}
           className={BUTTON}
         >
           Cancel
@@ -103,7 +103,7 @@ export function ApplicationActions({
         <select
           value={stageId ?? ""}
           onChange={(e) => run(() => updateApplicationStage(applicationId, e.target.value))}
-          disabled={pending}
+          disabled={isSubmitting}
           aria-label="Stage"
           className="h-8 rounded-md border bg-background px-2 text-xs focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50"
         >
@@ -113,14 +113,14 @@ export function ApplicationActions({
           ))}
         </select>
 
-        <button onClick={() => setEditing(true)} disabled={pending} className={BUTTON}>
+        <button onClick={() => setEditing(true)} disabled={isSubmitting} className={BUTTON}>
           Update
         </button>
 
         {closed ? (
           <button
             onClick={() => run(() => reopenApplication(applicationId))}
-            disabled={pending}
+            disabled={isSubmitting}
             className={BUTTON}
           >
             Reopen
@@ -128,7 +128,7 @@ export function ApplicationActions({
         ) : (
           <button
             onClick={() => run(() => closeApplication(applicationId))}
-            disabled={pending}
+            disabled={isSubmitting}
             title="Ends the process. Stage, notes, tags and rounds are kept exactly as they are."
             className={BUTTON}
           >
@@ -139,7 +139,7 @@ export function ApplicationActions({
         {archived ? (
           <button
             onClick={() => run(() => unarchiveApplication(applicationId))}
-            disabled={pending}
+            disabled={isSubmitting}
             className={BUTTON}
           >
             Unarchive
@@ -147,7 +147,7 @@ export function ApplicationActions({
         ) : (
           <button
             onClick={() => run(() => archiveApplication(applicationId))}
-            disabled={pending}
+            disabled={isSubmitting}
             title="Hides it from the list. Everything else is left alone."
             className={BUTTON}
           >
@@ -157,7 +157,7 @@ export function ApplicationActions({
 
         <button
           onClick={() => setConfirmingDelete(true)}
-          disabled={pending}
+          disabled={isSubmitting}
           title="Permanently removes the application, its rounds and its activity."
           className="inline-flex h-8 items-center rounded-md border px-3 text-xs font-medium text-destructive hover:bg-destructive/10 transition-colors disabled:opacity-50"
         >

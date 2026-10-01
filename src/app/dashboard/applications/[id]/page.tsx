@@ -91,7 +91,7 @@ export default async function ApplicationDetailPage({ params }: Props) {
   const scheduledDate = application.stageScheduledAt ? new Date(application.stageScheduledAt) : null;
   const isScheduledOpen = scheduledDate &&
     !application.closed &&
-    ["SCHEDULED", "PENDING", null].includes(application.stageOutcome);
+    (application.stageOutcome === null || application.stageOutcome === "SCHEDULED" || application.stageOutcome === "ASSIGNED");
   const scheduledIsToday = isScheduledOpen &&
     scheduledDate.getTime() <= now + 24 * 60 * 60 * 1000 &&
     scheduledDate.getTime() > now;
@@ -99,18 +99,13 @@ export default async function ApplicationDetailPage({ params }: Props) {
 
   const enabledStages = JSON.parse(JSON.stringify(stageTypes.filter((s) => s.enabled)));
 
-  // Outcome-based accent for the hero header and stats strip.
   const outcome = outcomeDisplay(application.stageOutcome);
-  // Only apply accent when there's a meaningful (non-pending) outcome on a scheduling stage.
-  const hasOutcomeAccent =
-    application.stageOutcome &&
-    !["PENDING"].includes(application.stageOutcome) &&
-    !application.closed;
-  const accentColor = hasOutcomeAccent ? outcome.color : null;
+  const hasOutcomeAccent = !!application.stageOutcome && !application.closed;
+  const accentColor = hasOutcomeAccent ? outcome?.color : null;
 
   // Derived label for the date column in the stats strip.
   const dateStatLabel =
-    !application.stageOutcome || application.stageOutcome === "SCHEDULED" || application.stageOutcome === "PENDING"
+    !application.stageOutcome || application.stageOutcome === "SCHEDULED" || application.stageOutcome === "ASSIGNED"
       ? "Scheduled"
       : "Stage Date";
 
@@ -178,7 +173,7 @@ export default async function ApplicationDetailPage({ params }: Props) {
             <div className="flex items-center gap-2.5 flex-wrap">
               <h1 className="text-2xl font-bold tracking-tight">{application.company}</h1>
               <StatusBadge application={application} />
-              {/* Stage outcome badge — shows when a scheduling stage has a non-pending outcome */}
+              {/* Stage outcome badge — shows when a scheduling stage has a set outcome */}
               {application.stageOutcome && !application.closed && (
                 <span
                   className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ${outcome.className}`}

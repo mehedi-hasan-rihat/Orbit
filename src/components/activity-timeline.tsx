@@ -56,7 +56,7 @@ function resolveActivityBadge(activity: Activity) {
 
   try {
     const meta = JSON.parse(activity.metadata ?? "{}") as Record<string, string>;
-    // Only override for terminal outcomes — SCHEDULED/PENDING keep the default badge.
+    // Only override for terminal outcomes — SCHEDULED/ASSIGNED keep the default badge.
     if (meta.outcome && OUTCOME_BADGE[meta.outcome]) return OUTCOME_BADGE[meta.outcome];
   } catch { /* ignore */ }
 
