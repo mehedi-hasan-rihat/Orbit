@@ -222,7 +222,7 @@ export function ApplicationSchedule({
 }) {
   const [creatingFollowUp, setCreatingFollowUp] = useState(false);
   const [editingFollowUp, setEditingFollowUp] = useState<FollowUpItem | null>(null);
-  const [followUpPending, setFollowUpPending] = useState<string | null>(null);
+  const [reminderInFlight, setFollowUpPending] = useState<string | null>(null);
   const [limitError, setLimitError] = useState<string | null>(null);
 
   const [addingNote, setAddingNote] = useState(false);
@@ -309,7 +309,7 @@ export function ApplicationSchedule({
                   <div className="flex items-center gap-2 shrink-0">
                     <button
                       onClick={() => runFollowUp(followUp.id, () => setReminderDone(followUp.id, applicationId, !followUp.done))}
-                      disabled={followUpPending === followUp.id}
+                      disabled={reminderInFlight === followUp.id}
                       className="text-xs text-muted-foreground hover:text-foreground disabled:opacity-50"
                     >
                       {followUp.done ? "Reopen" : "Done"}
@@ -321,7 +321,7 @@ export function ApplicationSchedule({
                     )}
                     <button
                       onClick={() => runFollowUp(followUp.id, () => deleteReminder(followUp.id, applicationId))}
-                      disabled={followUpPending === followUp.id}
+                      disabled={reminderInFlight === followUp.id}
                       className="text-xs text-destructive hover:text-destructive/80 disabled:opacity-50"
                     >
                       Delete

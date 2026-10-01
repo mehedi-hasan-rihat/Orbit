@@ -35,7 +35,6 @@ export type TagFormData = z.infer<typeof tagSchema>;
 // Single source of truth for every outcome value and its display properties.
 // Adding a new outcome means adding one entry here — nothing else needs updating.
 export const OUTCOMES = {
-  PENDING:   { label: "Pending",   color: "#6b7280", className: "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400" },
   SCHEDULED: { label: "Scheduled", color: "#3b82f6", className: "bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300" },
   ASSIGNED:  { label: "Assigned",  color: "#f59e0b", className: "bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300" },
   COMPLETED: { label: "Completed", color: "#6366f1", className: "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300" },
@@ -50,7 +49,7 @@ export type InterviewOutcome = keyof typeof OUTCOMES;
 export const INTERVIEW_OUTCOMES = Object.keys(OUTCOMES) as InterviewOutcome[];
 
 // Outcomes that mean the stage step hasn't happened yet — the cron chases these.
-export const OPEN_OUTCOMES: InterviewOutcome[] = ["PENDING", "SCHEDULED", "ASSIGNED"];
+export const OPEN_OUTCOMES: InterviewOutcome[] = ["SCHEDULED", "ASSIGNED"];
 
 // Stages whose status dropdown appears on the application form.
 export const SCHEDULING_STAGE_NAMES: readonly string[] = [

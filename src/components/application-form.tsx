@@ -30,8 +30,7 @@ interface ApplicationFormProps {
   onClose: () => void;
 }
 
-// User-selectable outcomes — excludes PENDING which is the silent default state.
-const STATUS_OPTIONS = INTERVIEW_OUTCOMES.filter((o) => o !== "PENDING");
+const STATUS_OPTIONS = INTERVIEW_OUTCOMES;
 
 // Label for the date field changes with the outcome.
 function dateFieldLabel(outcome: string | null | undefined, stageName: string | undefined): string {
@@ -45,7 +44,7 @@ function dateFieldLabel(outcome: string | null | undefined, stageName: string | 
 }
 
 function dateFieldHint(outcome: string | null | undefined): string | null {
-  if (!outcome || outcome === "SCHEDULED") return "You'll get a reminder email 2 days and 1 day before.";
+  if (!outcome || outcome === "SCHEDULED" || outcome === "ASSIGNED") return "You'll get a reminder email 2 days and 1 day before.";
   return null;
 }
 
@@ -65,7 +64,7 @@ export function ApplicationForm({ application, availableTags, stages, onClose }:
     application?.stageId ?? stages[0]?.id ?? ""
   );
   const [selectedOutcome, setSelectedOutcome] = useState<string>(
-    application?.stageOutcome ?? "SCHEDULED"
+    application?.stageOutcome ?? ""
   );
   const [suggestRejected, setSuggestRejected] = useState(false);
   const [markRejected, setMarkRejected] = useState(false);
@@ -284,9 +283,10 @@ export function ApplicationForm({ application, availableTags, stages, onClose }:
                   }}
                   className="flex h-10 w-full rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                 >
+                  <option value="" disabled>Select status…</option>
                   {STATUS_OPTIONS.map((o) => (
                     <option key={o} value={o}>
-                      {outcomeDisplay(o).label}
+                      {outcomeDisplay(o)?.label}
                     </option>
                   ))}
                 </select>
@@ -312,11 +312,11 @@ export function ApplicationForm({ application, availableTags, stages, onClose }:
               <div className="space-y-2">
                 <label htmlFor="stageScheduledAt" className="text-sm font-medium">
                   {dateFieldLabel(selectedOutcome, selectedStage?.name)}{" "}
-                  {selectedOutcome === "SCHEDULED" && (
+                  {(selectedOutcome === "SCHEDULED" || selectedOutcome === "ASSIGNED") && (
                     <><span className="text-destructive">*</span>{" "}
                     <span className="text-muted-foreground font-normal">(time optional)</span></>
                   )}
-                  {selectedOutcome !== "SCHEDULED" && (
+                  {selectedOutcome !== "SCHEDULED" && selectedOutcome !== "ASSIGNED" && (
                     <span className="text-muted-foreground font-normal">(optional)</span>
                   )}
                 </label>
@@ -325,7 +325,7 @@ export function ApplicationForm({ application, availableTags, stages, onClose }:
                   name="stageScheduledAt"
                   includeTime
                   placeholder="Pick date (and time)"
-                  required={selectedOutcome === "SCHEDULED"}
+                  required={selectedOutcome === "SCHEDULED" || selectedOutcome === "ASSIGNED"}
                   value={
                     application?.stageScheduledAt
                       ? new Date(application.stageScheduledAt).toISOString().slice(0, 16)

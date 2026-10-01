@@ -202,7 +202,7 @@ export function CalendarView({ events }: CalendarViewProps) {
                       {overdue && (
                         <span className="text-[10px] font-semibold text-destructive uppercase tracking-wide">Overdue</span>
                       )}
-                      {e.outcome && e.outcome !== "PENDING" && (
+                      {e.outcome && (
                         <span className={clsx("inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium", outcomeDisplay(e.outcome).className)}>
                           {outcomeDisplay(e.outcome).label}
                         </span>
