@@ -174,7 +174,7 @@ export default async function ApplicationDetailPage({ params }: Props) {
               <h1 className="text-2xl font-bold tracking-tight">{application.company}</h1>
               <StatusBadge application={application} />
               {/* Stage outcome badge — shows when a scheduling stage has a set outcome */}
-              {application.stageOutcome && !application.closed && (
+              {outcome && !application.closed && (
                 <span
                   className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ${outcome.className}`}
                 >
@@ -248,7 +248,7 @@ export default async function ApplicationDetailPage({ params }: Props) {
           <Stat
             label="Stage"
             value={application.stage?.name ?? "—"}
-            hint={application.stageOutcome
+            hint={outcome
               ? <span
                   className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${outcome.className}`}
                 >
