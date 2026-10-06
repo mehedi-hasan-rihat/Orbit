@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition, useEffect, useRef } from "react";
 import Link from "next/link";
 import { ApplicationForm } from "./application-form";
 import { deleteApplication } from "@/lib/actions/applications";
@@ -76,7 +76,21 @@ export function ApplicationsList({
   const [searchInput, setSearchInput] = useState(search);
   const [stageFilter, setStageFilter] = useState(stageId);
   const [sortBy, setSortBy] = useState(sort);
+  const [isPending, startTransition] = useTransition();
   const router = useRouter();
+  const searchDebounce = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Fire search 500ms after the user stops typing — no click or Enter needed.
+  useEffect(() => {
+    if (searchDebounce.current) clearTimeout(searchDebounce.current);
+    searchDebounce.current = setTimeout(() => {
+      applyFilters(searchInput);
+    }, 500);
+    return () => {
+      if (searchDebounce.current) clearTimeout(searchDebounce.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchInput]);
 
   function applyFilters(newSearch?: string, newStage?: string, newSort?: string) {
     const s = newSearch ?? searchInput;
@@ -88,7 +102,9 @@ export function ApplicationsList({
     if (so) params.set("sort", so);
     if (showArchived) params.set("archived", "true");
     if (showClosed) params.set("closed", "true");
-    router.push(`/dashboard/applications?${params.toString()}`);
+    startTransition(() => {
+      router.push(`/dashboard/applications?${params.toString()}`);
+    });
   }
 
   async function handleDelete(id: string) {
@@ -132,7 +148,7 @@ export function ApplicationsList({
               if (searchInput) params.set("search", searchInput);
               if (stageFilter && stageFilter !== "ALL") params.set("stage", stageFilter);
               if (sortBy) params.set("sort", sortBy);
-              router.push(`/dashboard/applications?${params.toString()}`);
+              startTransition(() => router.push(`/dashboard/applications?${params.toString()}`));
             }}
             className={clsx(
               "px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors",
@@ -144,7 +160,7 @@ export function ApplicationsList({
             Active
           </button>
           <button
-            onClick={() => router.push("/dashboard/applications?closed=true")}
+            onClick={() => startTransition(() => router.push("/dashboard/applications?closed=true"))}
             className={clsx(
               "px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors",
               showClosed
@@ -155,7 +171,7 @@ export function ApplicationsList({
             Closed
           </button>
           <button
-            onClick={() => router.push("/dashboard/applications?archived=true")}
+            onClick={() => startTransition(() => router.push("/dashboard/applications?archived=true"))}
             className={clsx(
               "px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors",
               showArchived
@@ -176,8 +192,6 @@ export function ApplicationsList({
               placeholder="Search company or role..."
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
-              onKeyDown={(e) => { if (e.key === "Enter") applyFilters(); }}
-              onBlur={() => applyFilters()}
               className="flex h-8 w-full rounded-md border bg-background pl-8 pr-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
             />
           </div>
@@ -205,7 +219,59 @@ export function ApplicationsList({
       </div>
 
       {/* Empty state */}
-      {applications.length === 0 ? (
+      {isPending ? (
+        /* Table skeleton — shown while filter/search navigation is in flight */
+        <div className="border rounded-xl overflow-hidden">
+          <div
+            className="hidden sm:grid items-center px-4 py-2.5 bg-muted/40 border-b"
+            style={{ gridTemplateColumns: "minmax(0,2fr) minmax(0,2fr) 120px 110px 130px 180px" }}
+          >
+            {["Company", "Role", "Stage", "Outcome", "Applied", "Actions"].map((h) => (
+              <span key={h} className="text-xs font-medium text-muted-foreground">{h}</span>
+            ))}
+          </div>
+          <div className="divide-y">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div
+                key={i}
+                className="hidden sm:grid items-center px-4 py-3"
+                style={{ gridTemplateColumns: "minmax(0,2fr) minmax(0,2fr) 120px 110px 130px 180px" }}
+              >
+                <div className="space-y-1.5 pr-3">
+                  <div className="h-4 w-28 rounded bg-muted animate-pulse" />
+                  <div className="h-3 w-16 rounded bg-muted animate-pulse" />
+                </div>
+                <div className="pr-3">
+                  <div className="h-4 w-36 rounded bg-muted animate-pulse" />
+                </div>
+                <div className="h-5 w-20 rounded-full bg-muted animate-pulse" />
+                <div className="h-5 w-16 rounded-full bg-muted animate-pulse" />
+                <div className="h-4 w-20 rounded bg-muted animate-pulse" />
+                <div className="flex justify-end gap-1">
+                  <div className="h-7 w-12 rounded-md bg-muted animate-pulse" />
+                  <div className="h-7 w-10 rounded-md bg-muted animate-pulse" />
+                  <div className="h-7 w-14 rounded-md bg-muted animate-pulse" />
+                </div>
+              </div>
+            ))}
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={`m-${i}`} className="sm:hidden p-4 space-y-3">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="space-y-1.5">
+                    <div className="h-4 w-32 rounded bg-muted animate-pulse" />
+                    <div className="h-3 w-24 rounded bg-muted animate-pulse" />
+                  </div>
+                  <div className="h-5 w-20 rounded-full bg-muted animate-pulse" />
+                </div>
+                <div className="flex gap-2">
+                  <div className="h-8 w-14 rounded-md bg-muted animate-pulse" />
+                  <div className="h-8 w-12 rounded-md bg-muted animate-pulse" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : applications.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center border rounded-xl">
           <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center text-xl mb-4">
             {showArchived ? "📦" : showClosed ? "🚪" : "📋"}
