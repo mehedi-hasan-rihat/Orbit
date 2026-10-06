@@ -40,7 +40,7 @@ interface Application {
   stage: { name: string; color: string; category: string } | null;
   appliedDate: Date | null;
   stageOutcome: string | null;
-  stageScheduledAt: Date | null;
+  stageDueAt: Date | null;
   notes: string | null;
   archived: boolean;
   closed: boolean;

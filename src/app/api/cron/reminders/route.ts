@@ -79,7 +79,7 @@ export async function GET(req: NextRequest) {
 
     const stageScheduled = await prisma.application.findMany({
       where: {
-        stageScheduledAt: { gte: targetDay, lt: nextDay },
+        stageDueAt: { gte: targetDay, lt: nextDay },
         archived: false,
         closed: false,
         OR: [
@@ -116,7 +116,7 @@ export async function GET(req: NextRequest) {
             role: app.role,
             daysUntil,
             type: "scheduled",
-            date: app.stageScheduledAt!,
+            date: app.stageDueAt!,
             interviewLabel: label,
             applicationUrl: `${APP_URL}/dashboard/applications/${app.id}`,
           }),

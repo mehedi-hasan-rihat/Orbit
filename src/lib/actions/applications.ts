@@ -27,7 +27,7 @@ export async function createApplication(formData: FormData) {
     stageId: formData.get("stageId") as string,
     appliedDate: formData.get("appliedDate") as string,
     stageOutcome: formData.get("stageOutcome") as string,
-    stageScheduledAt: formData.get("stageScheduledAt") as string,
+    stageDueAt: formData.get("stageDueAt") as string,
     notes: formData.get("notes") as string,
     tags: formData.get("tags") as string,
   };
@@ -56,18 +56,18 @@ export async function createApplication(formData: FormData) {
     return { error: { stageOutcome: ["Invalid status value"] } };
   }
 
-  // stageScheduledAt is required for Assessment (deadline, always) and for
+  // stageDueAt is required for Assessment (deadline, always) and for
   // SCHEDULED outcome on Screening/Interview (future appointment).
   const isAssessment = stage.name === "Assessment";
   const isScheduled = data.stageOutcome === "SCHEDULED";
-  if (isSchedulingStage && (isAssessment || isScheduled) && !data.stageScheduledAt) {
-    return { error: { stageScheduledAt: [isAssessment ? "Deadline is required for Assessment" : "Scheduled date is required for this stage"] } };
+  if (isSchedulingStage && (isAssessment || isScheduled) && !data.stageDueAt) {
+    return { error: { stageDueAt: [isAssessment ? "Deadline is required for Assessment" : "Scheduled date is required for this stage"] } };
   }
 
-  // stageScheduledAt (date) is required for outcome stages.
+  // stageDueAt (date) is required for outcome stages.
   const isOutcomeStage = OUTCOME_STAGE_NAMES.includes(stage.name);
-  if (isOutcomeStage && !data.stageScheduledAt) {
-    return { error: { stageScheduledAt: ["Date is required for this stage"] } };
+  if (isOutcomeStage && !data.stageDueAt) {
+    return { error: { stageDueAt: ["Date is required for this stage"] } };
   }
 
   const tagIds = data.tags ? data.tags.split(",").filter(Boolean) : [];
@@ -81,19 +81,19 @@ export async function createApplication(formData: FormData) {
       stageId: stage.id,
       appliedDate: data.appliedDate ? new Date(data.appliedDate) : null,
       stageOutcome: (data.stageOutcome || null) as StageOutcome | null,
-      stageScheduledAt: data.stageScheduledAt ? new Date(data.stageScheduledAt) : null,
+      stageDueAt: data.stageDueAt ? new Date(data.stageDueAt) : null,
       activities: {
         create: [
           {
             type: ActivityType.CREATED,
             description: `Application created for ${data.role} at ${data.company}`,
           },
-          ...(isSchedulingStage && data.stageScheduledAt ? [{
+          ...(isSchedulingStage && data.stageDueAt ? [{
             type: ActivityType.OUTCOME_CHANGE,
             description: data.stageOutcome && !["SCHEDULED", "ASSIGNED"].includes(data.stageOutcome)
-              ? `${stage.name} ${data.stageOutcome.toLowerCase()} on ${new Date(data.stageScheduledAt).toLocaleString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" })}`
-              : `${stage.name} scheduled for ${new Date(data.stageScheduledAt).toLocaleString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" })}`,
-            metadata: JSON.stringify({ stageType: stage.name, stageId: stage.id, scheduledAt: data.stageScheduledAt, outcome: data.stageOutcome }),
+              ? `${stage.name} ${data.stageOutcome.toLowerCase()} on ${new Date(data.stageDueAt).toLocaleString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" })}`
+              : `${stage.name} scheduled for ${new Date(data.stageDueAt).toLocaleString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" })}`,
+            metadata: JSON.stringify({ stageType: stage.name, stageId: stage.id, dueAt: data.stageDueAt, outcome: data.stageOutcome }),
           }] : []),
         ],
       },
@@ -117,7 +117,7 @@ export async function updateApplication(id: string, formData: FormData) {
     stageId: formData.get("stageId") as string,
     appliedDate: formData.get("appliedDate") as string,
     stageOutcome: formData.get("stageOutcome") as string,
-    stageScheduledAt: formData.get("stageScheduledAt") as string,
+    stageDueAt: formData.get("stageDueAt") as string,
     tags: formData.get("tags") as string,
   };
 
@@ -145,18 +145,18 @@ export async function updateApplication(id: string, formData: FormData) {
     return { error: { stageOutcome: ["Invalid status value"] } };
   }
 
-  // stageScheduledAt is required for Assessment (deadline, always) and for
+  // stageDueAt is required for Assessment (deadline, always) and for
   // SCHEDULED outcome on Screening/Interview (future appointment).
   const isAssessment = stage.name === "Assessment";
   const isScheduled = data.stageOutcome === "SCHEDULED";
-  if (isSchedulingStage && (isAssessment || isScheduled) && !data.stageScheduledAt) {
-    return { error: { stageScheduledAt: [isAssessment ? "Deadline is required for Assessment" : "Scheduled date is required for this stage"] } };
+  if (isSchedulingStage && (isAssessment || isScheduled) && !data.stageDueAt) {
+    return { error: { stageDueAt: [isAssessment ? "Deadline is required for Assessment" : "Scheduled date is required for this stage"] } };
   }
 
-  // stageScheduledAt (date) is required for outcome stages.
+  // stageDueAt (date) is required for outcome stages.
   const isOutcomeStage = OUTCOME_STAGE_NAMES.includes(stage.name);
-  if (isOutcomeStage && !data.stageScheduledAt) {
-    return { error: { stageScheduledAt: ["Date is required for this stage"] } };
+  if (isOutcomeStage && !data.stageDueAt) {
+    return { error: { stageDueAt: ["Date is required for this stage"] } };
   }
 
   const existing = await prisma.application.findFirst({
@@ -182,12 +182,12 @@ export async function updateApplication(id: string, formData: FormData) {
   }
 
   // Track when a scheduled date is set or changed for the current stage.
-  const newScheduledAt = data.stageScheduledAt ? new Date(data.stageScheduledAt) : null;
-  const oldScheduledAt = existing.stageScheduledAt;
+  const newScheduledAt = data.stageDueAt ? new Date(data.stageDueAt) : null;
+  const oldScheduledAt = existing.stageDueAt;
   const scheduledAtChanged =
     newScheduledAt?.toISOString() !== (oldScheduledAt?.toISOString() ?? undefined);
 
-  // Clear stageScheduledAt only when the stage changed AND the user didn't
+  // Clear stageDueAt only when the stage changed AND the user didn't
   // provide a new date for the new stage. If they set a date in the same
   // submit, keep it — it belongs to the new stage.
   const resolvedScheduledAt = (stageChanged && !newScheduledAt) ? null : newScheduledAt;
@@ -203,7 +203,7 @@ export async function updateApplication(id: string, formData: FormData) {
     activities.push({
       type: ActivityType.OUTCOME_CHANGE,
       description,
-      metadata: JSON.stringify({ stageType: stage.name, stageId: stage.id, scheduledAt: resolvedScheduledAt.toISOString(), outcome: data.stageOutcome }),
+      metadata: JSON.stringify({ stageType: stage.name, stageId: stage.id, dueAt: resolvedScheduledAt.toISOString(), outcome: data.stageOutcome }),
     });
   }
 
@@ -214,7 +214,7 @@ export async function updateApplication(id: string, formData: FormData) {
     activities.push({
       type: ActivityType.OUTCOME_CHANGE,
       description: `${stage.name} on ${dateStr}`,
-      metadata: JSON.stringify({ stageType: stage.name, stageId: stage.id, scheduledAt: resolvedScheduledAt.toISOString() }),
+      metadata: JSON.stringify({ stageType: stage.name, stageId: stage.id, dueAt: resolvedScheduledAt.toISOString() }),
     });
   }
 
@@ -226,7 +226,7 @@ export async function updateApplication(id: string, formData: FormData) {
     if (resolvedScheduledAt === null) {
       await tx.application.update({
         where: { id },
-        data: { stageScheduledAt: null, stageOutcome: stageChanged ? null : undefined },
+        data: { stageDueAt: null, stageOutcome: stageChanged ? null : undefined },
       });
     }
 
@@ -242,7 +242,7 @@ export async function updateApplication(id: string, formData: FormData) {
         stage: { connect: { id: stage.id } },
         appliedDate: data.appliedDate ? new Date(data.appliedDate) : null,
         stageOutcome: (data.stageOutcome || null) as StageOutcome | null,
-        stageScheduledAt: resolvedScheduledAt,
+        stageDueAt: resolvedScheduledAt,
         activities: activities.length > 0 ? { create: activities } : undefined,
         tags: tagIds.length > 0 ? {
           create: tagIds.map((tagId) => ({ tagId })),
@@ -284,7 +284,7 @@ export async function updateApplicationStage(id: string, stageId: string) {
     data: {
       stage: { connect: { id: stage.id } },
       stageOutcome: null, // clear sub-status when moving to a new stage
-      stageScheduledAt: null, // clear scheduled date when moving to a new stage
+      stageDueAt: null, // clear due date when moving to a new stage
       activities: {
         create: {
           type: ActivityType.OUTCOME_CHANGE,
@@ -326,7 +326,7 @@ export async function moveToRejectedStage(id: string) {
     data: {
       stage: { connect: { id: rejectedStage.id } },
       stageOutcome: null,
-      stageScheduledAt: null,
+      stageDueAt: null,
       activities: {
         create: {
           type: ActivityType.OUTCOME_CHANGE,
@@ -786,14 +786,14 @@ export async function getDueItems() {
   const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
 
   const [scheduled, reminders] = await Promise.all([
-    // Applications with a stage scheduled date that is today or in the past
+    // Applications with a stage due date that is today or in the past
     // and still in an open/scheduled outcome state.
     prisma.application.findMany({
       where: {
         userId: session.userId,
         archived: false,
         closed: false,
-        stageScheduledAt: { lte: todayEnd },
+        stageDueAt: { lte: todayEnd },
         OR: [
           { stageOutcome: { in: ["SCHEDULED", "ASSIGNED"] } },
           { stageOutcome: null },
@@ -803,11 +803,11 @@ export async function getDueItems() {
         id: true,
         company: true,
         role: true,
-        stageScheduledAt: true,
+        stageDueAt: true,
         stageOutcome: true,
         stage: { select: { name: true, color: true } },
       },
-      orderBy: { stageScheduledAt: "asc" },
+      orderBy: { stageDueAt: "asc" },
     }),
 
     // Open reminders due today or overdue
@@ -832,7 +832,7 @@ export async function getDueItems() {
       id: a.id,
       company: a.company,
       role: a.role,
-      date: a.stageScheduledAt!,
+      date: a.stageDueAt!,
       stageName: a.stage?.name ?? "Stage",
       stageColor: a.stage?.color ?? "#6366f1",
     })),

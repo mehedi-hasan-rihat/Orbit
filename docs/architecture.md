@@ -164,7 +164,7 @@ Server-Sent Events (SSE) at `/api/notifications/stream`. The client subscribes o
 ## Cron
 
 `/api/cron/reminders` — called by an external scheduler (e.g. Vercel Cron). On each run:
-1. Finds applications with `stageScheduledAt` falling 1 or 2 days from now whose outcome is still open (`null`, `SCHEDULED`, or `ASSIGNED`).
+1. Finds applications with `stageDueAt` falling 1 or 2 days from now whose outcome is still open (`null`, `SCHEDULED`, or `ASSIGNED`).
 2. Finds `Reminder` rows with `dueAt` today that are not yet done.
 3. For each, creates a `Notification` row (deduped by a stable key) and sends an email.
 

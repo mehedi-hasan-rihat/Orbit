@@ -87,8 +87,8 @@ export default async function ApplicationDetailPage({ params }: Props) {
 
   const now = renderTimestamp();
 
-  // Highlight when the stage is scheduled today or is overdue.
-  const scheduledDate = application.stageScheduledAt ? new Date(application.stageScheduledAt) : null;
+  // Highlight when the stage due date is today or overdue.
+  const scheduledDate = application.stageDueAt ? new Date(application.stageDueAt) : null;
   const isScheduledOpen = scheduledDate &&
     !application.closed &&
     (application.stageOutcome === null || application.stageOutcome === "SCHEDULED" || application.stageOutcome === "ASSIGNED");
@@ -106,7 +106,7 @@ export default async function ApplicationDetailPage({ params }: Props) {
   // Derived label for the date column in the stats strip.
   const dateStatLabel =
     !application.stageOutcome || application.stageOutcome === "SCHEDULED" || application.stageOutcome === "ASSIGNED"
-      ? "Scheduled"
+      ? application.stage?.name === "Assessment" ? "Deadline" : "Scheduled"
       : "Stage Date";
 
   return (
@@ -230,7 +230,7 @@ export default async function ApplicationDetailPage({ params }: Props) {
               archived={application.archived}
               application={JSON.parse(JSON.stringify({
                 ...application,
-                stageScheduledAt: application.stageScheduledAt ?? null,
+                stageDueAt: application.stageDueAt ?? null,
               }))}
               availableTags={JSON.parse(JSON.stringify(tags))}
             />
@@ -260,8 +260,8 @@ export default async function ApplicationDetailPage({ params }: Props) {
           <Stat
             label={dateStatLabel}
             value={
-              application.stageScheduledAt
-                ? new Date(application.stageScheduledAt).toLocaleDateString([], {
+              application.stageDueAt
+                ? new Date(application.stageDueAt).toLocaleDateString([], {
                     month: "short",
                     day: "numeric",
                     year: "numeric",
@@ -269,23 +269,23 @@ export default async function ApplicationDetailPage({ params }: Props) {
                 : "—"
             }
             hint={
-              application.stageScheduledAt
+              application.stageDueAt
                 ? (() => {
-                    const d = new Date(application.stageScheduledAt);
+                    const d = new Date(application.stageDueAt);
                     const hasTime = d.getHours() !== 0 || d.getMinutes() !== 0;
                     return hasTime
                       ? d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) +
                           " · " +
-                          relativeDay(application.stageScheduledAt, now)
-                      : relativeDay(application.stageScheduledAt, now);
+                          relativeDay(application.stageDueAt, now)
+                      : relativeDay(application.stageDueAt, now);
                   })()
                 : undefined
             }
             tone={
               // Future scheduled dates get primary accent; past outcome dates are neutral
-              application.stageScheduledAt &&
+              application.stageDueAt &&
               (!application.stageOutcome || application.stageOutcome === "SCHEDULED") &&
-              new Date(application.stageScheduledAt).getTime() > now
+              new Date(application.stageDueAt).getTime() > now
                 ? "primary"
                 : undefined
             }

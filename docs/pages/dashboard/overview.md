@@ -59,7 +59,7 @@ Top-to-bottom sections separated by `space-y-10`:
 
 `getDueItems()` returns two lists:
 
-- **scheduled** — applications where `stageScheduledAt <= end of today` AND `stageOutcome` is `null`, `SCHEDULED`, or `ASSIGNED` (open outcomes only). Sorted by `stageScheduledAt asc`.
+- **scheduled** — applications where `stageDueAt <= end of today` AND `stageOutcome` is `null`, `SCHEDULED`, or `ASSIGNED` (open outcomes only). Sorted by `stageDueAt asc`.
 - **reminders** — `Reminder` rows where `dueAt <= end of today` AND `done = false`. Sorted by `dueAt asc`.
 
 The section title changes based on whether items are overdue vs due today.
@@ -70,5 +70,5 @@ The section title changes based on whether items are overdue vs due today.
 
 - Columns are the user's enabled `PipelineStageType` rows in `order asc` order.
 - Each column shows: count badge, up to 5 application cards, a "+X more" link if count > 5.
-- Drag-and-drop calls `updateApplicationStage(id, stageId)` on drop, which clears `stageOutcome` and `stageScheduledAt` for the moved application.
+- Drag-and-drop calls `updateApplicationStage(id, stageId)` on drop, which clears `stageOutcome` and `stageDueAt` for the moved application.
 - Optimistic state: the board updates immediately client-side; the server revalidates in the background.

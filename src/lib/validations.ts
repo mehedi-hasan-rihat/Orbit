@@ -7,7 +7,7 @@ export const applicationSchema = z.object({
   stageId: z.string().min(1, "Stage is required"),
   appliedDate: z.string().optional().or(z.literal("")),
   stageOutcome: z.string().optional().or(z.literal("")),
-  stageScheduledAt: z.string().optional().or(z.literal("")),
+  stageDueAt: z.string().optional().or(z.literal("")),
   tags: z.string().optional().or(z.literal("")),
 });
 

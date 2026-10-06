@@ -8,7 +8,7 @@ export async function getCalendarEvents() {
   if (!session) return [];
 
   const [scheduled, reminders] = await Promise.all([
-    // Stage-scheduled events: only show appointments that are still open
+    // Stage due date events: only show appointments that are still open
     // (outcome is SCHEDULED, ASSIGNED, or not yet set). Terminal outcomes
     // (FAILED, PASSED, COMPLETED, CANCELLED) keep the date in the DB for
     // history but must not appear on the calendar.
@@ -17,7 +17,7 @@ export async function getCalendarEvents() {
         userId: session.userId,
         archived: false,
         closed: false,
-        stageScheduledAt: { not: null },
+        stageDueAt: { not: null },
         OR: [
           { stageOutcome: null },
           { stageOutcome: "SCHEDULED" },
@@ -28,11 +28,11 @@ export async function getCalendarEvents() {
         id: true,
         company: true,
         role: true,
-        stageScheduledAt: true,
+        stageDueAt: true,
         stage: { select: { name: true, color: true } },
         stageOutcome: true,
       },
-      orderBy: { stageScheduledAt: "asc" },
+      orderBy: { stageDueAt: "asc" },
     }),
 
     // Reminders: individual FollowUp rows set from the Reminders section
@@ -58,7 +58,7 @@ export async function getCalendarEvents() {
       type: "SCHEDULED" as const,
       company: a.company,
       role: a.role,
-      date: a.stageScheduledAt!,
+      date: a.stageDueAt!,
       outcome: a.stageOutcome,
       stageName: a.stage?.name ?? null,
       title: `${a.stage?.name ?? "Stage"}: ${a.company}`,

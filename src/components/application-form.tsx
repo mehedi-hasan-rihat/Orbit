@@ -22,7 +22,7 @@ interface ApplicationFormProps {
     stageId: string | null;
     appliedDate: Date | null;
     stageOutcome: string | null;
-    stageScheduledAt: Date | null;
+    stageDueAt: Date | null;
     tags?: { tag: Tag }[];
   };
   availableTags: Tag[];
@@ -105,12 +105,12 @@ export function ApplicationForm({ application, availableTags, stages, onClose }:
 
     const formData = new FormData(e.currentTarget);
     formData.set("tags", selectedTags.join(","));
-    // Clear stageOutcome and stageScheduledAt when the selected stage doesn't support them.
+    // Clear stageOutcome and stageDueAt when the selected stage doesn't support them.
     if (!showStatus) {
       formData.set("stageOutcome", "");
     }
     if (!showStatus && !showOutcomeDate) {
-      formData.set("stageScheduledAt", "");
+      formData.set("stageDueAt", "");
     }
 
     try {
@@ -325,10 +325,10 @@ export function ApplicationForm({ application, availableTags, stages, onClose }:
                 </label>
               )}
 
-              {/* Assigned Date field removed — stageScheduledAt serves as the deadline */}
+              {/* Assigned Date field removed — stageDueAt serves as the deadline */}
 
               <div className="space-y-2">
-                <label htmlFor="stageScheduledAt" className="text-sm font-medium">
+                <label htmlFor="stageDueAt" className="text-sm font-medium">
                   {dateFieldLabel(selectedOutcome, selectedStage?.name)}{" "}
                   {selectedStage?.name === "Assessment" ? (
                     <span className="text-destructive">*</span>
@@ -340,21 +340,21 @@ export function ApplicationForm({ application, availableTags, stages, onClose }:
                   )}
                 </label>
                 <DatePicker
-                  id="stageScheduledAt"
-                  name="stageScheduledAt"
+                  id="stageDueAt"
+                  name="stageDueAt"
                   includeTime
                   placeholder={selectedStage?.name === "Assessment" ? "Pick deadline (date and time)" : "Pick date (and time)"}
                   required={selectedStage?.name === "Assessment" || selectedOutcome === "SCHEDULED"}
                   value={
-                    application?.stageScheduledAt
-                      ? new Date(application.stageScheduledAt).toISOString().slice(0, 16)
+                    application?.stageDueAt
+                      ? new Date(application.stageDueAt).toISOString().slice(0, 16)
                       : ""
                   }
                 />
                 {dateFieldHint(selectedOutcome, selectedStage?.name) && (
                   <p className="text-xs text-muted-foreground">{dateFieldHint(selectedOutcome, selectedStage?.name)}</p>
                 )}
-                {errors.stageScheduledAt && <p className="text-xs text-destructive">{errors.stageScheduledAt[0]}</p>}
+                {errors.stageDueAt && <p className="text-xs text-destructive">{errors.stageDueAt[0]}</p>}
               </div>
             </div>
           )}
@@ -362,21 +362,21 @@ export function ApplicationForm({ application, availableTags, stages, onClose }:
           {/* Outcome date: required for Get Offer / Hired / Rejected */}
           {showOutcomeDate && (
             <div className="space-y-2">
-              <label htmlFor="stageScheduledAt" className="text-sm font-medium">
+              <label htmlFor="stageDueAt" className="text-sm font-medium">
                 {selectedStage?.name} Date *
               </label>
               <DatePicker
-                id="stageScheduledAt"
-                name="stageScheduledAt"
+                id="stageDueAt"
+                name="stageDueAt"
                 placeholder="Pick date"
                 required
                 value={
-                  application?.stageScheduledAt
-                    ? new Date(application.stageScheduledAt).toISOString().slice(0, 10)
+                  application?.stageDueAt
+                    ? new Date(application.stageDueAt).toISOString().slice(0, 10)
                     : ""
                 }
               />
-              {errors.stageScheduledAt && <p className="text-xs text-destructive">{errors.stageScheduledAt[0]}</p>}
+              {errors.stageDueAt && <p className="text-xs text-destructive">{errors.stageDueAt[0]}</p>}
             </div>
           )}
 
