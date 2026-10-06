@@ -51,7 +51,7 @@ model Application {
   closed           Boolean            @default(false)
   closedAt         DateTime?
   stageOutcome     StageOutcome?      // Sub-status of the current stage step
-  stageScheduledAt DateTime?          // When the current stage step is scheduled
+  stageScheduledAt DateTime?          // Appointment time (Screening/Interview) or submission deadline (Assessment)
   createdAt        DateTime           @default(now())
   updatedAt        DateTime           @updatedAt
   activities       Activity[]

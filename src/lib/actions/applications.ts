@@ -56,11 +56,12 @@ export async function createApplication(formData: FormData) {
     return { error: { stageOutcome: ["Invalid status value"] } };
   }
 
-  // stageScheduledAt is required only when outcome is SCHEDULED (future appointment).
-  // For other terminal outcomes the date is optional but still stored.
-  const isScheduled = data.stageOutcome === "SCHEDULED" || data.stageOutcome === "ASSIGNED";
-  if (isSchedulingStage && isScheduled && !data.stageScheduledAt) {
-    return { error: { stageScheduledAt: ["Scheduled date is required for this stage"] } };
+  // stageScheduledAt is required for Assessment (deadline, always) and for
+  // SCHEDULED outcome on Screening/Interview (future appointment).
+  const isAssessment = stage.name === "Assessment";
+  const isScheduled = data.stageOutcome === "SCHEDULED";
+  if (isSchedulingStage && (isAssessment || isScheduled) && !data.stageScheduledAt) {
+    return { error: { stageScheduledAt: [isAssessment ? "Deadline is required for Assessment" : "Scheduled date is required for this stage"] } };
   }
 
   // stageScheduledAt (date) is required for outcome stages.
@@ -144,11 +145,12 @@ export async function updateApplication(id: string, formData: FormData) {
     return { error: { stageOutcome: ["Invalid status value"] } };
   }
 
-  // stageScheduledAt is required only when outcome is SCHEDULED (future appointment).
-  // For other terminal outcomes the date is optional but still stored.
-  const isScheduled = data.stageOutcome === "SCHEDULED" || data.stageOutcome === "ASSIGNED";
-  if (isSchedulingStage && isScheduled && !data.stageScheduledAt) {
-    return { error: { stageScheduledAt: ["Scheduled date is required for this stage"] } };
+  // stageScheduledAt is required for Assessment (deadline, always) and for
+  // SCHEDULED outcome on Screening/Interview (future appointment).
+  const isAssessment = stage.name === "Assessment";
+  const isScheduled = data.stageOutcome === "SCHEDULED";
+  if (isSchedulingStage && (isAssessment || isScheduled) && !data.stageScheduledAt) {
+    return { error: { stageScheduledAt: [isAssessment ? "Deadline is required for Assessment" : "Scheduled date is required for this stage"] } };
   }
 
   // stageScheduledAt (date) is required for outcome stages.

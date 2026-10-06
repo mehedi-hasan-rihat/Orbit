@@ -4,7 +4,7 @@ import { useState, useRef } from "react";
 import { createApplication, updateApplication, checkDuplicate, moveToRejectedStage } from "@/lib/actions/applications";
 import { DatePicker } from "./date-picker";
 import { useRouter } from "next/navigation";
-import { SCHEDULING_STAGE_NAMES, OUTCOME_STAGE_NAMES, INTERVIEW_OUTCOMES } from "@/lib/validations";
+import { SCHEDULING_STAGE_NAMES, OUTCOME_STAGE_NAMES, INTERVIEW_OUTCOMES, type InterviewOutcome } from "@/lib/validations";
 import { outcomeDisplay } from "@/lib/outcome-display";
 
 interface Tag {
@@ -30,10 +30,17 @@ interface ApplicationFormProps {
   onClose: () => void;
 }
 
-const STATUS_OPTIONS = INTERVIEW_OUTCOMES;
+// ASSIGNED is only relevant for Assessment (you get assigned a task/test).
+// SCHEDULED is only relevant for Screening and Interview (a booking with a time).
+// Assessment uses a deadline instead — date+time always required.
+function statusOptionsForStage(stageName: string | undefined): InterviewOutcome[] {
+  if (stageName === "Assessment") return INTERVIEW_OUTCOMES.filter((o) => o !== "SCHEDULED");
+  return INTERVIEW_OUTCOMES.filter((o) => o !== "ASSIGNED");
+}
 
-// Label for the date field changes with the outcome.
+// Label for the date field changes with the outcome and stage.
 function dateFieldLabel(outcome: string | null | undefined, stageName: string | undefined): string {
+  if (stageName === "Assessment") return "Assessment Deadline";
   switch (outcome) {
     case "COMPLETED": return `${stageName ?? "Stage"} Completion Date`;
     case "PASSED":    return `${stageName ?? "Stage"} Date (Passed)`;
@@ -43,8 +50,9 @@ function dateFieldLabel(outcome: string | null | undefined, stageName: string | 
   }
 }
 
-function dateFieldHint(outcome: string | null | undefined): string | null {
-  if (!outcome || outcome === "SCHEDULED" || outcome === "ASSIGNED") return "You'll get a reminder email 2 days and 1 day before.";
+function dateFieldHint(outcome: string | null | undefined, stageName: string | undefined): string | null {
+  if (stageName === "Assessment") return null; // deadline, not a calendar appointment
+  if (!outcome || outcome === "SCHEDULED") return "You'll get a reminder email 2 days and 1 day before.";
   return null;
 }
 
@@ -230,7 +238,15 @@ export function ApplicationForm({ application, availableTags, stages, onClose }:
                 id="stageId"
                 name="stageId"
                 value={selectedStageId}
-                onChange={(e) => setSelectedStageId(e.target.value)}
+                onChange={(e) => {
+                  const newStageId = e.target.value;
+                  const newStage = stages.find((s) => s.id === newStageId);
+                  setSelectedStageId(newStageId);
+                  // ASSIGNED is only valid for Assessment — clear it if switching away
+                  if (selectedOutcome === "ASSIGNED" && newStage?.name !== "Assessment") {
+                    setSelectedOutcome("");
+                  }
+                }}
                 className="flex h-10 w-full rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
               >
                 {stages.map((stage) => (
@@ -284,7 +300,7 @@ export function ApplicationForm({ application, availableTags, stages, onClose }:
                   className="flex h-10 w-full rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                 >
                   <option value="" disabled>Select status…</option>
-                  {STATUS_OPTIONS.map((o) => (
+                  {statusOptionsForStage(selectedStage?.name).map((o) => (
                     <option key={o} value={o}>
                       {outcomeDisplay(o)?.label}
                     </option>
@@ -309,14 +325,17 @@ export function ApplicationForm({ application, availableTags, stages, onClose }:
                 </label>
               )}
 
+              {/* Assigned Date field removed — stageScheduledAt serves as the deadline */}
+
               <div className="space-y-2">
                 <label htmlFor="stageScheduledAt" className="text-sm font-medium">
                   {dateFieldLabel(selectedOutcome, selectedStage?.name)}{" "}
-                  {(selectedOutcome === "SCHEDULED" || selectedOutcome === "ASSIGNED") && (
+                  {selectedStage?.name === "Assessment" ? (
+                    <span className="text-destructive">*</span>
+                  ) : (selectedOutcome === "SCHEDULED") ? (
                     <><span className="text-destructive">*</span>{" "}
                     <span className="text-muted-foreground font-normal">(time optional)</span></>
-                  )}
-                  {selectedOutcome !== "SCHEDULED" && selectedOutcome !== "ASSIGNED" && (
+                  ) : (
                     <span className="text-muted-foreground font-normal">(optional)</span>
                   )}
                 </label>
@@ -324,16 +343,16 @@ export function ApplicationForm({ application, availableTags, stages, onClose }:
                   id="stageScheduledAt"
                   name="stageScheduledAt"
                   includeTime
-                  placeholder="Pick date (and time)"
-                  required={selectedOutcome === "SCHEDULED" || selectedOutcome === "ASSIGNED"}
+                  placeholder={selectedStage?.name === "Assessment" ? "Pick deadline (date and time)" : "Pick date (and time)"}
+                  required={selectedStage?.name === "Assessment" || selectedOutcome === "SCHEDULED"}
                   value={
                     application?.stageScheduledAt
                       ? new Date(application.stageScheduledAt).toISOString().slice(0, 16)
                       : ""
                   }
                 />
-                {dateFieldHint(selectedOutcome) && (
-                  <p className="text-xs text-muted-foreground">{dateFieldHint(selectedOutcome)}</p>
+                {dateFieldHint(selectedOutcome, selectedStage?.name) && (
+                  <p className="text-xs text-muted-foreground">{dateFieldHint(selectedOutcome, selectedStage?.name)}</p>
                 )}
                 {errors.stageScheduledAt && <p className="text-xs text-destructive">{errors.stageScheduledAt[0]}</p>}
               </div>
