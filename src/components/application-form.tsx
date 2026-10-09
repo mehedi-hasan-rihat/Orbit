@@ -110,6 +110,11 @@ export function ApplicationForm({ application, availableTags, stages, onClose }:
     if (!showStatus && !showOutcomeDate) {
       formData.set("stageDueAt", "");
     }
+    // Wishlist has no applied date — ensure the field is explicitly empty
+    // so formData.get("appliedDate") doesn't return null (which casts to "null").
+    if (isWishlist) {
+      formData.set("appliedDate", "");
+    }
 
     try {
       let result;

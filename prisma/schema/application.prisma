@@ -1,0 +1,71 @@
+enum StageOutcome {
+  SCHEDULED
+  ASSIGNED
+  COMPLETED
+  PASSED
+  FAILED
+  CANCELLED
+}
+
+enum ActivityType {
+  CREATED
+  OUTCOME_CHANGE
+  NOTE_ADDED
+  REMINDER_SET
+  OTHER
+}
+
+model Application {
+  id           String             @id @default(cuid())
+  userId       String
+  user         User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  company      String
+  role         String
+  jobUrl       String?
+  stageId      String?
+  stage        PipelineStageType? @relation(fields: [stageId], references: [id], onDelete: Restrict)
+  appliedDate  DateTime?
+  // archived: hidden from the active list, orthogonal to closed
+  archived     Boolean            @default(false)
+  // closed: process ended — keeps stageId intact so history is preserved
+  closed       Boolean            @default(false)
+  closedAt     DateTime?
+  stageOutcome StageOutcome?      // Sub-status of the current stage step
+  stageDueAt   DateTime?          // Appointment time (Screening/Interview) or submission deadline (Assessment)
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+  activities   Activity[]
+  reminders    Reminder[]
+  notes        Note[]
+  tags         ApplicationTag[]
+
+  @@index([userId])
+  @@index([userId, stageId])
+  @@index([userId, archived])
+  @@index([userId, closed])
+  @@index([company])
+}
+
+model Activity {
+  id            String       @id @default(cuid())
+  applicationId String
+  application   Application  @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  type          ActivityType
+  description   String
+  metadata      String?
+  createdAt     DateTime     @default(now())
+
+  @@index([applicationId])
+}
+
+model ApplicationTag {
+  id            String      @id @default(cuid())
+  applicationId String
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  tagId         String
+  tag           Tag         @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@unique([applicationId, tagId])
+  @@index([applicationId])
+  @@index([tagId])
+}

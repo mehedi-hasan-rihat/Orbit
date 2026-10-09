@@ -1,0 +1,23 @@
+enum StageCategory {
+  OPEN         // Not yet in process — Wishlist, Applied, Screening
+  INTERVIEWING // Actively progressing — Assessment, Interview
+  SUCCESS      // Final positive outcomes — Get Offer, Hired
+  CLOSED       // Terminal — Rejected
+}
+
+model PipelineStageType {
+  id           String        @id @default(cuid())
+  userId       String
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name         String
+  color        String        @default("#6b7280")
+  category     StageCategory @default(INTERVIEWING)
+  order        Int           @default(0)
+  enabled      Boolean       @default(true)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  applications Application[]
+
+  @@unique([userId, name])
+  @@index([userId])
+}

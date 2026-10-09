@@ -1,0 +1,18 @@
+model User {
+  id                  String              @id @default(cuid())
+  name                String
+  email               String              @unique
+  password            String
+  emailVerified       Boolean             @default(false)
+  verificationToken   String?             @unique
+  verificationExpiry  DateTime?
+  passwordResetToken  String?             @unique
+  passwordResetExpiry DateTime?
+  theme               String              @default("system")
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+  applications        Application[]
+  tags                Tag[]
+  notifications       Notification[]
+  stageTypes          PipelineStageType[]
+}

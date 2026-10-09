@@ -79,7 +79,7 @@ export function ApplicationsList({
   const [stageFilter, setStageFilter] = useState(stageId);
   const [sortBy, setSortBy] = useState(sort);
   const [isPending, startTransition] = useTransition();
-  const [pageSize, setPageSize] = useState<PageSize>(20);
+  const [pageSize, setPageSize] = useState<PageSize>(10);
   const [currentPage, setCurrentPage] = useState(1);
   const router = useRouter();
   const searchDebounce = useRef<ReturnType<typeof setTimeout> | null>(null);

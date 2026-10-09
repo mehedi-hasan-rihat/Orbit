@@ -23,13 +23,13 @@ export async function createApplication(formData: FormData) {
   const raw = {
     company: formData.get("company") as string,
     role: formData.get("role") as string,
-    jobUrl: formData.get("jobUrl") as string,
+    jobUrl: (formData.get("jobUrl") as string) || "",
     stageId: formData.get("stageId") as string,
-    appliedDate: formData.get("appliedDate") as string,
-    stageOutcome: formData.get("stageOutcome") as string,
-    stageDueAt: formData.get("stageDueAt") as string,
-    notes: formData.get("notes") as string,
-    tags: formData.get("tags") as string,
+    appliedDate: (formData.get("appliedDate") as string) || "",
+    stageOutcome: (formData.get("stageOutcome") as string) || "",
+    stageDueAt: (formData.get("stageDueAt") as string) || "",
+    notes: (formData.get("notes") as string) || "",
+    tags: (formData.get("tags") as string) || "",
   };
 
   const parsed = applicationSchema.safeParse(raw);
@@ -113,12 +113,12 @@ export async function updateApplication(id: string, formData: FormData) {
   const raw = {
     company: formData.get("company") as string,
     role: formData.get("role") as string,
-    jobUrl: formData.get("jobUrl") as string,
+    jobUrl: (formData.get("jobUrl") as string) || "",
     stageId: formData.get("stageId") as string,
-    appliedDate: formData.get("appliedDate") as string,
-    stageOutcome: formData.get("stageOutcome") as string,
-    stageDueAt: formData.get("stageDueAt") as string,
-    tags: formData.get("tags") as string,
+    appliedDate: (formData.get("appliedDate") as string) || "",
+    stageOutcome: (formData.get("stageOutcome") as string) || "",
+    stageDueAt: (formData.get("stageDueAt") as string) || "",
+    tags: (formData.get("tags") as string) || "",
   };
 
   const parsed = applicationSchema.safeParse(raw);

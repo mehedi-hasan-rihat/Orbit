@@ -1,0 +1,16 @@
+model Reminder {
+  id            String      @id @default(cuid())
+  applicationId String
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  title         String
+  details       String?
+  dueAt         DateTime
+  done          Boolean     @default(false)
+  doneAt        DateTime?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@index([applicationId])
+  @@index([applicationId, done])
+  @@index([dueAt])
+}
