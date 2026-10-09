@@ -8,7 +8,7 @@ import {
   setStageTypeEnabled,
   deleteStageType,
 } from "@/lib/actions/pipeline";
-import { STAGE_CATEGORIES, CATEGORY_LABELS, type StageCategoryValue } from "@/lib/validations";
+import { CATEGORY_LABELS, type StageCategoryValue } from "@/lib/validations";
 import clsx from "clsx";
 
 interface StageType {
@@ -28,13 +28,11 @@ const DEFAULT_NEW_COLOR = "#6b7280";
 export function PipelineManager({ stageTypes }: { stageTypes: StageType[] }) {
   const [name, setName] = useState("");
   const [newColor, setNewColor] = useState(DEFAULT_NEW_COLOR);
-  const [newCategory, setNewCategory] = useState<StageCategoryValue>("INTERVIEWING");
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState("");
   const [editingColor, setEditingColor] = useState(DEFAULT_NEW_COLOR);
-  const [editingCategory, setEditingCategory] = useState<StageCategoryValue>("INTERVIEWING");
   const router = useRouter();
 
   function readError(result: { error?: unknown }) {
@@ -54,7 +52,7 @@ export function PipelineManager({ stageTypes }: { stageTypes: StageType[] }) {
     const formData = new FormData();
     formData.set("name", name);
     formData.set("color", newColor);
-    formData.set("category", newCategory);
+    formData.set("category", "INTERVIEWING");
     const result = await createStageType(formData);
 
     const message = readError(result);
@@ -62,7 +60,6 @@ export function PipelineManager({ stageTypes }: { stageTypes: StageType[] }) {
     else {
       setName("");
       setNewColor(DEFAULT_NEW_COLOR);
-      setNewCategory("INTERVIEWING");
       router.refresh();
     }
     setPending(null);
@@ -72,10 +69,11 @@ export function PipelineManager({ stageTypes }: { stageTypes: StageType[] }) {
     setError(null);
     setPending(id);
 
+    const type = stageTypes.find((t) => t.id === id);
     const formData = new FormData();
     formData.set("name", editingName);
     formData.set("color", editingColor);
-    formData.set("category", editingCategory);
+    formData.set("category", type?.category ?? "INTERVIEWING");
     const result = await updateStageType(id, formData);
 
     const message = readError(result);
@@ -153,16 +151,6 @@ export function PipelineManager({ stageTypes }: { stageTypes: StageType[] }) {
           required
           className="flex h-9 flex-1 min-w-[8rem] rounded-md border bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
         />
-        <select
-          value={newCategory}
-          onChange={(e) => setNewCategory(e.target.value as StageCategoryValue)}
-          aria-label="Stage category"
-          className="h-9 shrink-0 rounded-md border bg-background px-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-        >
-          {STAGE_CATEGORIES.map((c) => (
-            <option key={c} value={c}>{CATEGORY_LABELS[c]}</option>
-          ))}
-        </select>
         <button
           type="submit"
           disabled={pending === "new"}
@@ -171,6 +159,9 @@ export function PipelineManager({ stageTypes }: { stageTypes: StageType[] }) {
           {pending === "new" ? "Adding…" : "Add"}
         </button>
       </form>
+      <p className="text-xs text-muted-foreground -mt-2">
+        Added stages count as <strong className="text-foreground">In process</strong> — they contribute to your interview rate.
+      </p>
 
       {error && <p className="text-xs text-destructive">{error}</p>}
 
@@ -196,18 +187,6 @@ export function PipelineManager({ stageTypes }: { stageTypes: StageType[] }) {
                   title={type.isSystem ? "Default stages keep their name" : undefined}
                   className="flex h-8 flex-1 min-w-0 rounded-md border bg-background px-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-60 disabled:cursor-not-allowed"
                 />
-                <select
-                  value={editingCategory}
-                  onChange={(e) => setEditingCategory(e.target.value as StageCategoryValue)}
-                  aria-label="Stage category"
-                  disabled={type.isSystem}
-                  title={type.isSystem ? "Default stages keep their category" : undefined}
-                  className="h-8 shrink-0 rounded-md border bg-background px-1 text-xs focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-60 disabled:cursor-not-allowed"
-                >
-                  {STAGE_CATEGORIES.map((c) => (
-                    <option key={c} value={c}>{CATEGORY_LABELS[c]}</option>
-                  ))}
-                </select>
                 <button
                   onClick={() => handleSaveEdit(type.id)}
                   disabled={pending === type.id}
@@ -259,7 +238,6 @@ export function PipelineManager({ stageTypes }: { stageTypes: StageType[] }) {
                     setEditingId(type.id);
                     setEditingName(type.name);
                     setEditingColor(type.color);
-                    setEditingCategory(type.category);
                   }}
                   className="text-xs text-muted-foreground hover:text-foreground"
                 >

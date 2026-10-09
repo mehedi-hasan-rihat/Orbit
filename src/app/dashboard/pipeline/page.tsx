@@ -32,19 +32,6 @@ export default async function PipelinePage() {
                 </p>
               </div>
 
-              <div className="space-y-3 border-t pt-4">
-                <p className="text-xs font-semibold">Categories</p>
-                <p className="text-xs text-muted-foreground">
-                  A stage&rsquo;s category is what the numbers are built on:{" "}
-                  <strong className="text-foreground">In process</strong> drives your
-                  interview rate,{" "}
-                  <strong className="text-foreground">Final stage</strong> drives your
-                  offer rate, and{" "}
-                  <strong className="text-foreground">Closed</strong> stages stop chasing
-                  follow-ups.
-                </p>
-              </div>
-
               <div className="space-y-2 border-t pt-4">
                 <p className="text-xs font-semibold">Default stages</p>
                 <p className="text-xs text-muted-foreground">
