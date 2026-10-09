@@ -79,9 +79,16 @@ export function ApplicationsList({
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
   const searchDebounce = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Track whether the component has mounted to skip the initial effect run.
+  const isMounted = useRef(false);
 
-  // Fire search 500ms after the user stops typing — no click or Enter needed.
+  // Fire search 500ms after the user stops typing — skip on first mount
+  // so landing on the page without a search param doesn't trigger a navigation.
   useEffect(() => {
+    if (!isMounted.current) {
+      isMounted.current = true;
+      return;
+    }
     if (searchDebounce.current) clearTimeout(searchDebounce.current);
     searchDebounce.current = setTimeout(() => {
       applyFilters(searchInput);
@@ -92,6 +99,8 @@ export function ApplicationsList({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchInput]);
 
+  const DEFAULT_SORT = "createdAt";
+
   function applyFilters(newSearch?: string, newStage?: string, newSort?: string) {
     const s = newSearch ?? searchInput;
     const st = newStage ?? stageFilter;
@@ -99,7 +108,9 @@ export function ApplicationsList({
     const params = new URLSearchParams();
     if (s) params.set("search", s);
     if (st && st !== "ALL") params.set("stage", st);
-    if (so) params.set("sort", so);
+    // Only write sort to the URL when it differs from the default so the URL
+    // stays clean on first load and doesn't cause a redundant navigation.
+    if (so && so !== DEFAULT_SORT) params.set("sort", so);
     if (showArchived) params.set("archived", "true");
     if (showClosed) params.set("closed", "true");
     startTransition(() => {
@@ -110,7 +121,6 @@ export function ApplicationsList({
   async function handleDelete(id: string) {
     if (!confirm("Delete this application? This cannot be undone.")) return;
     await deleteApplication(id);
-    router.refresh();
   }
 
   return (

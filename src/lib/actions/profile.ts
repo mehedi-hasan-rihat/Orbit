@@ -55,7 +55,7 @@ export async function updateProfile(formData: FormData) {
   // Refresh session cookie with new name/email
   await setSession({ userId: user.id, name: user.name, email: user.email });
 
-  revalidatePath("/dashboard");
+  revalidatePath("/dashboard", "layout");
   return { success: true };
 }
 

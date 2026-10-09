@@ -75,9 +75,7 @@ export async function createReminder(applicationId: string, formData: FormData) 
     },
   });
 
-  revalidatePath("/dashboard");
-  revalidatePath("/dashboard/applications");
-  revalidatePath(`/dashboard/applications/${applicationId}`);
+  revalidatePath("/dashboard", "layout");
   return { success: true };
 }
 
@@ -105,9 +103,7 @@ export async function updateReminder(id: string, applicationId: string, formData
     },
   });
 
-  revalidatePath("/dashboard");
-  revalidatePath("/dashboard/applications");
-  revalidatePath(`/dashboard/applications/${applicationId}`);
+  revalidatePath("/dashboard", "layout");
   return { success: true };
 }
 
@@ -144,9 +140,7 @@ export async function setReminderDone(id: string, applicationId: string, done: b
     });
   }
 
-  revalidatePath("/dashboard");
-  revalidatePath("/dashboard/applications");
-  revalidatePath(`/dashboard/applications/${applicationId}`);
+  revalidatePath("/dashboard", "layout");
   return { success: true };
 }
 
@@ -161,8 +155,6 @@ export async function deleteReminder(id: string, applicationId: string) {
 
   await prisma.reminder.delete({ where: { id } });
 
-  revalidatePath("/dashboard");
-  revalidatePath("/dashboard/applications");
-  revalidatePath(`/dashboard/applications/${applicationId}`);
+  revalidatePath("/dashboard", "layout");
   return { success: true };
 }

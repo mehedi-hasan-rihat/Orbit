@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken";
 import { cookies } from "next/headers";
+import { cache } from "react";
 
 const JWT_SECRET = process.env.JWT_SECRET || "default-secret-change-me";
 const COOKIE_NAME = "orbit-session";
@@ -22,12 +23,14 @@ export function verifyToken(token: string): SessionPayload | null {
   }
 }
 
-export async function getSession(): Promise<SessionPayload | null> {
+// Wrapped with React cache() so multiple Server Components in the same render
+// (layout + page) share a single cookies() call instead of each paying the cost.
+export const getSession = cache(async (): Promise<SessionPayload | null> => {
   const cookieStore = await cookies();
   const token = cookieStore.get(COOKIE_NAME)?.value;
   if (!token) return null;
   return verifyToken(token);
-}
+});
 
 export async function setSession(payload: SessionPayload) {
   const token = createToken(payload);

@@ -3,7 +3,6 @@
 import { useState, useRef } from "react";
 import { createApplication, updateApplication, checkDuplicate, moveToRejectedStage } from "@/lib/actions/applications";
 import { DatePicker } from "./date-picker";
-import { useRouter } from "next/navigation";
 import { SCHEDULING_STAGE_NAMES, OUTCOME_STAGE_NAMES, INTERVIEW_OUTCOMES, type InterviewOutcome } from "@/lib/validations";
 import { outcomeDisplay } from "@/lib/outcome-display";
 
@@ -77,7 +76,6 @@ export function ApplicationForm({ application, availableTags, stages, onClose }:
   const [suggestRejected, setSuggestRejected] = useState(false);
   const [markRejected, setMarkRejected] = useState(false);
   const duplicateCheckTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const router = useRouter();
 
   const selectedStage = stages.find((s) => s.id === selectedStageId);
   const isWishlist = selectedStage?.name === "Wishlist";
@@ -127,7 +125,6 @@ export function ApplicationForm({ application, availableTags, stages, onClose }:
         if (markRejected && application) {
           await moveToRejectedStage(application.id);
         }
-        router.refresh();
         onClose();
       }
     } catch {
