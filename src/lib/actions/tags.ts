@@ -40,7 +40,7 @@ export async function createTag(formData: FormData) {
     },
   });
 
-  revalidatePath("/dashboard");
+  revalidatePath("/dashboard", "layout");
   return { success: true };
 }
 
@@ -56,7 +56,7 @@ export async function deleteTag(id: string) {
   }
 
   await prisma.tag.delete({ where: { id } });
-  revalidatePath("/dashboard");
+  revalidatePath("/dashboard", "layout");
   return { success: true };
 }
 

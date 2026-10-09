@@ -103,7 +103,7 @@ export async function createApplication(formData: FormData) {
     },
   });
 
-  revalidatePath("/dashboard");
+  revalidatePath("/dashboard", "layout");
   return { success: true, id: application.id };
 }
 
@@ -251,7 +251,7 @@ export async function updateApplication(id: string, formData: FormData) {
     });
   });
 
-  revalidatePath("/dashboard");
+  revalidatePath("/dashboard", "layout");
   return { success: true };
 }
 
@@ -295,7 +295,7 @@ export async function updateApplicationStage(id: string, stageId: string) {
     },
   });
 
-  revalidatePath("/dashboard");
+  revalidatePath("/dashboard", "layout");
   return { success: true };
 }
 
@@ -337,7 +337,7 @@ export async function moveToRejectedStage(id: string) {
     },
   });
 
-  revalidatePath("/dashboard");
+  revalidatePath("/dashboard", "layout");
   return { success: true };
 }
 
@@ -365,7 +365,7 @@ export async function archiveApplication(id: string) {
     },
   });
 
-  revalidatePath("/dashboard");
+  revalidatePath("/dashboard", "layout");
   return { success: true };
 }
 
@@ -393,7 +393,7 @@ export async function unarchiveApplication(id: string) {
     },
   });
 
-  revalidatePath("/dashboard");
+  revalidatePath("/dashboard", "layout");
   return { success: true };
 }
 
@@ -429,9 +429,7 @@ export async function closeApplication(id: string) {
     },
   });
 
-  revalidatePath("/dashboard");
-  revalidatePath("/dashboard/applications");
-  revalidatePath(`/dashboard/applications/${id}`);
+  revalidatePath("/dashboard", "layout");
   return { success: true };
 }
 
@@ -460,9 +458,7 @@ export async function reopenApplication(id: string) {
     },
   });
 
-  revalidatePath("/dashboard");
-  revalidatePath("/dashboard/applications");
-  revalidatePath(`/dashboard/applications/${id}`);
+  revalidatePath("/dashboard", "layout");
   return { success: true };
 }
 
@@ -481,7 +477,7 @@ export async function deleteApplication(id: string) {
     where: { id },
   });
 
-  revalidatePath("/dashboard");
+  revalidatePath("/dashboard", "layout");
   return { success: true };
 }
 

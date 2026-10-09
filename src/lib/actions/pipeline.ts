@@ -204,9 +204,7 @@ export async function createStageType(formData: FormData) {
     },
   });
 
-  revalidatePath("/dashboard/pipeline");
-  revalidatePath("/dashboard/applications");
-  revalidatePath("/dashboard");
+  revalidatePath("/dashboard", "layout");
   return { success: true, id: created.id };
 }
 
@@ -243,9 +241,7 @@ export async function updateStageType(id: string, formData: FormData) {
       data: { color: parsed.data.color },
     });
 
-    revalidatePath("/dashboard/pipeline");
-    revalidatePath("/dashboard/applications");
-    revalidatePath("/dashboard");
+    revalidatePath("/dashboard", "layout");
     return { success: true };
   }
 
@@ -273,9 +269,7 @@ export async function updateStageType(id: string, formData: FormData) {
     data: { name, color: parsed.data.color, category: parsed.data.category as StageCategory },
   });
 
-  revalidatePath("/dashboard/pipeline");
-  revalidatePath("/dashboard/applications");
-  revalidatePath("/dashboard");
+  revalidatePath("/dashboard", "layout");
   return { success: true };
 }
 
@@ -297,9 +291,7 @@ export async function setStageTypeEnabled(id: string, enabled: boolean) {
   // using it keep rendering it.
   await prisma.pipelineStageType.update({ where: { id }, data: { enabled } });
 
-  revalidatePath("/dashboard/pipeline");
-  revalidatePath("/dashboard/applications");
-  revalidatePath("/dashboard");
+  revalidatePath("/dashboard", "layout");
   return { success: true };
 }
 
@@ -326,8 +318,6 @@ export async function deleteStageType(id: string) {
 
   await prisma.pipelineStageType.delete({ where: { id } });
 
-  revalidatePath("/dashboard/pipeline");
-  revalidatePath("/dashboard/applications");
-  revalidatePath("/dashboard");
+  revalidatePath("/dashboard", "layout");
   return { success: true };
 }

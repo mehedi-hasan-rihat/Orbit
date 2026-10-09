@@ -9,8 +9,6 @@ import {
   reopenApplication,
 } from "@/lib/actions/applications";
 import { createNote } from "@/lib/actions/notes";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { createPortal } from "react-dom";
 
 export interface StageOption {
@@ -48,7 +46,6 @@ export function QuickActions({
   const [position, setPosition] = useState<{ top: number; left: number; openUp: boolean }>({ top: 0, left: 0, openUp: false });
   const buttonRef = useRef<HTMLButtonElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const router = useRouter();
 
   const DROPDOWN_HEIGHT = 400;
 
@@ -117,7 +114,6 @@ export function QuickActions({
     await action();
     setOpen(false);
     setLoading(false);
-    router.refresh();
   }
 
   async function handleNoteSubmit(e: React.FormEvent) {
@@ -131,7 +127,6 @@ export function QuickActions({
     setShowNoteInput(false);
     setOpen(false);
     setLoading(false);
-    router.refresh();
   }
 
   return (

@@ -52,7 +52,6 @@ export function ApplicationActions({
     setPending(true);
     await action();
     setPending(false);
-    router.refresh();
   }
 
   async function handleDelete() {
@@ -63,12 +62,8 @@ export function ApplicationActions({
       setConfirmingDelete(false);
       return;
     }
-    // The row this page renders is gone, so refreshing in place would 404.
-    // deleteApplication only revalidates /dashboard, so the list has to be
-    // refreshed explicitly or the client router can serve it from cache with
-    // the deleted application still in it.
+    // The row this page renders is gone — navigate back to the list.
     router.push("/dashboard/applications");
-    router.refresh();
   }
 
   // Deleting takes the whole application, its rounds and its history with it,
