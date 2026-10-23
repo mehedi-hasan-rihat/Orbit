@@ -26,7 +26,7 @@ export function ExportButton() {
     <button
       onClick={handleExport}
       disabled={loading}
-      className="h-9 px-4 rounded-md border text-sm font-medium hover:bg-accent transition-colors disabled:opacity-50"
+      className="h-9 px-4 rounded-full border border-border text-sm hover:bg-control transition-colors disabled:opacity-50"
     >
       {loading ? "Exporting..." : "Export CSV"}
     </button>

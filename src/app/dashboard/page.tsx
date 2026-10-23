@@ -28,8 +28,8 @@ export default async function DashboardPage() {
         {/* Analytics */}
         <section>
           <div className="mb-4">
-            <h1 className="text-2xl font-bold">Dashboard</h1>
-            <p className="text-sm text-muted-foreground">
+            <h1 className="text-2xl">Dashboard</h1>
+            <p className="text-[13px] text-muted-foreground">
               Overview of your job search progress
               {stats.thisWeek > 0 && <span> · {stats.thisWeek} added this week</span>}
             </p>
@@ -41,8 +41,8 @@ export default async function DashboardPage() {
         {hasDueItems && (
           <section>
             <div className="mb-3">
-              <h2 className="text-xl font-bold">Due today</h2>
-              <p className="text-sm text-muted-foreground">
+              <h2 className="text-xl">Due today</h2>
+              <p className="text-[13px] text-muted-foreground">
                 Stages and follow-ups that need your attention
               </p>
             </div>
@@ -53,17 +53,17 @@ export default async function DashboardPage() {
                   <Link
                     key={item.id}
                     href={`/dashboard/applications/${item.id}`}
-                    className="flex items-center justify-between gap-4 rounded-xl border px-4 py-3 hover:bg-accent transition-colors"
+                    className="flex items-center justify-between gap-4 rounded-xl border border-border px-4 py-3 hover:bg-control transition-colors"
                   >
                     <div className="flex items-center gap-3 min-w-0">
                       <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: item.stageColor }} />
                       <div className="min-w-0">
-                        <p className="text-sm font-medium truncate">{item.company} — {item.role}</p>
-                        <p className="text-xs text-muted-foreground">{item.stageName}</p>
+                        <p className="text-sm truncate">{item.company} — {item.role}</p>
+                        <p className="text-[13px] text-muted-foreground">{item.stageName}</p>
                       </div>
                     </div>
                     <div className="text-right shrink-0">
-                      <p className={`text-xs font-medium ${isPast ? "text-destructive" : "text-primary"}`}>
+                      <p className={`text-[13px] ${isPast ? "text-destructive" : "text-foreground"}`}>
                         {new Date(item.date).toLocaleDateString([], { month: "short", day: "numeric" })}
                         {new Date(item.date).getHours() !== 0 && (
                           <span className="ml-1">
@@ -82,17 +82,17 @@ export default async function DashboardPage() {
                   <Link
                     key={item.reminderId}
                     href={`/dashboard/applications/${item.id}`}
-                    className="flex items-center justify-between gap-4 rounded-xl border border-amber-200 dark:border-amber-800/40 bg-amber-50/50 dark:bg-amber-900/10 px-4 py-3 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors"
+                    className="flex items-center justify-between gap-4 rounded-xl border border-[var(--color-status-pending-bg)] bg-[var(--color-status-pending-bg)] px-4 py-3 hover:bg-[var(--color-status-pending-bg)] transition-colors"
                   >
                     <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-2 h-2 rounded-full shrink-0 bg-amber-500" />
+                      <div className="w-2 h-2 rounded-full shrink-0 bg-[var(--color-status-pending)]" />
                       <div className="min-w-0">
-                        <p className="text-sm font-medium truncate">{item.company} — {item.role}</p>
-                        <p className="text-xs text-muted-foreground truncate">{item.title}</p>
+                        <p className="text-sm truncate">{item.company} — {item.role}</p>
+                        <p className="text-[13px] text-muted-foreground truncate">{item.title}</p>
                       </div>
                     </div>
                     <div className="text-right shrink-0">
-                      <p className={`text-xs font-medium ${isPast ? "text-destructive" : "text-amber-600 dark:text-amber-400"}`}>
+                      <p className={`text-[13px] ${isPast ? "text-destructive" : "text-[var(--color-status-pending)]"}`}>
                         {new Date(item.date).toLocaleDateString([], { month: "short", day: "numeric" })}
                       </p>
                       <p className="text-[10px] text-muted-foreground">{isPast ? "overdue" : "today"}</p>
@@ -108,11 +108,11 @@ export default async function DashboardPage() {
         <section>
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h2 className="text-xl font-bold">Pipeline</h2>
-              <p className="text-sm text-muted-foreground">Drag and drop to update application status</p>
+              <h2 className="text-xl">Pipeline</h2>
+              <p className="text-[13px] text-muted-foreground">Drag and drop to update application status</p>
             </div>
             {totalOnBoard > 0 && (
-              <Link href="/dashboard/applications" className="text-sm font-medium hover:underline">
+              <Link href="/dashboard/applications" className="text-[13px] hover:underline">
                 View all →
               </Link>
             )}
@@ -124,39 +124,39 @@ export default async function DashboardPage() {
         <section>
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h2 className="text-xl font-bold">Recent Applications</h2>
-              <p className="text-sm text-muted-foreground">
+              <h2 className="text-xl">Recent Applications</h2>
+              <p className="text-[13px] text-muted-foreground">
                 Your latest {recentApplications.length} applications
               </p>
             </div>
-            <Link href="/dashboard/applications" className="text-sm font-medium hover:underline">
+            <Link href="/dashboard/applications" className="text-[13px] hover:underline">
               View all →
             </Link>
           </div>
 
           {recentApplications.length === 0 ? (
-            <div className="text-center py-12 border rounded-lg">
-              <p className="text-lg font-medium">No applications yet</p>
-              <p className="text-sm text-muted-foreground mt-1">
+            <div className="text-center py-28 border border-border rounded-xl">
+              <p className="text-[15px]">No applications yet</p>
+              <p className="text-[13px] text-muted-foreground mt-1">
                 Add your first job application to get started
               </p>
             </div>
           ) : (
-            <div className="border rounded-lg overflow-hidden">
+            <div className="border border-border rounded-xl overflow-hidden">
               <table className="w-full text-sm">
                 <thead className="bg-muted/50">
                   <tr>
-                    <th className="text-left py-3 px-4 font-medium">Company</th>
-                    <th className="text-left py-3 px-4 font-medium">Role</th>
-                    <th className="text-left py-3 px-4 font-medium">Status</th>
-                    <th className="text-left py-3 px-4 font-medium hidden sm:table-cell">Date</th>
-                    <th className="text-right py-3 px-4 font-medium"></th>
+                    <th className="text-left py-3 px-4 text-[13px] text-muted-foreground">Company</th>
+                    <th className="text-left py-3 px-4 text-[13px] text-muted-foreground">Role</th>
+                    <th className="text-left py-3 px-4 text-[13px] text-muted-foreground">Status</th>
+                    <th className="text-left py-3 px-4 text-[13px] text-muted-foreground hidden sm:table-cell">Date</th>
+                    <th className="text-right py-3 px-4 text-[13px] text-muted-foreground"></th>
                   </tr>
                 </thead>
-                <tbody className="divide-y">
+                <tbody className="divide-y divide-border">
                   {recentApplications.map((app) => (
-                    <tr key={app.id} className="hover:bg-muted/30 transition-colors cursor-pointer">
-                      <td className="py-3 px-4 font-medium">
+                    <tr key={app.id} className="hover:bg-[#ffffff08] transition-colors cursor-pointer">
+                      <td className="py-3 px-4">
                         <Link href={`/dashboard/applications/${app.id}`} className="hover:underline">
                           {app.company}
                         </Link>
@@ -171,7 +171,7 @@ export default async function DashboardPage() {
                       <td className="py-3 px-4 text-right">
                         <Link
                           href={`/dashboard/applications/${app.id}`}
-                          className="text-xs text-muted-foreground hover:text-foreground"
+                          className="text-[13px] text-muted-foreground hover:text-foreground"
                         >
                           View →
                         </Link>

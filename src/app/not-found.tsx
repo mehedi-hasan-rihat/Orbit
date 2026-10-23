@@ -12,8 +12,8 @@ export default function NotFound() {
 
         {/* Text */}
         <div className="space-y-2">
-          <h1 className="text-5xl font-bold tracking-tight">404</h1>
-          <p className="text-base font-medium">Page not found</p>
+          <h1 className="text-5xl tracking-tight">404</h1>
+          <p className="text-base">Page not found</p>
           <p className="text-sm text-muted-foreground leading-relaxed">
             This page doesn&apos;t exist or you don&apos;t have access to it.
           </p>
@@ -23,13 +23,13 @@ export default function NotFound() {
         <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
           <Link
             href="/dashboard"
-            className="w-full sm:w-auto inline-flex items-center justify-center h-9 px-5 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity"
+            className="w-full sm:w-auto inline-flex items-center justify-center h-9 px-5 rounded-full bg-primary text-primary-foreground text-sm hover:bg-[#3a3a3a] transition-colors"
           >
             Go to dashboard
           </Link>
           <Link
             href="/"
-            className="w-full sm:w-auto inline-flex items-center justify-center h-9 px-5 rounded-md border text-sm font-medium hover:bg-accent transition-colors"
+            className="w-full sm:w-auto inline-flex items-center justify-center h-9 px-5 rounded-full border border-border text-sm hover:bg-control transition-colors"
           >
             Home
           </Link>

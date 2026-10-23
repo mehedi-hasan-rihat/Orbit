@@ -9,8 +9,8 @@ export default async function PipelinePage() {
       <div className="space-y-6">
         {/* Header */}
         <div>
-          <h1 className="text-xl font-semibold tracking-tight">Pipeline</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">
+          <h1 className="text-xl tracking-tight">Pipeline</h1>
+          <p className="text-[13px] text-muted-foreground mt-0.5">
             Shape the interview process you actually go through
           </p>
         </div>
@@ -22,7 +22,7 @@ export default async function PipelinePage() {
           </div>
 
           <div className="lg:col-span-2">
-            <div className="border rounded-xl p-5 space-y-5 lg:sticky lg:top-6">
+            <div className="border border-border rounded-xl p-5 space-y-5 lg:sticky lg:top-6">
               <div>
                 <h3 className="text-sm font-semibold">How the pipeline works</h3>
                 <p className="text-xs text-muted-foreground mt-1">
@@ -33,7 +33,7 @@ export default async function PipelinePage() {
               </div>
 
               <div className="space-y-2 border-t pt-4">
-                <p className="text-xs font-semibold">Default stages</p>
+                <p className="text-[13px]">Default stages</p>
                 <p className="text-xs text-muted-foreground">
                   Wishlist, Applied, Screening, Assessment, Interview, Get Offer, Hired
                   and Rejected are always part of your pipeline. You can recolour them,
@@ -43,7 +43,7 @@ export default async function PipelinePage() {
               </div>
 
               <div className="border-t pt-4 space-y-2">
-                <p className="text-xs font-semibold">Hide vs. delete</p>
+                <p className="text-[13px]">Hide vs. delete</p>
                 <p className="text-xs text-muted-foreground">
                   <strong className="text-foreground">Hide</strong> takes a stage off the
                   board but leaves everything filed under it untouched — the safe way to

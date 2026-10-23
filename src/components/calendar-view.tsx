@@ -46,10 +46,10 @@ function isPast(date: Date) {
 }
 
 function eventStyle(type: "SCHEDULED" | "REMINDER", overdue = false) {
-  if (overdue) return "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300";
+  if (overdue) return "bg-[var(--color-status-rejected-bg)] text-[var(--color-status-rejected)]";
   return type === "SCHEDULED"
-    ? "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300"
-    : "bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300";
+    ? "bg-[var(--color-status-pending-bg)] text-[var(--color-status-pending)]"
+    : "bg-surface text-muted-foreground";
 }
 
 export function CalendarView({ events }: CalendarViewProps) {
@@ -92,26 +92,26 @@ export function CalendarView({ events }: CalendarViewProps) {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       {/* Calendar grid */}
-      <div className="lg:col-span-2 border rounded-xl p-5 space-y-4">
+      <div className="lg:col-span-2 border border-border rounded-xl p-5 space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-base font-semibold">
+          <h2 className="text-base">
             {MONTHS[currentMonth]} {currentYear}
           </h2>
           <div className="flex gap-1">
-            <button onClick={prevMonth} className="h-8 w-8 rounded-md border flex items-center justify-center text-sm hover:bg-accent transition-colors">‹</button>
+            <button onClick={prevMonth} className="h-8 w-8 rounded-full border border-border flex items-center justify-center text-sm hover:bg-control transition-colors">‹</button>
             <button
               onClick={() => { setCurrentMonth(today.getMonth()); setCurrentYear(today.getFullYear()); setSelectedDate(today); }}
-              className="h-8 px-3 rounded-md border text-xs font-medium hover:bg-accent transition-colors"
+              className="h-8 px-3 rounded-full border border-border text-[13px] hover:bg-control transition-colors"
             >
               Today
             </button>
-            <button onClick={nextMonth} className="h-8 w-8 rounded-md border flex items-center justify-center text-sm hover:bg-accent transition-colors">›</button>
+            <button onClick={nextMonth} className="h-8 w-8 rounded-full border border-border flex items-center justify-center text-sm hover:bg-control transition-colors">›</button>
           </div>
         </div>
 
         <div className="grid grid-cols-7 text-center">
           {DAYS.map((d) => (
-            <div key={d} className="py-2 text-xs font-medium text-muted-foreground">{d}</div>
+            <div key={d} className="py-2 text-[13px] text-muted-foreground">{d}</div>
           ))}
         </div>
 
@@ -129,13 +129,13 @@ export function CalendarView({ events }: CalendarViewProps) {
                 key={i}
                 onClick={() => setSelectedDate(date)}
                 className={clsx(
-                  "bg-background h-16 sm:h-20 p-1.5 text-left transition-colors hover:bg-accent/50 flex flex-col",
+                  "bg-background h-16 sm:h-20 p-1.5 text-left transition-colors hover:bg-control/50 flex flex-col",
                   isSelected && "ring-2 ring-inset ring-primary",
                   past && !hasOverdue && "opacity-50"
                 )}
               >
                 <span className={clsx(
-                  "text-xs font-medium w-6 h-6 flex items-center justify-center rounded-full",
+                  "text-[13px] w-6 h-6 flex items-center justify-center rounded-full",
                   isToday(date) && "bg-primary text-primary-foreground",
                   hasOverdue && "text-destructive font-bold"
                 )}>
@@ -158,15 +158,15 @@ export function CalendarView({ events }: CalendarViewProps) {
 
         <div className="flex gap-4 text-xs text-muted-foreground">
           <div className="flex items-center gap-1.5">
-            <div className="w-3 h-3 rounded bg-indigo-200 dark:bg-indigo-700" />
+            <div className="w-3 h-3 rounded bg-[var(--color-status-pending-bg)]" />
             Scheduled
           </div>
           <div className="flex items-center gap-1.5">
-            <div className="w-3 h-3 rounded bg-amber-200 dark:bg-amber-700" />
+            <div className="w-3 h-3 rounded bg-surface" />
             Reminder
           </div>
           <div className="flex items-center gap-1.5">
-            <div className="w-3 h-3 rounded bg-red-200 dark:bg-red-700" />
+            <div className="w-3 h-3 rounded bg-[var(--color-status-rejected-bg)]" />
             Overdue
           </div>
         </div>
@@ -176,8 +176,8 @@ export function CalendarView({ events }: CalendarViewProps) {
       <div className="space-y-4">
         {/* Selected day */}
         {selectedDate && (
-          <div className="border rounded-xl p-4 space-y-3">
-            <h3 className="text-sm font-semibold">
+          <div className="border border-border rounded-xl p-4 space-y-3">
+            <h3 className="text-sm">
               {selectedDate.toLocaleDateString([], { weekday: "long", month: "long", day: "numeric" })}
             </h3>
             {selectedEvents.length === 0 ? (
@@ -191,12 +191,12 @@ export function CalendarView({ events }: CalendarViewProps) {
                     key={e.id}
                     href={`/dashboard/applications/${e.applicationId}`}
                     className={clsx(
-                      "block border rounded-lg p-3 hover:bg-accent transition-colors",
-                      overdue && "border-red-200 dark:border-red-800/40 bg-red-50/50 dark:bg-red-900/10"
+                      "block border rounded-lg p-3 hover:bg-control transition-colors",
+                      overdue && "border-[var(--color-status-rejected-bg)] bg-[var(--color-status-rejected-bg)]"
                     )}
                   >
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className={clsx("inline-flex rounded-full px-2 py-0.5 text-xs font-medium", eventStyle(e.type, overdue))}>
+                      <span className={clsx("inline-flex rounded-full px-2 py-0.5 text-[13px]", eventStyle(e.type, overdue))}>
                         {e.type === "SCHEDULED" ? (e.stageName ?? "Scheduled") : "Reminder"}
                       </span>
                       {overdue && (
@@ -205,7 +205,7 @@ export function CalendarView({ events }: CalendarViewProps) {
                       {e.outcome && (() => {
                         const od = outcomeDisplay(e.outcome);
                         return od ? (
-                          <span className={clsx("inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium", od.className)}>
+                          <span className={clsx("inline-flex items-center rounded-full px-2 py-0.5 text-[13px]", od.className)}>
                             {od.label}
                           </span>
                         ) : null;
@@ -230,8 +230,8 @@ export function CalendarView({ events }: CalendarViewProps) {
         )}
 
         {/* Upcoming 7 days */}
-        <div className="border rounded-xl p-4 space-y-3">
-          <h3 className="text-sm font-semibold">Due &amp; upcoming (7 days)</h3>
+        <div className="border border-border rounded-xl p-4 space-y-3">
+          <h3 className="text-sm">Due &amp; upcoming (7 days)</h3>
           {dueAndUpcoming.length === 0 ? (
             <p className="text-xs text-muted-foreground">Nothing due in the next 7 days.</p>
           ) : (
@@ -242,18 +242,18 @@ export function CalendarView({ events }: CalendarViewProps) {
                 <Link
                   key={e.id}
                   href={`/dashboard/applications/${e.applicationId}`}
-                  className="flex items-start gap-3 p-2 rounded-lg hover:bg-accent transition-colors"
+                  className="flex items-start gap-3 p-2 rounded-lg hover:bg-control transition-colors"
                 >
                   <div className="text-center shrink-0 w-10">
                     <p className="text-xs text-muted-foreground">
                       {new Date(e.date).toLocaleDateString([], { month: "short" })}
                     </p>
-                    <p className={clsx("text-base font-bold leading-none", overdue && "text-destructive")}>
+                    <p className={clsx("text-base leading-none", overdue && "text-destructive")}>
                       {new Date(e.date).getDate()}
                     </p>
                   </div>
                   <div className="min-w-0">
-                    <p className="text-xs font-medium truncate">{e.company}</p>
+                    <p className="text-[13px] truncate">{e.company}</p>
                     <p className="text-xs text-muted-foreground truncate">{e.role}</p>
                     <span className={clsx("inline-flex rounded-full px-1.5 py-0.5 text-[10px] font-medium mt-0.5", eventStyle(e.type, overdue))}>
                       {overdue ? "Overdue" : e.type === "SCHEDULED" ? (e.stageName ?? "Scheduled") : "Reminder"}

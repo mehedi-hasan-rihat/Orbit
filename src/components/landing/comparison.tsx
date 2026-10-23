@@ -31,31 +31,31 @@ export function ComparisonSection() {
   }, []);
 
   return (
-    <section ref={ref} className="py-24 px-6 border-t">
+    <section ref={ref} className="py-24 px-6 border-t border-border">
       <div className="max-w-3xl mx-auto space-y-10">
         <div className="space-y-3">
-          <p className="text-sm text-muted-foreground uppercase tracking-widest">Comparison</p>
-          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">Why Orbit over spreadsheets?</h2>
+          <p className="text-[13px] text-muted-foreground uppercase tracking-widest">Comparison</p>
+          <h2 className="text-3xl sm:text-4xl tracking-tight">Why Orbit over spreadsheets?</h2>
           <p className="text-muted-foreground">Purpose-built beats DIY every time.</p>
         </div>
 
-        <div className="comp-table opacity-0 rounded-xl border overflow-hidden">
+        <div className="comp-table opacity-0 rounded-xl border border-border bg-surface overflow-hidden">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b bg-muted/40">
-                <th className="text-left py-3 px-4 font-medium text-muted-foreground">Feature</th>
-                <th className="text-center py-3 px-4 font-semibold text-indigo-500 w-24">Orbit</th>
-                <th className="text-center py-3 px-4 font-medium text-muted-foreground w-28">Spreadsheet</th>
-                <th className="text-center py-3 px-4 font-medium text-muted-foreground w-24">Notion</th>
+              <tr className="border-b border-border bg-muted/40">
+                <th className="text-left py-3 px-4 text-[13px] text-muted-foreground">Feature</th>
+                <th className="text-center py-3 px-4 text-[13px] text-foreground w-24">Orbit</th>
+                <th className="text-center py-3 px-4 text-[13px] text-muted-foreground w-28">Spreadsheet</th>
+                <th className="text-center py-3 px-4 text-[13px] text-muted-foreground w-24">Notion</th>
               </tr>
             </thead>
-            <tbody className="divide-y">
+            <tbody className="divide-y divide-border">
               {rows.map((row) => (
-                <tr key={row.feature} className="hover:bg-muted/20 transition-colors">
+                <tr key={row.feature} className="hover:bg-[#ffffff08] transition-colors">
                   <td className="py-3 px-4 text-sm">{row.feature}</td>
-                  <td className="py-3 px-4 text-center">{row.orbit ? <Check className="w-4 h-4 text-green-500 mx-auto" /> : <X className="w-4 h-4 text-muted-foreground/30 mx-auto" />}</td>
-                  <td className="py-3 px-4 text-center">{row.spreadsheet ? <Check className="w-4 h-4 text-green-500 mx-auto" /> : <X className="w-4 h-4 text-muted-foreground/30 mx-auto" />}</td>
-                  <td className="py-3 px-4 text-center">{row.notion ? <Check className="w-4 h-4 text-green-500 mx-auto" /> : <X className="w-4 h-4 text-muted-foreground/30 mx-auto" />}</td>
+                  <td className="py-3 px-4 text-center">{row.orbit ? <Check className="w-4 h-4 text-[var(--color-status-approved)] mx-auto" /> : <X className="w-4 h-4 text-muted-foreground/30 mx-auto" />}</td>
+                  <td className="py-3 px-4 text-center">{row.spreadsheet ? <Check className="w-4 h-4 text-[var(--color-status-approved)] mx-auto" /> : <X className="w-4 h-4 text-muted-foreground/30 mx-auto" />}</td>
+                  <td className="py-3 px-4 text-center">{row.notion ? <Check className="w-4 h-4 text-[var(--color-status-approved)] mx-auto" /> : <X className="w-4 h-4 text-muted-foreground/30 mx-auto" />}</td>
                 </tr>
               ))}
             </tbody>

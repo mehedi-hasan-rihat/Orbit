@@ -65,9 +65,9 @@ export function ProfileForm({ user }: ProfileFormProps) {
   return (
     <div className="space-y-6">
       {/* Profile info */}
-      <div className="border rounded-xl overflow-hidden">
+      <div className="border border-border rounded-xl overflow-hidden">
         <div className="px-5 py-4 border-b bg-muted/20">
-          <h2 className="text-sm font-semibold">Profile Information</h2>
+          <h2 className="text-sm">Profile Information</h2>
           <p className="text-xs text-muted-foreground mt-0.5">Update your name and email address</p>
         </div>
         <form onSubmit={handleProfile} className="p-5 space-y-4">
@@ -75,13 +75,13 @@ export function ProfileForm({ user }: ProfileFormProps) {
             <p className="text-sm text-destructive">{profileErrors._form[0]}</p>
           )}
           {profileSuccess && (
-            <div className="rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 px-4 py-3 text-sm text-green-700 dark:text-green-400">
+            <div className="rounded-xl bg-[var(--color-status-approved-bg)] border border-[var(--color-status-approved-bg)] px-4 py-3 text-[13px] text-[var(--color-status-approved)]">
               Profile updated successfully.
             </div>
           )}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <label htmlFor="name" className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+              <label htmlFor="name" className="text-[13px] text-muted-foreground uppercase tracking-wide">
                 Name
               </label>
               <input
@@ -90,12 +90,12 @@ export function ProfileForm({ user }: ProfileFormProps) {
                 type="text"
                 defaultValue={user.name}
                 required
-                className="flex h-9 w-full rounded-lg border bg-background px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+                className="flex h-9 w-full rounded-xl border border-border bg-surface px-4 text-sm focus:outline-none focus:outline-2 focus:outline-offset-2 focus:outline-[var(--color-focus)]"
               />
               {profileErrors.name && <p className="text-xs text-destructive">{profileErrors.name[0]}</p>}
             </div>
             <div className="space-y-1.5">
-              <label htmlFor="email" className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+              <label htmlFor="email" className="text-[13px] text-muted-foreground uppercase tracking-wide">
                 Email
               </label>
               <input
@@ -104,7 +104,7 @@ export function ProfileForm({ user }: ProfileFormProps) {
                 type="email"
                 defaultValue={user.email}
                 required
-                className="flex h-9 w-full rounded-lg border bg-background px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+                className="flex h-9 w-full rounded-xl border border-border bg-surface px-4 text-sm focus:outline-none focus:outline-2 focus:outline-offset-2 focus:outline-[var(--color-focus)]"
               />
               {profileErrors.email && <p className="text-xs text-destructive">{profileErrors.email[0]}</p>}
             </div>
@@ -113,7 +113,7 @@ export function ProfileForm({ user }: ProfileFormProps) {
             <button
               type="submit"
               disabled={profileLoading}
-              className="h-8 px-4 rounded-lg bg-primary text-primary-foreground text-xs font-semibold hover:opacity-90 disabled:opacity-50 transition-opacity"
+              className="h-8 px-4 rounded-full bg-primary text-primary-foreground text-[13px] hover:bg-[#3a3a3a] disabled:opacity-50 transition-colors"
             >
               {profileLoading ? "Saving..." : "Save Changes"}
             </button>
@@ -122,9 +122,9 @@ export function ProfileForm({ user }: ProfileFormProps) {
       </div>
 
       {/* Change password */}
-      <div className="border rounded-xl overflow-hidden">
+      <div className="border border-border rounded-xl overflow-hidden">
         <div className="px-5 py-4 border-b bg-muted/20">
-          <h2 className="text-sm font-semibold">Change Password</h2>
+          <h2 className="text-sm">Change Password</h2>
           <p className="text-xs text-muted-foreground mt-0.5">Choose a strong password</p>
         </div>
         <form onSubmit={handlePassword} className="p-5 space-y-4">
@@ -132,12 +132,12 @@ export function ProfileForm({ user }: ProfileFormProps) {
             <p className="text-sm text-destructive">{(pwErrors._form as string[])[0]}</p>
           )}
           {pwSuccess && (
-            <div className="rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 px-4 py-3 text-sm text-green-700 dark:text-green-400">
+            <div className="rounded-xl bg-[var(--color-status-approved-bg)] border border-[var(--color-status-approved-bg)] px-4 py-3 text-[13px] text-[var(--color-status-approved)]">
               Password changed successfully.
             </div>
           )}
           <div className="space-y-1.5">
-            <label htmlFor="currentPassword" className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+            <label htmlFor="currentPassword" className="text-[13px] text-muted-foreground uppercase tracking-wide">
               Current Password
             </label>
             <input
@@ -145,13 +145,13 @@ export function ProfileForm({ user }: ProfileFormProps) {
               name="currentPassword"
               type="password"
               required
-              className="flex h-9 w-full rounded-lg border bg-background px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+              className="flex h-9 w-full rounded-xl border border-border bg-surface px-4 text-sm focus:outline-none focus:outline-2 focus:outline-offset-2 focus:outline-[var(--color-focus)]"
             />
             {pwErrors.currentPassword && <p className="text-xs text-destructive">{pwErrors.currentPassword[0]}</p>}
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <label htmlFor="newPassword" className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+              <label htmlFor="newPassword" className="text-[13px] text-muted-foreground uppercase tracking-wide">
                 New Password
               </label>
               <input
@@ -160,12 +160,12 @@ export function ProfileForm({ user }: ProfileFormProps) {
                 type="password"
                 required
                 minLength={8}
-                className="flex h-9 w-full rounded-lg border bg-background px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+                className="flex h-9 w-full rounded-xl border border-border bg-surface px-4 text-sm focus:outline-none focus:outline-2 focus:outline-offset-2 focus:outline-[var(--color-focus)]"
               />
               {pwErrors.newPassword && <p className="text-xs text-destructive">{pwErrors.newPassword[0]}</p>}
             </div>
             <div className="space-y-1.5">
-              <label htmlFor="confirmPassword" className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+              <label htmlFor="confirmPassword" className="text-[13px] text-muted-foreground uppercase tracking-wide">
                 Confirm Password
               </label>
               <input
@@ -173,7 +173,7 @@ export function ProfileForm({ user }: ProfileFormProps) {
                 name="confirmPassword"
                 type="password"
                 required
-                className="flex h-9 w-full rounded-lg border bg-background px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+                className="flex h-9 w-full rounded-xl border border-border bg-surface px-4 text-sm focus:outline-none focus:outline-2 focus:outline-offset-2 focus:outline-[var(--color-focus)]"
               />
               {pwErrors.confirmPassword && <p className="text-xs text-destructive">{pwErrors.confirmPassword[0]}</p>}
             </div>
@@ -182,7 +182,7 @@ export function ProfileForm({ user }: ProfileFormProps) {
             <button
               type="submit"
               disabled={pwLoading}
-              className="h-8 px-4 rounded-lg bg-primary text-primary-foreground text-xs font-semibold hover:opacity-90 disabled:opacity-50 transition-opacity"
+              className="h-8 px-4 rounded-full bg-primary text-primary-foreground text-[13px] hover:bg-[#3a3a3a] disabled:opacity-50 transition-colors"
             >
               {pwLoading ? "Updating..." : "Update Password"}
             </button>
@@ -193,7 +193,7 @@ export function ProfileForm({ user }: ProfileFormProps) {
       {/* Danger zone */}
       <div className="border border-destructive/30 rounded-xl overflow-hidden">
         <div className="px-5 py-4 border-b border-destructive/20 bg-destructive/5">
-          <h2 className="text-sm font-semibold text-destructive">Danger Zone</h2>
+          <h2 className="text-sm text-destructive">Danger Zone</h2>
           <p className="text-xs text-muted-foreground mt-0.5">
             Permanently delete your account and all data
           </p>
@@ -202,7 +202,7 @@ export function ProfileForm({ user }: ProfileFormProps) {
           {!showDelete ? (
             <button
               onClick={() => setShowDelete(true)}
-              className="h-8 px-4 rounded-lg border border-destructive/30 text-destructive text-xs font-medium hover:bg-destructive/10 transition-colors"
+              className="h-8 px-4 rounded-full border border-destructive/30 text-destructive text-[13px] hover:bg-[var(--color-status-rejected-bg)] transition-colors"
             >
               Delete Account
             </button>
@@ -217,19 +217,19 @@ export function ProfileForm({ user }: ProfileFormProps) {
                 value={deleteConfirm}
                 onChange={(e) => setDeleteConfirm(e.target.value)}
                 placeholder="Type DELETE to confirm"
-                className="flex h-9 w-full rounded-lg border bg-background px-3 text-sm focus:outline-none focus:ring-1 focus:ring-destructive"
+                className="flex h-9 w-full rounded-xl border border-border bg-surface px-4 text-sm focus:outline-none focus:outline-2 focus:outline-offset-2 focus:outline-[var(--color-focus)]"
               />
               <div className="flex gap-2">
                 <button
                   onClick={handleDelete}
                   disabled={deleteConfirm !== "DELETE" || deleteLoading}
-                  className="h-8 px-4 rounded-lg bg-destructive text-white text-xs font-medium disabled:opacity-40 hover:opacity-90 transition-opacity"
+                  className="h-8 px-4 rounded-full bg-destructive text-destructive-foreground text-[13px] disabled:opacity-40 hover:opacity-90 transition-opacity"
                 >
                   {deleteLoading ? "Deleting..." : "Confirm Delete"}
                 </button>
                 <button
                   onClick={() => { setShowDelete(false); setDeleteConfirm(""); }}
-                  className="h-8 px-4 rounded-lg border text-xs font-medium hover:bg-accent transition-colors"
+                  className="h-8 px-4 rounded-full border border-border text-[13px] hover:bg-control transition-colors"
                 >
                   Cancel
                 </button>

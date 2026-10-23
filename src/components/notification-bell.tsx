@@ -77,7 +77,7 @@ export function NotificationBell() {
     <div className="relative" ref={ref}>
       <button
         onClick={handleOpen}
-        className="relative p-2 rounded-lg hover:bg-accent transition-colors"
+        className="relative p-2 rounded-full hover:bg-accent transition-colors"
         aria-label="Notifications"
       >
         {loading ? (
@@ -86,18 +86,18 @@ export function NotificationBell() {
           <Bell className={clsx("w-5 h-5", count > 0 && "text-foreground")} />
         )}
         {count > 0 && (
-          <span className="absolute top-1 right-1 w-4 h-4 rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold flex items-center justify-center leading-none">
+          <span className="absolute top-1 right-1 w-4 h-4 rounded-full bg-destructive text-destructive-foreground text-[10px] flex items-center justify-center leading-none">
             {count > 9 ? "9+" : count}
           </span>
         )}
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full mt-2 w-80 rounded-xl border bg-background shadow-xl z-50 overflow-hidden">
+        <div className="absolute right-0 top-full mt-2 w-80 rounded-xl border border-border bg-surface z-50 overflow-hidden">
           {/* Header */}
-          <div className="flex items-center justify-between px-4 py-3 border-b">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-border">
             <div>
-              <p className="text-sm font-semibold">Notifications</p>
+              <p className="text-sm">Notifications</p>
               <p className="text-xs text-muted-foreground">
                 {count > 0 ? `${count} unread` : "All caught up"}
               </p>
@@ -117,13 +117,13 @@ export function NotificationBell() {
           {items.length === 0 ? (
             <div className="flex flex-col items-center gap-2 px-4 py-8 text-center">
               <BellOff className="w-8 h-8 text-muted-foreground/40" />
-              <p className="text-sm font-medium">No new notifications</p>
+              <p className="text-sm">No new notifications</p>
               <p className="text-xs text-muted-foreground">
-                You'll be notified before scheduled actions &amp; reminders
+                You&apos;ll be notified before scheduled actions &amp; reminders
               </p>
             </div>
           ) : (
-            <ul className="max-h-80 overflow-y-auto divide-y">
+            <ul className="max-h-80 overflow-y-auto divide-y divide-border">
               {items.map((item) => {
                 const days = daysUntilFromBody(item.body);
                 const urgency = days <= 1 ? "high" : "medium";
@@ -134,21 +134,21 @@ export function NotificationBell() {
                     <span className={clsx(
                       "shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm",
                       item.type === "scheduled"
-                        ? "bg-blue-100 dark:bg-blue-900/30"
-                        : "bg-amber-100 dark:bg-amber-900/30"
+                        ? "bg-[var(--color-status-approved-bg)]"
+                        : "bg-[var(--color-status-pending-bg)]"
                     )}>
                       {item.type === "scheduled" ? "🎤" : "📅"}
                     </span>
 
                     {/* Text */}
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium truncate leading-snug">{item.title}</p>
+                      <p className="text-sm truncate leading-snug">{item.title}</p>
                       <div className="flex items-center gap-1.5 mt-0.5">
                         <span className={clsx(
-                          "text-[10px] font-semibold px-1.5 py-0.5 rounded-full",
+                          "text-[10px] px-1.5 py-0.5 rounded-full",
                           urgency === "high"
-                            ? "bg-destructive/10 text-destructive"
-                            : "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400"
+                            ? "bg-[var(--color-status-rejected-bg)] text-[var(--color-status-rejected)]"
+                            : "bg-[var(--color-status-pending-bg)] text-[var(--color-status-pending)]"
                         )}>
                           {days <= 0 ? "Today" : days === 1 ? "Tomorrow" : `In ${days} days`}
                         </span>
@@ -166,7 +166,7 @@ export function NotificationBell() {
                       <Link
                         href={`/dashboard/applications/${item.applicationId}`}
                         onClick={() => setOpen(false)}
-                        className="flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors"
+                        className="flex items-center gap-3 px-4 py-3 hover:bg-[#ffffff08] transition-colors"
                       >
                         {content}
                       </Link>

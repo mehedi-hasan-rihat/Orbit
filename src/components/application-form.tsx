@@ -148,10 +148,10 @@ export function ApplicationForm({ application, availableTags, stages, onClose }:
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="w-full max-w-lg rounded-lg border bg-background p-6 shadow-lg mx-4 max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#00000080] backdrop-blur-[8px]">
+      <div className="w-full max-w-lg rounded-[32px] border border-border bg-[var(--color-floating)] backdrop-blur-[var(--blur-floating)] p-8 shadow-[0_8px_32px_#00000040] mx-4 max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-lg font-semibold">
+          <h2 className="text-lg">
             {application ? "Update Application" : "New Application"}
           </h2>
           <button onClick={onClose} className="text-muted-foreground hover:text-foreground" aria-label="Close">
@@ -161,15 +161,15 @@ export function ApplicationForm({ application, availableTags, stages, onClose }:
 
         {/* Duplicate warning */}
         {duplicate && (
-          <div className="mb-4 rounded-md border border-amber-300 bg-amber-50 dark:bg-amber-900/20 dark:border-amber-700 p-3 text-sm">
-            <p className="font-medium text-amber-800 dark:text-amber-300">Possible duplicate</p>
-            <p className="text-amber-700 dark:text-amber-400 text-xs mt-0.5">
+          <div className="mb-4 rounded-xl border border-[var(--color-status-pending-bg)] bg-[var(--color-status-pending-bg)] p-3 text-[13px]">
+            <p className="text-[var(--color-status-pending)]">Possible duplicate</p>
+            <p className="text-muted-foreground text-[13px] mt-0.5">
               You already have an application for <strong>{duplicate.company}</strong> — <strong>{duplicate.role}</strong> at stage <strong>{duplicate.stage?.name ?? "Unassigned"}</strong>.
             </p>
             <button
               type="button"
               onClick={() => setDuplicate(null)}
-              className="text-xs text-amber-600 dark:text-amber-400 underline mt-1"
+              className="text-[13px] text-[var(--color-status-pending)] underline mt-1"
             >
               Continue anyway
             </button>
@@ -178,14 +178,14 @@ export function ApplicationForm({ application, availableTags, stages, onClose }:
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {errors._form && (
-            <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
+            <div className="rounded-xl bg-[var(--color-status-rejected-bg)] p-3 text-[13px] text-destructive">
               {(errors._form as string[]).join(", ")}
             </div>
           )}
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <label htmlFor="company" className="text-sm font-medium">Company *</label>
+              <label htmlFor="company" className="text-[13px] text-muted-foreground">Company *</label>
               <input
                 id="company"
                 name="company"
@@ -196,13 +196,13 @@ export function ApplicationForm({ application, availableTags, stages, onClose }:
                   const role = (document.getElementById("role") as HTMLInputElement)?.value || "";
                   handleFieldChange(e.target.value, role);
                 }}
-                className="flex h-10 w-full rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                className="flex h-9 w-full rounded-xl border border-border bg-surface px-4 text-sm focus:outline-none focus:outline-2 focus:outline-offset-2 focus:outline-[var(--color-focus)]"
               />
-              {errors.company && <p className="text-xs text-destructive">{errors.company[0]}</p>}
+              {errors.company && <p className="text-[13px] text-destructive">{errors.company[0]}</p>}
             </div>
 
             <div className="space-y-2">
-              <label htmlFor="role" className="text-sm font-medium">Role *</label>
+              <label htmlFor="role" className="text-[13px] text-muted-foreground">Role *</label>
               <input
                 id="role"
                 name="role"
@@ -213,29 +213,29 @@ export function ApplicationForm({ application, availableTags, stages, onClose }:
                   const company = (document.getElementById("company") as HTMLInputElement)?.value || "";
                   handleFieldChange(company, e.target.value);
                 }}
-                className="flex h-10 w-full rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                className="flex h-9 w-full rounded-xl border border-border bg-surface px-4 text-sm focus:outline-none focus:outline-2 focus:outline-offset-2 focus:outline-[var(--color-focus)]"
               />
-              {errors.role && <p className="text-xs text-destructive">{errors.role[0]}</p>}
+              {errors.role && <p className="text-[13px] text-destructive">{errors.role[0]}</p>}
             </div>
           </div>
 
           <div className="space-y-2">
-            <label htmlFor="jobUrl" className="text-sm font-medium">Job Description URL</label>
+            <label htmlFor="jobUrl" className="text-[13px] text-muted-foreground">Job Description URL</label>
             <input
               id="jobUrl"
               name="jobUrl"
               type="url"
               defaultValue={application?.jobUrl || ""}
               placeholder="https://..."
-              className="flex h-10 w-full rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              className="flex h-9 w-full rounded-xl border border-border bg-surface px-4 text-sm focus:outline-none focus:outline-2 focus:outline-offset-2 focus:outline-[var(--color-focus)]"
             />
-            {errors.jobUrl && <p className="text-xs text-destructive">{errors.jobUrl[0]}</p>}
+            {errors.jobUrl && <p className="text-[13px] text-destructive">{errors.jobUrl[0]}</p>}
           </div>
 
           {/* Stage + Applied Date row */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <label htmlFor="stageId" className="text-sm font-medium">Stage *</label>
+              <label htmlFor="stageId" className="text-[13px] text-muted-foreground">Stage *</label>
               <select
                 id="stageId"
                 name="stageId"
@@ -249,7 +249,7 @@ export function ApplicationForm({ application, availableTags, stages, onClose }:
                     setSelectedOutcome("");
                   }
                 }}
-                className="flex h-10 w-full rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                className="flex h-9 w-full rounded-xl border border-border bg-surface px-4 text-sm focus:outline-none focus:outline-2 focus:outline-offset-2 focus:outline-[var(--color-focus)]"
               >
                 {stages.map((stage) => (
                   <option key={stage.id} value={stage.id}>
@@ -257,13 +257,13 @@ export function ApplicationForm({ application, availableTags, stages, onClose }:
                   </option>
                 ))}
               </select>
-              {errors.stageId && <p className="text-xs text-destructive">{errors.stageId[0]}</p>}
+              {errors.stageId && <p className="text-[13px] text-destructive">{errors.stageId[0]}</p>}
             </div>
 
             {/* Applied Date: hidden for Wishlist, required for everything else */}
             {!isWishlist && (
               <div className="space-y-2">
-                <label htmlFor="appliedDate" className="text-sm font-medium">
+                <label htmlFor="appliedDate" className="text-[13px] text-muted-foreground">
                   Applied Date {!isWishlist && <span className="text-destructive">*</span>}
                 </label>
                 <DatePicker
@@ -273,7 +273,7 @@ export function ApplicationForm({ application, availableTags, stages, onClose }:
                   required
                   value={application?.appliedDate ? new Date(application.appliedDate).toISOString().split("T")[0] : ""}
                 />
-                {errors.appliedDate && <p className="text-xs text-destructive">{errors.appliedDate[0]}</p>}
+                {errors.appliedDate && <p className="text-[13px] text-destructive">{errors.appliedDate[0]}</p>}
               </div>
             )}
           </div>
@@ -282,7 +282,7 @@ export function ApplicationForm({ application, availableTags, stages, onClose }:
           {showStatus && (
             <div className="space-y-3">
               <div className="space-y-2">
-                <label htmlFor="stageOutcome" className="text-sm font-medium">
+                <label htmlFor="stageOutcome" className="text-[13px] text-muted-foreground">
                   {selectedStage?.name} Status *
                 </label>
                 <select
@@ -299,7 +299,7 @@ export function ApplicationForm({ application, availableTags, stages, onClose }:
                       setMarkRejected(false);
                     }
                   }}
-                  className="flex h-10 w-full rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                  className="flex h-9 w-full rounded-xl border border-border bg-surface px-4 text-sm focus:outline-none focus:outline-2 focus:outline-offset-2 focus:outline-[var(--color-focus)]"
                 >
                   <option value="" disabled>Select status…</option>
                   {statusOptionsForStage(selectedStage?.name).map((o) => (
@@ -308,20 +308,20 @@ export function ApplicationForm({ application, availableTags, stages, onClose }:
                     </option>
                   ))}
                 </select>
-                {errors.stageOutcome && <p className="text-xs text-destructive">{errors.stageOutcome[0]}</p>}
+                {errors.stageOutcome && <p className="text-[13px] text-destructive">{errors.stageOutcome[0]}</p>}
               </div>
 
               {/* Close suggestion — appears when outcome is Failed or Cancelled on an existing application */}
               {suggestRejected && (
-                <label className="flex items-start gap-3 rounded-md border border-amber-300 bg-amber-50 dark:bg-amber-900/20 dark:border-amber-700 px-3 py-2.5 cursor-pointer select-none">
+                <label className="flex items-start gap-3 rounded-xl border border-[var(--color-status-pending-bg)] bg-[var(--color-status-pending-bg)] px-3 py-2.5 cursor-pointer select-none">
                   <input
                     type="checkbox"
                     checked={markRejected}
                     onChange={(e) => setMarkRejected(e.target.checked)}
-                    className="mt-0.5 h-4 w-4 shrink-0 accent-amber-600"
+                    className="mt-0.5 h-4 w-4 shrink-0 accent-[var(--color-status-pending)]"
                   />
-                  <span className="text-xs text-amber-800 dark:text-amber-300 leading-relaxed">
-                    <span className="font-medium">Also move this application to Rejected.</span>{" "}
+                  <span className="text-[13px] text-[var(--color-status-pending)] leading-relaxed">
+                    <span>Also move this application to Rejected.</span>{" "}
                     Since the stage {selectedOutcome === "FAILED" ? "failed" : "was cancelled"}, the application is likely over.
                   </span>
                 </label>
@@ -330,7 +330,7 @@ export function ApplicationForm({ application, availableTags, stages, onClose }:
               {/* Assigned Date field removed — stageDueAt serves as the deadline */}
 
               <div className="space-y-2">
-                <label htmlFor="stageDueAt" className="text-sm font-medium">
+                <label htmlFor="stageDueAt" className="text-[13px] text-muted-foreground">
                   {dateFieldLabel(selectedOutcome, selectedStage?.name)}{" "}
                   {selectedStage?.name === "Assessment" ? (
                     <span className="text-destructive">*</span>
@@ -356,7 +356,7 @@ export function ApplicationForm({ application, availableTags, stages, onClose }:
                 {dateFieldHint(selectedOutcome, selectedStage?.name) && (
                   <p className="text-xs text-muted-foreground">{dateFieldHint(selectedOutcome, selectedStage?.name)}</p>
                 )}
-                {errors.stageDueAt && <p className="text-xs text-destructive">{errors.stageDueAt[0]}</p>}
+                {errors.stageDueAt && <p className="text-[13px] text-destructive">{errors.stageDueAt[0]}</p>}
               </div>
             </div>
           )}
@@ -364,7 +364,7 @@ export function ApplicationForm({ application, availableTags, stages, onClose }:
           {/* Outcome date: required for Get Offer / Hired / Rejected */}
           {showOutcomeDate && (
             <div className="space-y-2">
-              <label htmlFor="stageDueAt" className="text-sm font-medium">
+              <label htmlFor="stageDueAt" className="text-[13px] text-muted-foreground">
                 {selectedStage?.name} Date *
               </label>
               <DatePicker
@@ -378,14 +378,14 @@ export function ApplicationForm({ application, availableTags, stages, onClose }:
                     : ""
                 }
               />
-              {errors.stageDueAt && <p className="text-xs text-destructive">{errors.stageDueAt[0]}</p>}
+              {errors.stageDueAt && <p className="text-[13px] text-destructive">{errors.stageDueAt[0]}</p>}
             </div>
           )}
 
           {/* Tags */}
           {availableTags.length > 0 && (
             <div className="space-y-2">
-              <label className="text-sm font-medium">Tags</label>
+              <label className="text-[13px] text-muted-foreground">Tags</label>
               <div className="flex flex-wrap gap-2">
                 {availableTags.map((tag) => {
                   const isSelected = selectedTags.includes(tag.id);
@@ -439,14 +439,14 @@ export function ApplicationForm({ application, availableTags, stages, onClose }:
             <button
               type="button"
               onClick={onClose}
-              className="h-9 px-4 rounded-md border text-sm font-medium hover:bg-accent transition-colors"
+              className="h-9 px-4 rounded-full border border-border text-[13px] hover:bg-control transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="h-9 px-4 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-colors disabled:opacity-50"
+              className="h-9 px-4 rounded-full bg-primary text-primary-foreground text-[13px] hover:bg-[#3a3a3a] transition-colors disabled:opacity-50"
             >
               {loading ? "Saving..." : application ? "Update" : "Create"}
             </button>

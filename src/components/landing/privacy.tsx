@@ -27,22 +27,22 @@ export function PrivacySection() {
   }, []);
 
   return (
-    <section ref={ref} className="py-24 px-6 border-t bg-muted/20">
+    <section ref={ref} className="py-24 px-6 border-t border-border bg-surface">
       <div className="max-w-6xl mx-auto space-y-12">
         <div className="space-y-3">
-          <p className="text-sm text-muted-foreground uppercase tracking-widest">Privacy</p>
-          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">Your job search is private</h2>
+          <p className="text-[13px] text-muted-foreground uppercase tracking-widest">Privacy</p>
+          <h2 className="text-3xl sm:text-4xl tracking-tight">Your job search is private</h2>
           <p className="text-muted-foreground max-w-md">Built to be as private as a notebook. Your data stays yours.</p>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {pillars.map((p) => (
-            <div key={p.title} className="priv-card opacity-0 rounded-xl border bg-background p-6 space-y-3 hover:shadow-sm transition-shadow">
-              <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
+            <div key={p.title} className="priv-card opacity-0 rounded-xl border border-border bg-surface p-6 space-y-3 hover:bg-floating transition-colors">
+              <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center">
                 <p.icon className="w-4 h-4 text-muted-foreground" />
               </div>
-              <p className="text-sm font-semibold">{p.title}</p>
-              <p className="text-xs text-muted-foreground leading-relaxed">{p.description}</p>
+              <p className="text-[15px]">{p.title}</p>
+              <p className="text-[13px] text-muted-foreground leading-relaxed">{p.description}</p>
             </div>
           ))}
         </div>

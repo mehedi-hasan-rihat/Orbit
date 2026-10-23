@@ -9,8 +9,8 @@ export default async function TagsPage() {
       <div className="space-y-6">
         {/* Header */}
         <div>
-          <h1 className="text-xl font-semibold tracking-tight">Tags</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">
+          <h1 className="text-xl tracking-tight">Tags</h1>
+          <p className="text-[13px] text-muted-foreground mt-0.5">
             Organize and filter your applications with custom labels
           </p>
         </div>
@@ -24,7 +24,7 @@ export default async function TagsPage() {
 
           {/* Use cases — sidebar */}
           <div className="lg:col-span-2">
-            <div className="border rounded-xl p-5 space-y-5 lg:sticky lg:top-6">
+            <div className="border border-border rounded-xl p-5 space-y-5 lg:sticky lg:top-6">
               <div>
                 <h3 className="text-sm font-semibold">How to use tags</h3>
                 <p className="text-xs text-muted-foreground mt-1">
@@ -37,7 +37,7 @@ export default async function TagsPage() {
                   <div key={uc.title} className="space-y-1">
                     <div className="flex items-center gap-2">
                       <span className="text-sm">{uc.icon}</span>
-                      <p className="text-xs font-semibold">{uc.title}</p>
+                      <p className="text-[13px]">{uc.title}</p>
                     </div>
                     <div className="flex flex-wrap gap-1.5 pl-5">
                       {uc.examples.map((ex) => (

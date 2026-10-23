@@ -59,25 +59,25 @@ export function AnalyticsCharts({ stats }: StatsProps) {
     <div className="space-y-8">
       {/* Summary Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
-        <div className="rounded-lg border p-4 space-y-1">
+        <div className="rounded-xl border border-border p-4 space-y-1">
           <p className="text-sm text-muted-foreground">Total</p>
-          <p className="text-2xl font-bold">{stats.total}</p>
+          <p className="text-2xl">{stats.total}</p>
         </div>
-        <div className="rounded-lg border p-4 space-y-1">
+        <div className="rounded-xl border border-border p-4 space-y-1">
           <p className="text-sm text-muted-foreground">This Week</p>
-          <p className="text-2xl font-bold">{stats.thisWeek}</p>
+          <p className="text-2xl">{stats.thisWeek}</p>
         </div>
-        <div className="rounded-lg border p-4 space-y-1">
+        <div className="rounded-xl border border-border p-4 space-y-1">
           <p className="text-sm text-muted-foreground">Interviews</p>
-          <p className="text-2xl font-bold">{stats.interviewing}</p>
+          <p className="text-2xl">{stats.interviewing}</p>
         </div>
-        <div className="rounded-lg border p-4 space-y-1">
+        <div className="rounded-xl border border-border p-4 space-y-1">
           <p className="text-sm text-muted-foreground">Interview Rate</p>
-          <p className="text-2xl font-bold">{stats.interviewRate.toFixed(1)}%</p>
+          <p className="text-2xl">{stats.interviewRate.toFixed(1)}%</p>
         </div>
-        <div className="rounded-lg border p-4 space-y-1">
+        <div className="rounded-xl border border-border p-4 space-y-1">
           <p className="text-sm text-muted-foreground">Offer Rate</p>
-          <p className="text-2xl font-bold">{stats.offerRate.toFixed(1)}%</p>
+          <p className="text-2xl">{stats.offerRate.toFixed(1)}%</p>
         </div>
       </div>
 
@@ -85,8 +85,8 @@ export function AnalyticsCharts({ stats }: StatsProps) {
       {stats.total > 0 && isClient ? (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Bar Chart */}
-          <div className="rounded-lg border p-4 space-y-4">
-            <h3 className="text-sm font-medium">Applications by Stage</h3>
+          <div className="rounded-xl border border-border p-4 space-y-4">
+            <h3 className="text-sm">Applications by Stage</h3>
             <div className="h-64 min-h-[16rem] w-full min-w-0">
               <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                 <BarChart data={barData}>
@@ -105,8 +105,8 @@ export function AnalyticsCharts({ stats }: StatsProps) {
           </div>
 
           {/* Pie Chart */}
-          <div className="rounded-lg border p-4 space-y-4">
-            <h3 className="text-sm font-medium">Stage Distribution</h3>
+          <div className="rounded-xl border border-border p-4 space-y-4">
+            <h3 className="text-sm">Stage Distribution</h3>
             <div className="h-64 min-h-[16rem] w-full min-w-0">
               <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                 <PieChart>
@@ -142,7 +142,7 @@ export function AnalyticsCharts({ stats }: StatsProps) {
         </div>
       ) : (
         <div className="text-center py-16">
-          <p className="text-lg font-medium">No data yet</p>
+          <p className="text-[15px]">No data yet</p>
           <p className="text-sm text-muted-foreground mt-1">
             Add some applications to see your analytics
           </p>

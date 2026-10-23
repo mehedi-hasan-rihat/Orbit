@@ -13,13 +13,13 @@ export default async function VerifyEmailPage({
   if (!error) {
     return (
       <div className="flex flex-1 items-center justify-center px-4">
-        <div className="w-full max-w-sm text-center space-y-4">
-          <CheckCircle2 className="w-12 h-12 text-green-500 mx-auto" />
-          <h1 className="text-xl font-bold">Check your email</h1>
-          <p className="text-sm text-muted-foreground">
+        <div className="w-full max-w-[440px] text-center space-y-4">
+          <CheckCircle2 className="w-12 h-12 text-[var(--color-status-approved)] mx-auto" />
+          <h1 className="text-xl">Check your email</h1>
+          <p className="text-[13px] text-muted-foreground">
             We sent a verification link to your email address. Click the link to activate your account.
           </p>
-          <Link href="/login" className="text-sm text-muted-foreground hover:underline">
+          <Link href="/login" className="text-[13px] text-muted-foreground hover:underline">
             Back to sign in
           </Link>
         </div>
@@ -32,18 +32,18 @@ export default async function VerifyEmailPage({
 
   return (
     <div className="flex flex-1 items-center justify-center px-4">
-      <div className="w-full max-w-sm text-center space-y-4">
+      <div className="w-full max-w-[440px] text-center space-y-4">
         {isExpired ? (
-          <Clock className="w-12 h-12 text-amber-500 mx-auto" />
+          <Clock className="w-12 h-12 text-[var(--color-status-pending)] mx-auto" />
         ) : (
           <XCircle className="w-12 h-12 text-destructive mx-auto" />
         )}
 
-        <h1 className="text-xl font-bold">
+        <h1 className="text-xl">
           {isExpired ? "Link expired" : "Verification failed"}
         </h1>
 
-        <p className="text-sm text-muted-foreground">
+        <p className="text-[13px] text-muted-foreground">
           {isExpired
             ? "This verification link has expired. Request a new one below."
             : "This link is invalid or has already been used."}
@@ -53,7 +53,7 @@ export default async function VerifyEmailPage({
           {isExpired && email ? (
             <Link
               href={`/verify-email/resend?email=${encodeURIComponent(email)}`}
-              className="inline-flex h-10 items-center justify-center rounded-md bg-primary px-6 text-sm font-medium text-primary-foreground hover:opacity-90"
+              className="inline-flex h-9 items-center justify-center rounded-full bg-primary px-6 text-sm text-primary-foreground hover:bg-[#3a3a3a]"
             >
               Resend verification email
             </Link>
@@ -61,12 +61,12 @@ export default async function VerifyEmailPage({
           {isInvalid && (
             <Link
               href="/register"
-              className="text-sm font-medium hover:underline"
+              className="text-[13px] text-foreground hover:underline"
             >
               Sign up again
             </Link>
           )}
-          <Link href="/login" className="text-sm text-muted-foreground hover:underline">
+          <Link href="/login" className="text-[13px] text-muted-foreground hover:underline">
             Back to sign in
           </Link>
         </div>

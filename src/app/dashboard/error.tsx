@@ -19,14 +19,14 @@ export default function DashboardError({
         ⚠️
       </div>
       <div className="space-y-1">
-        <h2 className="text-lg font-semibold">Something went wrong</h2>
+        <h2 className="text-lg">Something went wrong</h2>
         <p className="text-sm text-muted-foreground max-w-sm">
           {error.message || "An unexpected error occurred. Try refreshing the page."}
         </p>
       </div>
       <button
         onClick={reset}
-        className="h-9 px-4 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity"
+        className="h-9 px-4 rounded-full bg-primary text-primary-foreground text-sm hover:bg-[#3a3a3a] transition-colors"
       >
         Try again
       </button>

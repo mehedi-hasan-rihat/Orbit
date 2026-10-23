@@ -1,65 +1,162 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #0f0f0f;
-  --muted: #f5f5f5;
-  --muted-foreground: #737373;
-  --border: #e5e5e5;
-  --primary: #0f0f0f;
-  --primary-foreground: #ffffff;
-  --accent: #f5f5f5;
-  --accent-foreground: #0f0f0f;
-  --destructive: #ef4444;
-  --ring: #0f0f0f;
+@theme inline {
+  /* ── Typography ─────────────────────────────────────────────────── */
+  --font-sans: var(--font-inter), Arial, Helvetica, sans-serif;
+
+  /* ── Surfaces ───────────────────────────────────────────────────── */
+  --color-canvas:  #0a0a0a;
+  --color-surface: #161616;
+
+  /* ── Text ───────────────────────────────────────────────────────── */
+  --color-foreground: #f5f5f5;
+  --color-muted:      #999999;
+
+  /* ── Borders & outlines ─────────────────────────────────────────── */
+  --color-border: #333333;
+  --color-focus:  #7fb3cf;
+
+  /* ── Interactive fills ──────────────────────────────────────────── */
+  --color-control:         #ffffff0d;
+  --color-glass:           #0a0a0ab8;
+  --color-floating:        #1a1a1af0;
+  --color-floating-hover:  #242424f5;
+  --color-floating-active: #2e2e2ef5;
+
+  /* ── Status ─────────────────────────────────────────────────────── */
+  --color-status-pending:      #fbbf24;
+  --color-status-pending-bg:   #422006;
+  --color-status-approved:     #4ade80;
+  --color-status-approved-bg:  #052e16;
+  --color-status-rejected:     #f87171;
+  --color-status-rejected-bg:  #450a0a;
+
+  /* ── shadcn/ui bridge ───────────────────────────────────────────── */
+  --color-background:           #0a0a0a;
+  --color-card:                 #161616;
+  --color-card-foreground:      #f5f5f5;
+  --color-popover:              #1a1a1a;
+  --color-popover-foreground:   #f5f5f5;
+  --color-primary:              #f5f5f5;
+  --color-primary-foreground:   #0a0a0a;
+  --color-secondary:            #161616;
+  --color-secondary-foreground: #f5f5f5;
+  --color-muted-foreground:     #999999;
+  --color-accent:               #161616;
+  --color-accent-foreground:    #f5f5f5;
+  --color-destructive:          #f87171;
+  --color-input:                #333333;
+  --color-ring:                 #7fb3cf;
+
+  /* ── Radius ─────────────────────────────────────────────────────── */
+  --radius:      0.75rem;
+  --radius-card: 2.5rem;
+  --radius-xl:   0.75rem;
+
+  /* ── Blur ───────────────────────────────────────────────────────── */
+  --blur-floating: 16px;
+
+  /* ── Layout spacing ─────────────────────────────────────────────── */
+  --spacing-gutter:  2rem;
+  --spacing-section: 7rem;
+  --spacing-column:  2.5rem;
 }
 
-@media (prefers-color-scheme: dark) {
+/* ─── Base layout vars ───────────────────────────────────────────────────── */
+:root {
+  --header-height:         64px;
+  --header-control-height: 32px;
+  color-scheme: dark;
+}
+
+/* ─── Responsive layout overrides ───────────────────────────────────────── */
+@media (min-width: 768px) and (not (min-width: 1200px)) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #fafafa;
-    --muted: #1a1a1a;
-    --muted-foreground: #a3a3a3;
-    --border: #262626;
-    --primary: #fafafa;
-    --primary-foreground: #0a0a0a;
-    --accent: #1a1a1a;
-    --accent-foreground: #fafafa;
-    --destructive: #ef4444;
-    --ring: #fafafa;
+    --spacing-gutter:  1.5rem;
+    --spacing-section: 5.5rem;
+    --spacing-column:  1.5rem;
+    --radius-card:     2rem;
   }
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-muted: var(--muted);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-border: var(--border);
-  --color-primary: var(--primary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-accent: var(--accent);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-destructive: var(--destructive);
-  --color-ring: var(--ring);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+@media not all and (min-width: 768px) {
+  :root {
+    --spacing-gutter:        1.25rem;
+    --spacing-column:        1.5rem;
+    --header-height:         80px;
+    --header-control-height: 40px;
+    --radius-card:           1.75rem;
+  }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-sans), system-ui, sans-serif;
+@media not all and (min-width: 360px) {
+  :root {
+    --spacing-gutter: 1rem;
+  }
 }
 
-* {
-  border-color: var(--border);
+/* ─── Base styles ───────────────────────────────────────────────────────── */
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    scrollbar-gutter: stable;
+    scroll-padding-top: calc(var(--header-height) + 24px);
+    color-scheme: dark;
+    forced-color-adjust: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+  }
+
+  body {
+    background-color: var(--color-canvas);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    font-size: 15px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3, h4, h5, h6 { font-weight: 400; }
+
+  h1 {
+    font-size: clamp(28px, 4vw, 40px);
+    line-height: 1.15;
+    letter-spacing: -0.03em;
+  }
+
+  h2 {
+    font-size: 28px;
+    line-height: 32px;
+    letter-spacing: -0.03em;
+  }
+
+  h3 {
+    font-size: 15px;
+    line-height: 24px;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 5px;
+  }
+
+  ::selection { background-color: #2a3a35; }
 }
 
-/* ── Custom scrollbar ───────────────────────────────────────────────────── */
+/* ─── Default border colour ─────────────────────────────────────────────────
+   Ensures bare `border`, `divide-y`, `border-b`, etc. always use the token
+   rather than falling back to the browser default.                         */
+*, ::before, ::after {
+  border-color: var(--color-border);
+}
+
+/* ─── Custom scrollbar ───────────────────────────────────────────────────── */
 .scrollbar-thin {
   scrollbar-width: thin;
-  scrollbar-color: var(--border) transparent;
+  scrollbar-color: var(--color-border) transparent;
 }
 
 .scrollbar-thin::-webkit-scrollbar {
@@ -71,10 +168,10 @@ body {
 }
 
 .scrollbar-thin::-webkit-scrollbar-thumb {
-  background-color: var(--border);
+  background-color: var(--color-border);
   border-radius: 9999px;
 }
 
 .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-  background-color: var(--muted-foreground);
+  background-color: var(--color-muted);
 }

@@ -30,7 +30,7 @@ export default function PricingPage() {
         <div className="max-w-4xl mx-auto px-6 h-14 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
             {/* <Logo className="w-5 h-5" /> */}
-            <span className="text-sm font-semibold">Orbit</span>
+            <span className="text-sm">Orbit</span>
           </Link>
           <Link href="/" className="text-xs text-muted-foreground hover:text-foreground transition-colors">← Back to home</Link>
         </div>
@@ -42,7 +42,7 @@ export default function PricingPage() {
           {/* Header */}
           <div className="text-center space-y-4">
             <p className="text-xs text-muted-foreground uppercase tracking-widest">Pricing</p>
-            <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">
+            <h1 className="text-3xl sm:text-4xl tracking-tight">
               {PRICING_STATUS === "free"
                 ? "Currently free to use"
                 : "Simple, transparent pricing"}
@@ -56,11 +56,11 @@ export default function PricingPage() {
 
           {/* Plan card */}
           {PRICING_STATUS === "free" && (
-            <div className="max-w-sm mx-auto rounded-2xl border-2 border-indigo-500/30 bg-indigo-500/3 p-8 space-y-6">
+            <div className="max-w-sm mx-auto rounded-2xl border-2 border-border bg-surface p-8 space-y-6">
               <div className="space-y-1">
-                <p className="text-xs font-semibold uppercase tracking-widest text-indigo-500">Free plan</p>
+                <p className="text-[13px] uppercase tracking-widest text-muted-foreground">Free plan</p>
                 <div className="flex items-end gap-1">
-                  <span className="text-5xl font-bold">$0</span>
+                  <span className="text-5xl">$0</span>
                   <span className="text-muted-foreground mb-1">/ month</span>
                 </div>
                 <p className="text-sm text-muted-foreground">No credit card · No expiry</p>
@@ -69,7 +69,7 @@ export default function PricingPage() {
               <ul className="space-y-2.5">
                 {FREE_FEATURES.map((f) => (
                   <li key={f} className="flex items-center gap-2.5 text-sm">
-                    <Check className="w-4 h-4 text-indigo-500 shrink-0" />
+                    <Check className="w-4 h-4 text-foreground shrink-0" />
                     {f}
                   </li>
                 ))}
@@ -77,7 +77,7 @@ export default function PricingPage() {
 
               <Link
                 href="/register"
-                className="flex h-10 items-center justify-center rounded-lg text-sm font-semibold bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
+                className="flex h-10 items-center justify-center rounded-lg text-sm bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
               >
                 Get started free →
               </Link>
@@ -85,8 +85,8 @@ export default function PricingPage() {
           )}
 
           {/* Pricing note */}
-          <div className="max-w-xl mx-auto rounded-xl border bg-muted/30 p-6 space-y-3 text-center">
-            <p className="text-sm font-semibold">A note on future pricing</p>
+          <div className="max-w-xl mx-auto rounded-xl border border-border bg-surface p-6 space-y-3 text-center">
+            <p className="text-sm">A note on future pricing</p>
             <p className="text-sm text-muted-foreground leading-relaxed">
               We may introduce paid tiers in the future. When we do, we will announce it clearly, give existing users advance notice, and ensure a free tier remains available. Your data is always exportable — you&apos;re never locked in.
             </p>
@@ -97,7 +97,7 @@ export default function PricingPage() {
 
           {/* FAQ */}
           <div className="max-w-2xl mx-auto space-y-6">
-            <h2 className="text-lg font-semibold">Common questions</h2>
+            <h2 className="text-lg">Common questions</h2>
             <div className="space-y-5 divide-y">
               {[
                 {
@@ -118,7 +118,7 @@ export default function PricingPage() {
                 },
               ].map((item) => (
                 <div key={item.q} className="pt-5 space-y-1.5 first:pt-0">
-                  <p className="text-sm font-medium">{item.q}</p>
+                  <p className="text-[13px]">{item.q}</p>
                   <p className="text-sm text-muted-foreground leading-relaxed">{item.a}</p>
                 </div>
               ))}

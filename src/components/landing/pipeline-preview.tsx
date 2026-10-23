@@ -18,10 +18,10 @@ const stages = [
 ];
 
 const CATEGORY_STYLE: Record<string, string> = {
-  "Not started": "bg-slate-500/10 text-slate-500",
-  "In process":  "bg-indigo-500/10 text-indigo-500",
-  "Final stage": "bg-green-500/10 text-green-500",
-  "Closed":      "bg-red-500/10 text-red-500",
+  "Not started": "bg-surface text-muted-foreground",
+  "In process":  "bg-[var(--color-status-pending-bg)] text-[var(--color-status-pending)]",
+  "Final stage": "bg-[var(--color-status-approved-bg)] text-[var(--color-status-approved)]",
+  "Closed":      "bg-[var(--color-status-rejected-bg)] text-[var(--color-status-rejected)]",
 };
 
 export function PipelinePreviewSection() {
@@ -37,13 +37,13 @@ export function PipelinePreviewSection() {
   }, []);
 
   return (
-    <section ref={ref} className="py-24 px-6 border-t bg-muted/20">
+    <section ref={ref} className="py-24 px-6 border-t border-border bg-surface">
       <div className="max-w-6xl mx-auto space-y-10">
         <div className="space-y-3">
-          <p className="text-sm text-muted-foreground uppercase tracking-widest">Pipeline</p>
+          <p className="text-[13px] text-muted-foreground uppercase tracking-widest">Pipeline</p>
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">Every stage, one view</h2>
-            <p className="text-sm text-muted-foreground max-w-xs">
+            <h2 className="text-3xl sm:text-4xl tracking-tight">Every stage, one view</h2>
+            <p className="text-[13px] text-muted-foreground max-w-xs">
               Eight stages · drag to move · categories drive your analytics
             </p>
           </div>
@@ -52,21 +52,21 @@ export function PipelinePreviewSection() {
         {/* 8-column board */}
         <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2">
           {stages.map((stage) => (
-            <div key={stage.name} className="pp-col opacity-0 flex flex-col rounded-lg border bg-background overflow-hidden">
-              <div className="px-2.5 py-2 border-b flex items-center gap-1.5">
+            <div key={stage.name} className="pp-col opacity-0 flex flex-col rounded-xl border border-border bg-surface overflow-hidden">
+              <div className="px-2.5 py-2 border-b border-border flex items-center gap-1.5">
                 <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: stage.color }} />
-                <span className="text-[10px] font-semibold truncate">{stage.name}</span>
+                <span className="text-[10px] truncate">{stage.name}</span>
                 <span className="text-[10px] text-muted-foreground ml-auto">{stage.cards.length}</span>
               </div>
-              <div className="px-2 py-1 border-b bg-muted/30">
-                <span className={`inline-flex items-center rounded-full px-1.5 py-0.5 text-[9px] font-medium ${CATEGORY_STYLE[stage.category]}`}>
+              <div className="px-2 py-1 border-b border-border bg-muted/30">
+                <span className={`inline-flex items-center rounded-full px-1.5 py-0.5 text-[9px] ${CATEGORY_STYLE[stage.category]}`}>
                   {stage.category}
                 </span>
               </div>
               <div className="p-1.5 space-y-1 flex-1">
                 {stage.cards.slice(0, 3).map((name) => (
-                  <div key={name} className="rounded border bg-muted/20 px-2 py-1.5">
-                    <p className="text-[9px] font-medium truncate">{name}</p>
+                  <div key={name} className="rounded border border-border bg-muted/20 px-2 py-1.5">
+                    <p className="text-[9px] truncate">{name}</p>
                     <div className="h-0.5 w-3/4 rounded-full bg-muted mt-1" />
                   </div>
                 ))}

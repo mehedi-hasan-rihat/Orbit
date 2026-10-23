@@ -16,41 +16,41 @@ const typeConfig: Record<string, { color: string; label: string; className: stri
   CREATED: {
     color: "#3b82f6",
     label: "Created",
-    className: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300",
+    className: "bg-surface text-foreground",
   },
   OUTCOME_CHANGE: {
     color: "#f59e0b",
     label: "Outcome",
-    className: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300",
+    className: "bg-[var(--color-status-pending-bg)] text-[var(--color-status-pending)]",
   },
   NOTE_ADDED: {
     color: "#8b5cf6",
     label: "Note",
-    className: "bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300",
+    className: "bg-surface text-foreground",
   },
   REMINDER_SET: {
     color: "#22c55e",
     label: "Reminder",
-    className: "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300",
+    className: "bg-[var(--color-status-approved-bg)] text-[var(--color-status-approved)]",
   },
   INTERVIEW_SCHEDULED: {
     color: "#6366f1",
     label: "Scheduled",
-    className: "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300",
+    className: "bg-[var(--color-status-pending-bg)] text-[var(--color-status-pending)]",
   },
 };
 
 // Badge config per terminal outcome — overrides the default "Scheduled" badge
 // on INTERVIEW_SCHEDULED activities that recorded a non-open outcome.
 const OUTCOME_BADGE: Record<string, { color: string; label: string; className: string }> = {
-  PASSED:    { color: "#22c55e", label: "Passed",    className: "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300" },
-  FAILED:    { color: "#ef4444", label: "Failed",    className: "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300" },
-  COMPLETED: { color: "#6366f1", label: "Completed", className: "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300" },
-  CANCELLED: { color: "#64748b", label: "Cancelled", className: "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400" },
+  PASSED:    { color: "#22c55e", label: "Passed",    className: "bg-[var(--color-status-approved-bg)] text-[var(--color-status-approved)]" },
+  FAILED:    { color: "#ef4444", label: "Failed",    className: "bg-[var(--color-status-rejected-bg)] text-[var(--color-status-rejected)]" },
+  COMPLETED: { color: "#6366f1", label: "Completed", className: "bg-[var(--color-status-pending-bg)] text-[var(--color-status-pending)]" },
+  CANCELLED: { color: "#64748b", label: "Cancelled", className: "bg-surface text-muted-foreground" },
 };
 
 function resolveActivityBadge(activity: Activity) {
-  const base = typeConfig[activity.type] ?? { color: "#6b7280", label: activity.type, className: "bg-gray-100 text-gray-700" };
+  const base = typeConfig[activity.type] ?? { color: "#6b7280", label: activity.type, className: "bg-surface text-muted-foreground" };
 
   if (activity.type !== "INTERVIEW_SCHEDULED") return base;
 
@@ -131,10 +131,10 @@ export function ActivityTimeline({ activities }: { activities: Activity[] }) {
             key={opt.value}
             onClick={() => setFilter(opt.value)}
             className={clsx(
-              "h-7 px-3 rounded-full text-xs font-medium transition-colors",
+              "h-7 px-3 rounded-full text-xs transition-colors",
               filter === opt.value
-                ? "bg-primary text-primary-foreground"
-                : "bg-muted text-muted-foreground hover:text-foreground"
+                ? "bg-foreground text-background"
+                : "border border-border text-muted-foreground hover:text-foreground hover:border-foreground/30"
             )}
           >
             {opt.label}

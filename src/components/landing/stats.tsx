@@ -30,9 +30,9 @@ export function StatsSection() {
       <div className="max-w-4xl mx-auto grid grid-cols-2 lg:grid-cols-4 gap-10 text-center">
         {stats.map((s) => (
           <div key={s.label} className="stat-item opacity-0 space-y-1">
-            <p className="text-4xl font-bold tracking-tight text-indigo-500">{s.value}</p>
-            <p className="text-sm font-semibold">{s.label}</p>
-            <p className="text-xs text-muted-foreground">{s.sub}</p>
+            <p className="text-4xl tracking-tight text-foreground">{s.value}</p>
+            <p className="text-[13px]">{s.label}</p>
+            <p className="text-[13px] text-muted-foreground">{s.sub}</p>
           </div>
         ))}
       </div>

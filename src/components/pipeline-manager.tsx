@@ -124,9 +124,9 @@ export function PipelineManager({ stageTypes }: { stageTypes: StageType[] }) {
   }
 
   return (
-    <div className="border rounded-xl p-5 space-y-5">
+    <div className="border border-border rounded-xl p-5 space-y-5">
       <div>
-        <h2 className="text-sm font-semibold">Stage types</h2>
+        <h2 className="text-sm">Stage types</h2>
         <p className="text-xs text-muted-foreground mt-1">
           The types you can pick when adding an interview round. Renaming one updates
           every round already using it. The stages marked <strong>Default</strong> are
@@ -140,7 +140,7 @@ export function PipelineManager({ stageTypes }: { stageTypes: StageType[] }) {
           value={newColor}
           onChange={(e) => setNewColor(e.target.value)}
           aria-label="Stage colour"
-          className="h-9 w-10 shrink-0 rounded-md border bg-background p-1 cursor-pointer"
+          className="h-9 w-10 shrink-0 rounded-xl border border-border bg-surface p-1 cursor-pointer"
         />
         <input
           type="text"
@@ -149,12 +149,12 @@ export function PipelineManager({ stageTypes }: { stageTypes: StageType[] }) {
           placeholder="Add a stage…"
           maxLength={100}
           required
-          className="flex h-9 flex-1 min-w-[8rem] rounded-md border bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+          className="flex h-9 flex-1 min-w-32 rounded-xl border border-border bg-surface px-3 text-sm focus:outline-none focus:outline-2 focus:outline-offset-2 focus:outline-[var(--color-focus)]"
         />
         <button
           type="submit"
           disabled={pending === "new"}
-          className="h-9 px-4 shrink-0 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 disabled:opacity-50 transition-colors"
+          className="h-9 px-4 shrink-0 rounded-full bg-primary text-primary-foreground text-sm hover:bg-[#3a3a3a] disabled:opacity-50 transition-colors"
         >
           {pending === "new" ? "Adding…" : "Add"}
         </button>
@@ -175,7 +175,7 @@ export function PipelineManager({ stageTypes }: { stageTypes: StageType[] }) {
                   value={editingColor}
                   onChange={(e) => setEditingColor(e.target.value)}
                   aria-label="Stage colour"
-                  className="h-8 w-9 shrink-0 rounded-md border bg-background p-1 cursor-pointer"
+                  className="h-8 w-9 shrink-0 rounded-xl border border-border bg-surface p-1 cursor-pointer"
                 />
                 <input
                   type="text"
@@ -185,7 +185,7 @@ export function PipelineManager({ stageTypes }: { stageTypes: StageType[] }) {
                   autoFocus={!type.isSystem}
                   disabled={type.isSystem}
                   title={type.isSystem ? "Default stages keep their name" : undefined}
-                  className="flex h-8 flex-1 min-w-0 rounded-md border bg-background px-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-60 disabled:cursor-not-allowed"
+                  className="flex h-8 flex-1 min-w-0 rounded-xl border border-border bg-surface px-2 text-sm focus:outline-none focus:outline-2 focus:outline-offset-2 focus:outline-[var(--color-focus)] disabled:opacity-60 disabled:cursor-not-allowed"
                 />
                 <button
                   onClick={() => handleSaveEdit(type.id)}

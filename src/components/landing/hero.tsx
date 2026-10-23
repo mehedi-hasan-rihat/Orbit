@@ -6,45 +6,45 @@ import gsap from "gsap";
 
 function MockAppForm() {
   return (
-    <div className="rounded-xl border bg-background shadow-sm overflow-hidden text-[11px] select-none">
-      <div className="flex items-center justify-between px-4 py-3 border-b bg-muted/30">
-        <span className="text-xs font-semibold">New Application</span>
+    <div className="rounded-xl border border-border bg-surface overflow-hidden text-[11px] select-none">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-muted/30">
+        <span className="text-xs">New Application</span>
         <button className="text-muted-foreground hover:text-foreground text-sm leading-none">✕</button>
       </div>
       <div className="p-4 space-y-3">
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1">
-            <p className="text-muted-foreground font-medium">Company *</p>
-            <div className="h-8 rounded-md border bg-background px-2.5 flex items-center text-foreground font-medium">Stripe</div>
+            <p className="text-muted-foreground">Company *</p>
+            <div className="h-8 rounded-xl border border-border bg-background px-2.5 flex items-center text-foreground">Stripe</div>
           </div>
           <div className="space-y-1">
-            <p className="text-muted-foreground font-medium">Role *</p>
-            <div className="h-8 rounded-md border bg-background px-2.5 flex items-center text-foreground">Frontend Engineer</div>
+            <p className="text-muted-foreground">Role *</p>
+            <div className="h-8 rounded-xl border border-border bg-background px-2.5 flex items-center text-foreground">Frontend Engineer</div>
           </div>
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1">
-            <p className="text-muted-foreground font-medium">Stage *</p>
-            <div className="h-8 rounded-md border bg-background px-2.5 flex items-center justify-between">
-              <span className="font-medium">Applied</span>
+            <p className="text-muted-foreground">Stage *</p>
+            <div className="h-8 rounded-xl border border-border bg-background px-2.5 flex items-center justify-between">
+              <span>Applied</span>
               <span className="text-muted-foreground text-xs">▾</span>
             </div>
           </div>
           <div className="space-y-1">
-            <p className="text-muted-foreground font-medium">Applied Date *</p>
-            <div className="h-8 rounded-md border bg-background px-2.5 flex items-center text-muted-foreground">Sep 1, 2026</div>
+            <p className="text-muted-foreground">Applied Date *</p>
+            <div className="h-8 rounded-xl border border-border bg-background px-2.5 flex items-center text-muted-foreground">Sep 1, 2026</div>
           </div>
         </div>
         <div className="space-y-1">
-          <p className="text-muted-foreground font-medium">Tags</p>
+          <p className="text-muted-foreground">Tags</p>
           <div className="flex gap-1.5 flex-wrap">
-            <span className="rounded-full px-2.5 py-0.5 bg-indigo-500/12 text-indigo-500 font-medium border border-indigo-500/20">Remote</span>
-            <span className="rounded-full px-2.5 py-0.5 bg-purple-500/12 text-purple-500 font-medium border border-purple-500/20">Fintech</span>
+            <span className="rounded-full px-2.5 py-0.5 bg-surface border border-border text-foreground">Remote</span>
+            <span className="rounded-full px-2.5 py-0.5 bg-surface border border-border text-foreground">Fintech</span>
           </div>
         </div>
         <div className="flex justify-end gap-2 pt-1">
-          <div className="h-8 px-4 rounded-md border flex items-center text-muted-foreground text-xs font-medium cursor-default">Cancel</div>
-          <div className="h-8 px-4 rounded-md bg-indigo-500 text-white flex items-center text-xs font-semibold cursor-default">Create</div>
+          <div className="h-8 px-4 rounded-full border border-border flex items-center text-muted-foreground text-xs cursor-default">Cancel</div>
+          <div className="h-8 px-4 rounded-full bg-primary text-primary-foreground flex items-center text-xs cursor-default">Create</div>
         </div>
       </div>
     </div>
@@ -59,23 +59,23 @@ function MockPipelineBoard() {
     { name: "Interview", color: "#f97316", cards: ["GitHub"] },
   ];
   return (
-    <div className="rounded-xl border bg-background shadow-sm overflow-hidden text-[10px] select-none">
-      <div className="flex items-center justify-between px-4 py-2.5 border-b bg-muted/30">
-        <span className="text-xs font-semibold">Pipeline Board</span>
+    <div className="rounded-xl border border-border bg-surface overflow-hidden text-[10px] select-none">
+      <div className="flex items-center justify-between px-4 py-2.5 border-b border-border bg-muted/30">
+        <span className="text-xs">Pipeline Board</span>
         <span className="text-[10px] text-muted-foreground">Drag to move</span>
       </div>
       <div className="p-2.5 flex gap-2">
         {cols.map((col) => (
-          <div key={col.name} className="flex-1 rounded-lg border bg-muted/20">
-            <div className="flex items-center gap-1.5 px-2 py-1.5 border-b">
+          <div key={col.name} className="flex-1 rounded-xl border border-border bg-muted/20">
+            <div className="flex items-center gap-1.5 px-2 py-1.5 border-b border-border">
               <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: col.color }} />
-              <span className="font-semibold truncate">{col.name}</span>
+              <span className="truncate">{col.name}</span>
               <span className="text-muted-foreground ml-auto">{col.cards.length}</span>
             </div>
             <div className="p-1.5 space-y-1">
               {col.cards.map((c) => (
-                <div key={c} className="rounded border bg-background px-2 py-1.5 shadow-sm">
-                  <p className="font-medium">{c}</p>
+                <div key={c} className="rounded border border-border bg-background px-2 py-1.5">
+                  <p>{c}</p>
                   <div className="h-0.5 w-2/3 rounded-full bg-muted mt-1" />
                 </div>
               ))}
@@ -109,14 +109,14 @@ export function HeroSection() {
   return (
     <section ref={ref} className="pt-32 pb-20 px-6">
       <div className="max-w-3xl mx-auto text-center hero-text space-y-6">
-        <span className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-muted/50 px-3.5 py-1.5 text-xs text-muted-foreground">
-          <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+        <span className="inline-flex items-center gap-2 rounded-full border border-border bg-surface px-3.5 py-1.5 text-[13px] text-muted-foreground">
+          <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-status-approved)] animate-pulse" />
           Currently free · No credit card required
         </span>
 
-        <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.1]">
+        <h1 className="text-4xl sm:text-5xl lg:text-6xl tracking-tight leading-[1.15]">
           Get your job search<br />
-          <span className="text-indigo-500">done right</span>
+          <span className="text-foreground">done right</span>
         </h1>
 
         <p className="text-base sm:text-lg text-muted-foreground leading-relaxed max-w-xl mx-auto">
@@ -126,19 +126,19 @@ export function HeroSection() {
         <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
           <Link
             href="/register"
-            className="inline-flex h-11 items-center rounded-lg px-7 text-sm font-semibold bg-indigo-500 text-white hover:bg-indigo-600 transition-colors"
+            className="inline-flex h-9 items-center rounded-full px-5 text-sm bg-primary text-primary-foreground hover:bg-[#3a3a3a] transition-colors"
           >
             Start for free →
           </Link>
           <Link
             href="/login"
-            className="inline-flex h-11 items-center rounded-lg border px-7 text-sm font-medium hover:bg-accent transition-colors"
+            className="inline-flex h-9 items-center rounded-full border border-border px-5 text-sm text-foreground hover:bg-control transition-colors"
           >
             Sign in
           </Link>
         </div>
 
-        <p className="text-xs text-muted-foreground">Set up in minutes · Export your data anytime</p>
+        <p className="text-[13px] text-muted-foreground">Set up in minutes · Export your data anytime</p>
       </div>
 
       {/* Mockups below the headline */}
