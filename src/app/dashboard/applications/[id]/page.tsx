@@ -36,8 +36,8 @@ function Card({
   id?: string;
 }) {
   return (
-    <section id={id} className="border rounded-xl p-5 space-y-3">
-      {title && <h2 className="text-sm font-semibold tracking-tight">{title}</h2>}
+    <section id={id} className="border border-border rounded-xl p-5 space-y-3">
+      {title && <h2 className="text-xl tracking-tight">{title}</h2>}
       {children}
     </section>
   );
@@ -60,10 +60,10 @@ function Stat({
       <p
         className={
           tone === "danger"
-            ? "text-sm font-semibold text-destructive"
+            ? "text-sm text-destructive"
             : tone === "primary"
-              ? "text-sm font-semibold text-primary"
-              : "text-sm font-semibold"
+              ? "text-sm text-primary"
+              : "text-sm"
         }
       >
         {value}
@@ -125,7 +125,7 @@ export default async function ApplicationDetailPage({ params }: Props) {
       {application.closed && (
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border bg-muted/40 px-4 py-3">
           <p className="text-sm text-muted-foreground">
-            <span className="font-medium text-foreground">This application is closed.</span>{" "}
+            <span className="text-foreground">This application is closed.</span>{" "}
             Its stage, notes, tags and interview rounds are kept exactly as they were
             {application.closedAt && <> — closed {formatDate(application.closedAt)}</>}.
           </p>
@@ -162,7 +162,7 @@ export default async function ApplicationDetailPage({ params }: Props) {
 
       {/* Hero */}
       <div
-        className="border rounded-xl p-6"
+        className="border border-border rounded-xl p-6"
         style={accentColor ? {
           borderColor: `${accentColor}40`,
           background: `linear-gradient(to bottom right, ${accentColor}08, transparent)`,
@@ -171,7 +171,7 @@ export default async function ApplicationDetailPage({ params }: Props) {
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div className="space-y-2 min-w-0">
             <div className="flex items-center gap-2.5 flex-wrap">
-              <h1 className="text-2xl font-bold tracking-tight">{application.company}</h1>
+              <h1 className="text-2xl tracking-tight">{application.company}</h1>
               <StatusBadge application={application} />
               {/* Stage outcome badge — shows when a scheduling stage has a set outcome */}
               {outcome && !application.closed && (
@@ -217,7 +217,7 @@ export default async function ApplicationDetailPage({ params }: Props) {
                 href={application.jobUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex h-8 items-center gap-1.5 rounded-lg border px-3 text-xs font-medium hover:bg-accent transition-colors"
+                className="inline-flex h-8 items-center gap-1.5 rounded-full border border-border px-3 text-[13px] hover:bg-control transition-colors"
               >
                 Job Description ↗
               </a>

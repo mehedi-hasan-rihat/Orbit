@@ -225,7 +225,7 @@ export function DatePicker({
         width: position.width,
         maxHeight: position.maxHeight,
       }}
-      className="z-[100] overflow-y-auto rounded-xl border bg-background shadow-lg p-3 space-y-3"
+      className="z-[100] overflow-y-auto rounded-xl border border-border bg-[var(--color-floating)] shadow-lg p-3 space-y-3"
     >
 
       {/* Month/year nav */}
@@ -233,17 +233,17 @@ export function DatePicker({
         <button
           type="button"
           onClick={prevMonth}
-          className="w-7 h-7 flex items-center justify-center rounded-md hover:bg-accent transition-colors text-muted-foreground"
+          className="w-7 h-7 flex items-center justify-center rounded-md hover:bg-control transition-colors text-muted-foreground"
         >
           ‹
         </button>
-        <span className="text-sm font-semibold">
+        <span className="text-sm">
           {MONTHS[viewMonth]} {viewYear}
         </span>
         <button
           type="button"
           onClick={nextMonth}
-          className="w-7 h-7 flex items-center justify-center rounded-md hover:bg-accent transition-colors text-muted-foreground"
+          className="w-7 h-7 flex items-center justify-center rounded-md hover:bg-control transition-colors text-muted-foreground"
         >
           ›
         </button>
@@ -274,7 +274,7 @@ export function DatePicker({
                 "h-8 w-full rounded-md text-sm transition-colors",
                 isSelected && "bg-primary text-primary-foreground font-semibold",
                 !isSelected && isToday && "border border-primary text-primary font-semibold",
-                !isSelected && !isToday && "hover:bg-accent text-foreground"
+                !isSelected && !isToday && "hover:bg-control text-foreground"
               )}
             >
               {day}
@@ -286,12 +286,12 @@ export function DatePicker({
       {/* Time picker */}
       {includeTime && (
         <div className="border-t pt-3 space-y-1.5">
-          <label className="text-xs font-medium text-muted-foreground">Time</label>
+          <label className="text-[13px] text-muted-foreground">Time</label>
           <input
             type="time"
             value={timeValue}
             onChange={e => handleTimeChange(e.target.value)}
-            className="flex h-9 w-full rounded-md border bg-background px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+            className="flex h-9 w-full rounded-xl border border-border bg-surface px-4 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
           />
         </div>
       )}
@@ -317,7 +317,7 @@ export function DatePicker({
             <button
               type="button"
               onClick={handleClear}
-              className="h-7 px-2.5 rounded-md text-xs border hover:bg-accent transition-colors text-muted-foreground"
+              className="h-7 px-2.5 rounded-full text-[13px] border border-border hover:bg-control transition-colors text-muted-foreground"
             >
               Clear
             </button>
@@ -327,7 +327,7 @@ export function DatePicker({
               type="button"
               onClick={handleConfirm}
               disabled={!selected}
-              className="h-7 px-3 rounded-md text-xs bg-primary text-primary-foreground font-medium disabled:opacity-40 hover:opacity-90 transition-opacity"
+              className="h-7 px-3 rounded-full text-[13px] bg-primary text-primary-foreground disabled:opacity-40 hover:opacity-90 transition-opacity"
             >
               Confirm
             </button>
@@ -349,8 +349,8 @@ export function DatePicker({
         id={id}
         onClick={toggleOpen}
         className={clsx(
-          "flex h-10 w-full items-center justify-between rounded-md border bg-background px-3 text-sm transition-colors",
-          "focus:outline-none focus:ring-2 focus:ring-ring",
+          "flex h-9 w-full items-center justify-between rounded-xl border border-border bg-surface px-4 text-sm transition-colors",
+          "focus:outline-none focus:outline-2 focus:outline-offset-2 focus:outline-[var(--color-focus)]",
           !displayValue && "text-muted-foreground"
         )}
       >

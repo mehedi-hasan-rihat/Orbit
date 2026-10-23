@@ -16,9 +16,9 @@ export default function PrivacyPage() {
         <div className="max-w-3xl mx-auto px-6 h-14 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
             {/* <Logo className="w-5 h-5" /> */}
-            <span className="text-sm font-semibold">Orbit</span>
+            <span className="text-sm">Orbit</span>
           </Link>
-          <Link href="/" className="text-xs text-muted-foreground hover:text-foreground transition-colors">← Back to home</Link>
+          <Link href="/" className="text-[13px] text-muted-foreground hover:text-foreground transition-colors">← Back to home</Link>
         </div>
       </header>
 
@@ -26,15 +26,15 @@ export default function PrivacyPage() {
         <div className="max-w-3xl mx-auto space-y-10">
           {/* Header */}
           <div className="space-y-2 pb-8 border-b">
-            <p className="text-xs text-muted-foreground uppercase tracking-widest">Legal</p>
-            <h1 className="text-3xl font-bold tracking-tight">Privacy Policy</h1>
+            <p className="text-[13px] text-muted-foreground uppercase tracking-widest">Legal</p>
+            <h1 className="text-3xl tracking-tight">Privacy Policy</h1>
             <p className="text-sm text-muted-foreground">Last updated: {LAST_UPDATED}</p>
           </div>
 
-          <div className="prose prose-sm dark:prose-invert max-w-none space-y-8 text-sm text-muted-foreground leading-relaxed [&_h2]:text-base [&_h2]:font-semibold [&_h2]:text-foreground [&_h2]:mt-8 [&_h2]:mb-3 [&_strong]:text-foreground">
+          <div className="prose prose-sm prose-invert max-w-none space-y-8 text-sm text-muted-foreground leading-relaxed [&_h2]:text-base [&_h2]:font-semibold [&_h2]:text-foreground [&_h2]:mt-8 [&_h2]:mb-3 [&_strong]:text-foreground">
 
             <p>
-              Orbit ("we", "us", or "our") is committed to protecting your privacy. This Privacy Policy explains what information we collect, how we use it, and the choices you have.
+              Orbit (&ldquo;we&rdquo;, &ldquo;us&rdquo;, or &ldquo;our&rdquo;) is committed to protecting your privacy. This Privacy Policy explains what information we collect, how we use it, and the choices you have.
             </p>
 
             <h2>1. Information We Collect</h2>
@@ -91,7 +91,7 @@ export default function PrivacyPage() {
 
             <h2>10. Changes to This Policy</h2>
             <p>
-              We may update this Privacy Policy from time to time. We will update the "Last updated" date at the top. Continued use of the Service constitutes acceptance of the updated policy.
+              We may update this Privacy Policy from time to time. We will update the &ldquo;Last updated&rdquo; date at the top. Continued use of the Service constitutes acceptance of the updated policy.
             </p>
 
             <h2>11. Contact</h2>
@@ -103,7 +103,7 @@ export default function PrivacyPage() {
       </main>
 
       <footer className="border-t">
-        <div className="max-w-3xl mx-auto px-6 py-5 flex items-center justify-between text-xs text-muted-foreground">
+        <div className="max-w-3xl mx-auto px-6 py-5 flex items-center justify-between text-[13px] text-muted-foreground">
           <span>© 2026 Orbit</span>
           <div className="flex items-center gap-4">
             <Link href="/terms" className="hover:text-foreground transition-colors">Terms</Link>

@@ -18,8 +18,8 @@ export default async function ProfilePage() {
       <div className="space-y-6 max-w-3xl">
         {/* Header */}
         <div>
-          <h1 className="text-xl font-semibold tracking-tight">Profile</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">
+          <h1 className="text-xl tracking-tight">Profile</h1>
+          <p className="text-[13px] text-muted-foreground mt-0.5">
             Manage your account settings
           </p>
         </div>
@@ -33,7 +33,7 @@ export default async function ProfilePage() {
             </div>
             <div>
               <p className="font-semibold">{user.name}</p>
-              <p className="text-sm text-muted-foreground">{user.email}</p>
+              <p className="text-[13px] text-muted-foreground">{user.email}</p>
               <p className="text-xs text-muted-foreground mt-0.5">Member since {memberSince}</p>
             </div>
           </div>
@@ -41,15 +41,15 @@ export default async function ProfilePage() {
           {/* Stats */}
           <div className="grid grid-cols-3 gap-4 mt-5 pt-5 border-t">
             <div className="text-center">
-              <p className="text-2xl font-bold">{total}</p>
+              <p className="text-2xl">{total}</p>
               <p className="text-xs text-muted-foreground mt-0.5">Applications</p>
             </div>
             <div className="text-center">
-              <p className="text-2xl font-bold">{interviews}</p>
+              <p className="text-2xl">{interviews}</p>
               <p className="text-xs text-muted-foreground mt-0.5">Interviews</p>
             </div>
             <div className="text-center">
-              <p className="text-2xl font-bold text-green-600 dark:text-green-400">{offers}</p>
+              <p className="text-2xl text-[var(--color-status-approved)]">{offers}</p>
               <p className="text-xs text-muted-foreground mt-0.5">Offers</p>
             </div>
           </div>

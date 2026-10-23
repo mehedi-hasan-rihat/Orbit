@@ -149,10 +149,10 @@ export function KanbanBoard({
               {columnItems.map((item) => (
                 <div
                   key={item.id}
-                  className="rounded-md border bg-background p-3 shadow-sm"
+                  className="rounded-xl border border-border bg-surface p-3"
                 >
-                  <p className="text-sm font-medium truncate">{item.company}</p>
-                  <p className="text-xs text-muted-foreground truncate mt-0.5">
+                  <p className="text-sm truncate">{item.company}</p>
+                  <p className="text-[13px] text-muted-foreground truncate mt-0.5">
                     {item.role}
                   </p>
                 </div>
@@ -160,7 +160,7 @@ export function KanbanBoard({
               {more > 0 && (
                 <Link
                   href="/dashboard/applications"
-                  className="block text-xs text-muted-foreground text-center py-1.5 rounded-md border border-dashed hover:border-solid hover:text-foreground transition-colors"
+                  className="block text-[13px] text-muted-foreground text-center py-1.5 rounded-xl border border-dashed border-border hover:border-solid hover:text-foreground transition-colors"
                 >
                   +{more} more
                 </Link>
@@ -204,7 +204,7 @@ export function KanbanBoard({
                 {more > 0 && (
                   <Link
                     href="/dashboard/applications"
-                    className="block text-xs text-muted-foreground text-center py-1.5 rounded-md border border-dashed hover:border-solid hover:text-foreground transition-colors"
+                    className="block text-[13px] text-muted-foreground text-center py-1.5 rounded-xl border border-dashed border-border hover:border-solid hover:text-foreground transition-colors"
                   >
                     +{more} more
                   </Link>

@@ -186,10 +186,10 @@ export function ApplicationsList({
       {/* Page header */}
       <div className="flex items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl font-semibold tracking-tight">
+          <h1 className="text-xl tracking-tight">
             {showArchived ? "Archived" : showClosed ? "Closed" : "Applications"}
           </h1>
-          <p className="text-sm text-muted-foreground mt-0.5">
+          <p className="text-[13px] text-muted-foreground mt-0.5">
             {applications.length}{" "}
             {applications.length === 1 ? "application" : "applications"}
             {totalPages > 1 && (
@@ -204,7 +204,7 @@ export function ApplicationsList({
             <ExportButton />
             <button
               onClick={() => setShowForm(true)}
-              className="h-8 px-3 rounded-md bg-primary text-primary-foreground text-xs font-semibold hover:opacity-90 transition-opacity"
+              className="h-8 px-3 rounded-full bg-primary text-primary-foreground text-[13px] hover:bg-[#3a3a3a] transition-colors"
             >
               + New
             </button>
@@ -215,7 +215,7 @@ export function ApplicationsList({
       {/* Tabs + Filters */}
       <div className="flex flex-col gap-3">
         {/* Tabs — pill style with filled active state */}
-        <div className="flex items-center gap-1 p-1 rounded-lg bg-muted/60 w-fit">
+        <div className="flex items-center gap-1 p-1 rounded-xl bg-muted/60 w-fit">
           {tabs.map((tab) => {
             const isActive = activeTab === tab.key;
             return (
@@ -224,9 +224,9 @@ export function ApplicationsList({
                 onClick={tab.onClick}
                 disabled={isPending}
                 className={clsx(
-                  "relative px-4 py-1.5 rounded-md text-sm font-medium transition-all duration-150 select-none",
+                  "relative px-4 py-1.5 rounded-full text-[13px] transition-all duration-150 select-none",
                   isActive
-                    ? "bg-background text-foreground shadow-sm ring-1 ring-border/50"
+                    ? "bg-background text-foreground ring-1 ring-border/50"
                     : "text-muted-foreground hover:text-foreground hover:bg-background/50"
                 )}
               >
@@ -251,13 +251,13 @@ export function ApplicationsList({
               placeholder="Search company or role..."
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
-              className="flex h-8 w-full rounded-md border bg-background pl-8 pr-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+              className="flex h-9 w-full rounded-xl border border-border bg-surface pl-8 pr-3 text-sm focus:outline-none focus:outline-2 focus:outline-offset-2 focus:outline-[var(--color-focus)]"
             />
           </div>
           <select
             value={stageFilter}
             onChange={(e) => { setStageFilter(e.target.value); applyFilters(undefined, e.target.value); }}
-            className="flex h-8 rounded-md border bg-background px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+            className="flex h-9 rounded-xl border border-border bg-surface px-3 text-sm focus:outline-none focus:outline-2 focus:outline-offset-2 focus:outline-[var(--color-focus)]"
           >
             <option value="ALL">All Stages</option>
             {stages.map((stage) => (
@@ -267,7 +267,7 @@ export function ApplicationsList({
           <select
             value={sortBy}
             onChange={(e) => { setSortBy(e.target.value); applyFilters(undefined, undefined, e.target.value); }}
-            className="flex h-8 rounded-md border bg-background px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+            className="flex h-9 rounded-xl border border-border bg-surface px-3 text-sm focus:outline-none focus:outline-2 focus:outline-offset-2 focus:outline-[var(--color-focus)]"
           >
             <option value="createdAt">Newest first</option>
             <option value="updatedAt">Recently updated</option>
@@ -279,13 +279,13 @@ export function ApplicationsList({
 
       {/* Content */}
       {isPending ? (
-        <div className="border rounded-xl overflow-hidden">
+        <div className="border border-border rounded-xl overflow-hidden">
           <div
             className="hidden sm:grid items-center px-4 py-2.5 bg-muted/40 border-b"
             style={{ gridTemplateColumns: "minmax(0,2fr) minmax(0,2fr) 120px 110px 130px 180px" }}
           >
             {["Company", "Role", "Stage", "Outcome", "Applied", "Actions"].map((h) => (
-              <span key={h} className="text-xs font-medium text-muted-foreground">{h}</span>
+              <span key={h} className="text-[13px] text-muted-foreground">{h}</span>
             ))}
           </div>
           <div className="divide-y">
@@ -328,18 +328,18 @@ export function ApplicationsList({
           </div>
         </div>
       ) : applications.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-20 text-center border rounded-xl">
+        <div className="flex flex-col items-center justify-center py-28 text-center border border-border rounded-xl">
           <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center text-xl mb-4">
             {showArchived ? "📦" : showClosed ? "🚪" : "📋"}
           </div>
-          <p className="font-medium">
+          <p className="text-[15px]">
             {showArchived
               ? "No archived applications"
               : showClosed
               ? "No closed applications"
               : "No applications yet"}
           </p>
-          <p className="text-sm text-muted-foreground mt-1 max-w-xs">
+          <p className="text-[13px] text-muted-foreground mt-1 max-w-xs">
             {search || (stageId && stageId !== "ALL")
               ? "No results match your filters. Try adjusting them."
               : showArchived
@@ -351,7 +351,7 @@ export function ApplicationsList({
           {!search && (!stageId || stageId === "ALL") && !showArchived && !showClosed && (
             <button
               onClick={() => setShowForm(true)}
-              className="mt-5 h-8 px-4 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity"
+              className="mt-5 h-9 px-4 rounded-full bg-primary text-primary-foreground text-[13px] hover:bg-[#3a3a3a] transition-colors"
             >
               + New Application
             </button>
@@ -360,25 +360,25 @@ export function ApplicationsList({
       ) : (
         <>
           {/* Table */}
-          <div className="border rounded-xl overflow-hidden">
+          <div className="border border-border rounded-xl overflow-hidden">
             {/* Header */}
             <div
               className="hidden sm:grid items-center px-4 py-2.5 bg-muted/40 border-b"
               style={{ gridTemplateColumns: "minmax(0,2fr) minmax(0,2fr) 120px 110px 130px 180px" }}
             >
-              <span className="text-xs font-medium text-muted-foreground">Company</span>
-              <span className="text-xs font-medium text-muted-foreground">Role</span>
-              <span className="text-xs font-medium text-muted-foreground">Stage</span>
-              <span className="text-xs font-medium text-muted-foreground">Outcome</span>
-              <span className="text-xs font-medium text-muted-foreground">Applied</span>
-              <span className="text-xs font-medium text-muted-foreground text-right">Actions</span>
+              <span className="text-[13px] text-muted-foreground">Company</span>
+              <span className="text-[13px] text-muted-foreground">Role</span>
+              <span className="text-[13px] text-muted-foreground">Stage</span>
+              <span className="text-[13px] text-muted-foreground">Outcome</span>
+              <span className="text-[13px] text-muted-foreground">Applied</span>
+              <span className="text-[13px] text-muted-foreground text-right">Actions</span>
             </div>
 
             <div className="divide-y">
               {visibleApps.map((app) => (
                 <div
                   key={app.id}
-                  className="group hidden sm:grid items-center px-4 py-3 hover:bg-muted/30 transition-colors"
+                  className="group hidden sm:grid items-center px-4 py-3 hover:bg-[#ffffff08] transition-colors"
                   style={{ gridTemplateColumns: "minmax(0,2fr) minmax(0,2fr) 120px 110px 130px 180px" }}
                 >
                   {/* Company */}
@@ -469,19 +469,19 @@ export function ApplicationsList({
                   <div className="flex items-center justify-end gap-1">
                     <Link
                       href={`/dashboard/applications/${app.id}`}
-                      className="inline-flex h-7 items-center px-2.5 rounded-md text-xs font-medium border hover:bg-accent transition-colors whitespace-nowrap"
+                      className="inline-flex h-7 items-center px-2.5 rounded-full text-[13px] border border-border hover:bg-control transition-colors whitespace-nowrap"
                     >
                       View
                     </Link>
                     <button
                       onClick={() => setEditingApp(app)}
-                      className="inline-flex h-7 items-center px-2.5 rounded-md text-xs font-medium border hover:bg-accent transition-colors"
+                      className="inline-flex h-7 items-center px-2.5 rounded-full text-[13px] border border-border hover:bg-control transition-colors"
                     >
                       Edit
                     </button>
                     <button
                       onClick={() => handleDelete(app.id)}
-                      className="inline-flex h-7 items-center px-2.5 rounded-md text-xs font-medium text-destructive border border-destructive/20 hover:bg-destructive/10 transition-colors"
+                      className="inline-flex h-7 items-center px-2.5 rounded-full text-[13px] text-destructive border border-destructive/20 hover:bg-[var(--color-status-rejected-bg)] transition-colors"
                     >
                       Delete
                     </button>
@@ -501,7 +501,7 @@ export function ApplicationsList({
               {visibleApps.map((app) => (
                 <div
                   key={`m-${app.id}`}
-                  className="sm:hidden p-4 space-y-3 hover:bg-muted/30 transition-colors"
+                  className="sm:hidden p-4 space-y-3 hover:bg-[#ffffff08] transition-colors"
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
@@ -556,13 +556,13 @@ export function ApplicationsList({
                   <div className="flex items-center gap-2 flex-wrap">
                     <Link
                       href={`/dashboard/applications/${app.id}`}
-                      className="inline-flex h-8 items-center px-3 rounded-md text-xs font-medium bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
+                      className="inline-flex h-8 items-center px-3 rounded-full text-[13px] bg-primary text-primary-foreground hover:bg-[#3a3a3a] transition-colors"
                     >
                       View
                     </Link>
                     <button
                       onClick={() => setEditingApp(app)}
-                      className="inline-flex h-8 items-center px-3 rounded-md text-xs font-medium border hover:bg-accent transition-colors"
+                      className="inline-flex h-8 items-center px-3 rounded-full text-[13px] border border-border hover:bg-control transition-colors"
                     >
                       Edit
                     </button>
@@ -591,7 +591,7 @@ export function ApplicationsList({
                     key={size}
                     onClick={() => setPageSize(size)}
                     className={clsx(
-                      "h-7 min-w-[2.25rem] px-2 rounded-md text-xs font-medium transition-colors",
+                      "h-7 min-w-9 px-2 rounded-full text-[13px] transition-colors",
                       pageSize === size
                         ? "bg-primary text-primary-foreground"
                         : "border hover:bg-accent text-muted-foreground"
@@ -614,7 +614,7 @@ export function ApplicationsList({
                   onClick={() => goToPage(safeCurrentPage - 1)}
                   disabled={safeCurrentPage === 1}
                   aria-label="Previous page"
-                  className="h-7 w-7 inline-flex items-center justify-center rounded-md border text-xs hover:bg-accent transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="h-7 w-7 inline-flex items-center justify-center rounded-full border border-border text-[13px] hover:bg-control transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   ‹
                 </button>
@@ -630,7 +630,7 @@ export function ApplicationsList({
                       key={p}
                       onClick={() => goToPage(p)}
                       className={clsx(
-                        "h-7 min-w-[1.75rem] px-1.5 inline-flex items-center justify-center rounded-md text-xs font-medium transition-colors",
+                        "h-7 min-w-7 px-1.5 inline-flex items-center justify-center rounded-full text-[13px] transition-colors",
                         p === safeCurrentPage
                           ? "bg-primary text-primary-foreground"
                           : "border hover:bg-accent text-muted-foreground"
@@ -646,7 +646,7 @@ export function ApplicationsList({
                   onClick={() => goToPage(safeCurrentPage + 1)}
                   disabled={safeCurrentPage === totalPages}
                   aria-label="Next page"
-                  className="h-7 w-7 inline-flex items-center justify-center rounded-md border text-xs hover:bg-accent transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="h-7 w-7 inline-flex items-center justify-center rounded-full border border-border text-[13px] hover:bg-control transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   ›
                 </button>

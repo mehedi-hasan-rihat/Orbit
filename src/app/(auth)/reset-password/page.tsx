@@ -35,10 +35,10 @@ function ResetPasswordForm() {
   if (!token) {
     return (
       <div className="flex flex-1 items-center justify-center px-4">
-        <div className="w-full max-w-sm text-center space-y-4">
-          <h1 className="text-xl font-bold">Invalid reset link</h1>
-          <p className="text-sm text-muted-foreground">This link is missing a token.</p>
-          <Link href="/forgot-password" className="text-sm font-medium hover:underline">
+        <div className="w-full max-w-[440px] text-center space-y-4">
+          <h1 className="text-xl">Invalid reset link</h1>
+          <p className="text-[13px] text-muted-foreground">This link is missing a token.</p>
+          <Link href="/forgot-password" className="text-[13px] text-foreground hover:underline">
             Request a new one
           </Link>
         </div>
@@ -48,28 +48,28 @@ function ResetPasswordForm() {
 
   return (
     <div className="flex flex-1 items-center justify-center px-4">
-      <div className="w-full max-w-sm space-y-6">
+      <div className="w-full max-w-[440px] space-y-6">
         <div className="space-y-2 text-center">
-          <h1 className="text-2xl font-bold">Set new password</h1>
-          <p className="text-sm text-muted-foreground">Choose a strong password for your account.</p>
+          <h1 className="text-2xl">Set new password</h1>
+          <p className="text-[13px] text-muted-foreground">Choose a strong password for your account.</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
-            <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
+            <div className="rounded-xl bg-[var(--color-status-rejected-bg)] p-3 text-[13px] text-[var(--color-status-rejected)]">{error}</div>
           )}
-          <div className="space-y-2">
-            <label htmlFor="password" className="text-sm font-medium">New password</label>
+          <div className="space-y-1">
+            <label htmlFor="password" className="text-[13px] text-muted-foreground">New password</label>
             <input id="password" name="password" type="password" placeholder="••••••••" required minLength={8}
-              className="flex h-10 w-full rounded-md border bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2" />
+              className="flex h-9 w-full rounded-xl border border-border bg-surface px-4 text-sm placeholder:text-muted-foreground focus:outline-none focus:outline-2 focus:outline-offset-2 focus:outline-[var(--color-focus)]" />
           </div>
-          <div className="space-y-2">
-            <label htmlFor="confirm" className="text-sm font-medium">Confirm password</label>
+          <div className="space-y-1">
+            <label htmlFor="confirm" className="text-[13px] text-muted-foreground">Confirm password</label>
             <input id="confirm" name="confirm" type="password" placeholder="••••••••" required minLength={8}
-              className="flex h-10 w-full rounded-md border bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2" />
+              className="flex h-9 w-full rounded-xl border border-border bg-surface px-4 text-sm placeholder:text-muted-foreground focus:outline-none focus:outline-2 focus:outline-offset-2 focus:outline-[var(--color-focus)]" />
           </div>
           <button type="submit" disabled={loading}
-            className="flex h-10 w-full items-center justify-center rounded-md bg-primary text-sm font-medium text-primary-foreground transition-colors hover:opacity-90 disabled:opacity-50">
+            className="flex h-9 w-full items-center justify-center rounded-full bg-primary text-sm text-primary-foreground transition-colors hover:bg-[#3a3a3a] disabled:opacity-50 disabled:cursor-not-allowed">
             {loading ? "Updating..." : "Update Password"}
           </button>
         </form>

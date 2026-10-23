@@ -38,57 +38,58 @@ export function Sidebar({ user }: SidebarProps) {
   }
 
   return (
-    <aside className="hidden md:flex w-60 flex-col border-r bg-muted/30">
-      <div className="p-4 border-b">
+    <aside className="hidden md:flex w-60 flex-col border-r border-border bg-canvas">
+      <div className="p-4 border-b border-border">
         <Link href="/dashboard" className="flex items-center gap-2">
           {/* <Logo className="w-6 h-6" /> */}
-          <span className="text-lg font-bold">Orbit</span>
+          <span className="text-[15px] text-foreground">Orbit</span>
         </Link>
       </div>
 
-      <nav className="flex-1 p-3 space-y-1">
+      <nav className="flex-1 p-3 space-y-0.5">
         {navigation.map((item) => (
           <Link
             key={item.name}
             href={item.href}
             className={clsx(
-              "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+              "flex items-center gap-3 rounded-lg px-3 py-2 text-[13px] transition-colors",
               isActive(item.href)
-                ? "bg-accent text-accent-foreground"
-                : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                ? "bg-[#2a2a2a] text-foreground"
+                : "text-muted-foreground hover:bg-[#1e1e1e] hover:text-foreground"
             )}
           >
-            <span>{item.icon}</span>
             {item.name}
           </Link>
         ))}
       </nav>
 
-      <div className="border-t p-3">
+      <div className="border-t border-border p-3">
         {/* Profile row */}
         <Link
           href="/dashboard/profile"
           className={clsx(
-            "flex items-center gap-3 w-full rounded-md px-3 py-2 transition-colors hover:bg-accent",
-            pathname === "/dashboard/profile" ? "bg-accent" : ""
+            "flex items-center gap-3 w-full rounded-lg px-3 py-2 transition-colors",
+            pathname === "/dashboard/profile"
+              ? "bg-[#2a2a2a] text-foreground"
+              : "hover:bg-[#1e1e1e]"
           )}
         >
-          <div className="w-7 h-7 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold shrink-0">
+          <div className="w-6 h-6 rounded-full bg-[#2a2a2a] text-muted-foreground flex items-center justify-center text-xs shrink-0">
             {user.name.charAt(0).toUpperCase()}
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-sm font-medium truncate leading-none">{user.name}</p>
-            <p className="text-xs text-muted-foreground truncate mt-0.5">{user.email}</p>
+            <p className="text-[13px] text-foreground truncate leading-none">{user.name}</p>
+            <p className="text-[11px] text-muted-foreground truncate mt-0.5">{user.email}</p>
           </div>
         </Link>
 
         {/* Sign out */}
-        <form action={logoutAction} className="mt-1">
+        <form action={logoutAction} className="mt-0.5">
           <button
             type="submit"
-            className="flex items-center gap-2.5 w-full rounded-md px-3 py-2 text-sm text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+            className="flex items-center gap-2.5 w-full rounded-lg px-3 py-2 text-[13px] text-muted-foreground hover:bg-[#1e1e1e] hover:text-foreground transition-colors"
           >
-            <ArrowRightFromLine className="w-4 h-4 shrink-0" />
+            <ArrowRightFromLine className="w-3.5 h-3.5 shrink-0" />
             Sign Out
           </button>
         </form>

@@ -37,12 +37,12 @@ export function KanbanCard({ application, isOverlay }: KanbanCardProps) {
       {...attributes}
       {...listeners}
       className={clsx(
-        "rounded-md border bg-background p-3 cursor-grab active:cursor-grabbing shadow-sm",
+        "rounded-xl border border-border bg-surface p-3 cursor-grab active:cursor-grabbing",
         isDragging && "opacity-50",
         isOverlay && "shadow-lg rotate-2"
       )}
     >
-      <p className="text-sm font-medium truncate">{application.company}</p>
+      <p className="text-sm truncate">{application.company}</p>
       <p className="text-xs text-muted-foreground truncate mt-0.5">
         {application.role}
       </p>

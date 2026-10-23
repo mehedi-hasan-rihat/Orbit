@@ -16,9 +16,9 @@ export default function TermsPage() {
         <div className="max-w-3xl mx-auto px-6 h-14 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
             {/* <Logo className="w-5 h-5" /> */}
-            <span className="text-sm font-semibold">Orbit</span>
+            <span className="text-sm">Orbit</span>
           </Link>
-          <Link href="/" className="text-xs text-muted-foreground hover:text-foreground transition-colors">← Back to home</Link>
+          <Link href="/" className="text-[13px] text-muted-foreground hover:text-foreground transition-colors">← Back to home</Link>
         </div>
       </header>
 
@@ -26,15 +26,15 @@ export default function TermsPage() {
         <div className="max-w-3xl mx-auto space-y-10">
           {/* Header */}
           <div className="space-y-2 pb-8 border-b">
-            <p className="text-xs text-muted-foreground uppercase tracking-widest">Legal</p>
-            <h1 className="text-3xl font-bold tracking-tight">Terms of Service</h1>
+            <p className="text-[13px] text-muted-foreground uppercase tracking-widest">Legal</p>
+            <h1 className="text-3xl tracking-tight">Terms of Service</h1>
             <p className="text-sm text-muted-foreground">Last updated: {LAST_UPDATED}</p>
           </div>
 
-          <div className="prose prose-sm dark:prose-invert max-w-none space-y-8 text-sm text-muted-foreground leading-relaxed [&_h2]:text-base [&_h2]:font-semibold [&_h2]:text-foreground [&_h2]:mt-8 [&_h2]:mb-3 [&_strong]:text-foreground">
+          <div className="prose prose-sm prose-invert max-w-none space-y-8 text-sm text-muted-foreground leading-relaxed [&_h2]:text-base [&_h2]:font-semibold [&_h2]:text-foreground [&_h2]:mt-8 [&_h2]:mb-3 [&_strong]:text-foreground">
 
             <p>
-              Welcome to Orbit. By accessing or using Orbit ("the Service") at <Link href="/" className="underline hover:text-foreground">orbit.app</Link>, you agree to be bound by these Terms of Service. Please read them carefully.
+              Welcome to Orbit. By accessing or using Orbit (&ldquo;the Service&rdquo;) at <Link href="/" className="underline hover:text-foreground">orbit.app</Link>, you agree to be bound by these Terms of Service. Please read them carefully.
             </p>
 
             <h2>1. Acceptance of Terms</h2>
@@ -44,7 +44,7 @@ export default function TermsPage() {
 
             <h2>2. Description of Service</h2>
             <p>
-              Orbit is a job application managment tool that helps users organise job applications, schedule interviews, set follow-up reminders, and view analytics about their job search. The Service is provided "as is" and may be updated, changed, or discontinued at any time.
+              Orbit is a job application managment tool that helps users organise job applications, schedule interviews, set follow-up reminders, and view analytics about their job search. The Service is provided &ldquo;as is&rdquo; and may be updated, changed, or discontinued at any time.
             </p>
 
             <h2>3. Accounts</h2>
@@ -94,7 +94,7 @@ export default function TermsPage() {
 
             <h2>11. Changes to These Terms</h2>
             <p>
-              We may update these Terms at any time. We will update the "Last updated" date at the top of this page. Continued use of the Service after changes constitutes your acceptance of the new Terms.
+              We may update these Terms at any time. We will update the &ldquo;Last updated&rdquo; date at the top of this page. Continued use of the Service after changes constitutes your acceptance of the new Terms.
             </p>
 
             <h2>12. Contact</h2>
@@ -106,7 +106,7 @@ export default function TermsPage() {
       </main>
 
       <footer className="border-t">
-        <div className="max-w-3xl mx-auto px-6 py-5 flex items-center justify-between text-xs text-muted-foreground">
+        <div className="max-w-3xl mx-auto px-6 py-5 flex items-center justify-between text-[13px] text-muted-foreground">
           <span>© 2026 Orbit</span>
           <div className="flex items-center gap-4">
             <Link href="/terms" className="hover:text-foreground transition-colors">Terms</Link>

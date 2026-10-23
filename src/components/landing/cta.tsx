@@ -20,10 +20,10 @@ export function CTASection() {
   }, []);
 
   return (
-    <section ref={ref} className="py-20 px-6 border-t bg-muted/20">
+    <section ref={ref} className="py-20 px-6 border-t border-border bg-surface">
       <div className="cta-inner opacity-0 max-w-2xl mx-auto text-center space-y-6">
-        <p className="text-sm font-medium text-indigo-500 uppercase tracking-widest">Get started</p>
-        <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">
+        <p className="text-[13px] text-muted-foreground uppercase tracking-widest">Get started</p>
+        <h2 className="text-3xl sm:text-4xl tracking-tight">
           Build a better landing page fast
         </h2>
         <p className="text-muted-foreground leading-relaxed">
@@ -32,13 +32,13 @@ export function CTASection() {
         <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
           <Link
             href="/register"
-            className="inline-flex h-11 items-center rounded-lg px-8 text-sm font-semibold bg-indigo-500 text-white hover:bg-indigo-600 transition-colors"
+            className="inline-flex h-9 items-center rounded-full px-5 text-sm bg-primary text-primary-foreground hover:bg-[#3a3a3a] transition-colors"
           >
             Learn more
           </Link>
           <Link
             href="/login"
-            className="inline-flex h-11 items-center rounded-lg border px-8 text-sm font-medium hover:bg-accent transition-colors"
+            className="inline-flex h-9 items-center rounded-full border border-border px-5 text-sm text-foreground hover:bg-control transition-colors"
           >
             Get started
           </Link>

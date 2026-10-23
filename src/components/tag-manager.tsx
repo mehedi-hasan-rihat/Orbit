@@ -44,11 +44,11 @@ export function TagManager({ tags }: { tags: Tag[] }) {
   }
 
   return (
-    <div className="border rounded-xl overflow-hidden">
+    <div className="border border-border rounded-xl overflow-hidden">
       {/* Header */}
       <div className="flex items-center justify-between px-5 py-4 border-b bg-muted/20">
         <div>
-          <h3 className="text-sm font-semibold">Your Tags</h3>
+          <h3 className="text-sm">Your Tags</h3>
           <p className="text-xs text-muted-foreground mt-0.5">
             {tags.length === 0 ? "No tags yet" : `${tags.length} tag${tags.length !== 1 ? "s" : ""}`}
           </p>
@@ -56,7 +56,7 @@ export function TagManager({ tags }: { tags: Tag[] }) {
         {!showCreate && (
           <button
             onClick={() => setShowCreate(true)}
-            className="h-7 px-3 rounded-md bg-primary text-primary-foreground text-xs font-medium hover:opacity-90 transition-opacity"
+            className="h-7 px-3 rounded-full bg-primary text-primary-foreground text-[13px] hover:bg-[#3a3a3a] transition-colors"
           >
             + New Tag
           </button>
@@ -68,7 +68,7 @@ export function TagManager({ tags }: { tags: Tag[] }) {
         <form onSubmit={handleCreate} className="px-5 py-4 border-b bg-muted/10 space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <label htmlFor="tag-name" className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+              <label htmlFor="tag-name" className="text-[13px] text-muted-foreground uppercase tracking-wide">
                 Tag Name
               </label>
               <input
@@ -79,11 +79,11 @@ export function TagManager({ tags }: { tags: Tag[] }) {
                 placeholder="e.g. Remote, Referral, High Priority"
                 required
                 autoFocus
-                className="flex h-9 w-full rounded-lg border bg-background px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+                className="flex h-9 w-full rounded-xl border border-border bg-surface px-4 text-sm focus:outline-none focus:outline-2 focus:outline-offset-2 focus:outline-[var(--color-focus)]"
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+              <label className="text-[13px] text-muted-foreground uppercase tracking-wide">
                 Color
               </label>
               <div className="flex items-center gap-2 h-9">
@@ -119,14 +119,14 @@ export function TagManager({ tags }: { tags: Tag[] }) {
             <button
               type="submit"
               disabled={loading || !name.trim()}
-              className="h-8 px-4 rounded-lg bg-primary text-primary-foreground text-xs font-semibold hover:opacity-90 disabled:opacity-50 transition-opacity"
+              className="h-8 px-4 rounded-full bg-primary text-primary-foreground text-[13px] hover:bg-[#3a3a3a] disabled:opacity-50 transition-colors"
             >
               {loading ? "Creating..." : "Create Tag"}
             </button>
             <button
               type="button"
               onClick={() => { setShowCreate(false); setName(""); setColor(presetColors[0]); }}
-              className="h-8 px-4 rounded-lg border text-xs font-medium hover:bg-accent transition-colors"
+              className="h-8 px-4 rounded-full border border-border text-[13px] hover:bg-control transition-colors"
             >
               Cancel
             </button>
@@ -140,14 +140,14 @@ export function TagManager({ tags }: { tags: Tag[] }) {
           <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-lg mb-3">
             🏷️
           </div>
-          <p className="text-sm font-medium">No tags created yet</p>
+          <p className="text-sm">No tags created yet</p>
           <p className="text-xs text-muted-foreground mt-1">
             Create your first tag to start organizing applications
           </p>
           {!showCreate && (
             <button
               onClick={() => setShowCreate(true)}
-              className="mt-4 h-8 px-4 rounded-lg border text-xs font-medium hover:bg-accent transition-colors"
+              className="mt-4 h-8 px-4 rounded-full border border-border text-[13px] hover:bg-control transition-colors"
             >
               + Create Tag
             </button>
@@ -159,11 +159,11 @@ export function TagManager({ tags }: { tags: Tag[] }) {
             {tags.map((tag) => (
               <div
                 key={tag.id}
-                className="group flex items-center justify-between rounded-lg border p-3 hover:bg-muted/30 transition-colors"
+                className="group flex items-center justify-between rounded-xl border border-border p-3 hover:bg-control transition-colors"
               >
                 <div className="flex items-center gap-2.5">
                   <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: tag.color }} />
-                  <span className="text-sm font-medium">{tag.name}</span>
+                  <span className="text-sm">{tag.name}</span>
                 </div>
                 <button
                   onClick={() => handleDelete(tag.id)}

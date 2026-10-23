@@ -12,21 +12,21 @@ const testimonials = [
     name: "Sarah K.",
     role: "Software Engineer",
     avatar: "S",
-    color: "bg-indigo-500",
+    color: "bg-surface text-foreground",
   },
   {
     quote: "The Kanban board makes it so easy to see where everything stands. I finally feel in control of my job search.",
     name: "James R.",
     role: "Product Manager",
     avatar: "J",
-    color: "bg-purple-500",
+    color: "bg-surface text-foreground",
   },
   {
     quote: "Follow-up reminders alone have saved me from ghosting so many companies. Simple but incredibly effective.",
     name: "Priya M.",
     role: "UX Designer",
     avatar: "P",
-    color: "bg-pink-500",
+    color: "bg-surface text-foreground",
   },
 ];
 
@@ -43,17 +43,17 @@ export function TestimonialsSection() {
   }, []);
 
   return (
-    <section ref={ref} className="py-24 px-6 border-t bg-muted/20">
+    <section ref={ref} className="py-24 px-6 border-t border-border bg-surface">
       <div className="max-w-6xl mx-auto space-y-12">
         <div className="text-center space-y-3">
-          <p className="text-sm font-medium text-indigo-500 uppercase tracking-widest">Testimonials</p>
-          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">You&apos;re the best</h2>
-          <p className="text-muted-foreground text-sm">See what people are saying about Orbit</p>
+          <p className="text-[13px] text-muted-foreground uppercase tracking-widest">Testimonials</p>
+          <h2 className="text-3xl sm:text-4xl tracking-tight">You&apos;re the best</h2>
+          <p className="text-muted-foreground text-[13px]">See what people are saying about Orbit</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {testimonials.map((t) => (
-            <div key={t.name} className="t-card opacity-0 rounded-xl border bg-background p-6 space-y-4 hover:shadow-sm transition-shadow flex flex-col">
+            <div key={t.name} className="t-card opacity-0 rounded-xl border border-border bg-surface p-6 space-y-4 hover:bg-floating transition-colors flex flex-col">
               {/* Stars */}
               <div className="flex gap-0.5">
                 {[...Array(5)].map((_, i) => (
@@ -62,16 +62,16 @@ export function TestimonialsSection() {
                   </svg>
                 ))}
               </div>
-              <p className="text-sm leading-relaxed text-muted-foreground flex-1">
+              <p className="text-[13px] leading-relaxed text-muted-foreground flex-1">
                 &ldquo;{t.quote}&rdquo;
               </p>
-              <div className="flex items-center gap-3 pt-2 border-t">
-                <div className={`w-8 h-8 rounded-full ${t.color} text-white flex items-center justify-center text-sm font-bold shrink-0`}>
+              <div className="flex items-center gap-3 pt-2 border-t border-border">
+                <div className={`w-8 h-8 rounded-full ${t.color} flex items-center justify-center text-sm shrink-0`}>
                   {t.avatar}
                 </div>
                 <div>
-                  <p className="text-sm font-semibold">{t.name}</p>
-                  <p className="text-xs text-muted-foreground">{t.role}</p>
+                  <p className="text-[13px]">{t.name}</p>
+                  <p className="text-[13px] text-muted-foreground">{t.role}</p>
                 </div>
               </div>
             </div>

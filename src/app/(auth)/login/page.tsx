@@ -38,23 +38,23 @@ export default function LoginPage() {
 
   return (
     <div className="flex flex-1 items-center justify-center px-4">
-      <div className="w-full max-w-sm space-y-6">
+      <div className="w-full max-w-[440px] space-y-6">
         <div className="space-y-2 text-center">
-          <h1 className="text-2xl font-bold">Sign in to Orbit</h1>
-          <p className="text-sm text-muted-foreground">Enter your credentials to access your dashboard</p>
+          <h1 className="text-2xl">Sign in to Orbit</h1>
+          <p className="text-[13px] text-muted-foreground">Enter your credentials to access your dashboard</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Unverified account banner */}
           {unverifiedEmail && (
-            <div className="rounded-lg border border-amber-300 bg-amber-50 dark:bg-amber-900/20 dark:border-amber-700 p-4 space-y-2">
+            <div className="rounded-xl border border-[var(--color-status-pending-bg)] bg-[var(--color-status-pending-bg)] p-4 space-y-2">
               <div className="flex items-start gap-3">
-                <MailWarning className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                <MailWarning className="w-5 h-5 text-[var(--color-status-pending)] shrink-0 mt-0.5" />
                 <div>
-                  <p className="text-sm font-semibold text-amber-800 dark:text-amber-300">
+                  <p className="text-[13px] text-[var(--color-status-pending)]">
                     Your account isn&apos;t verified yet
                   </p>
-                  <p className="text-xs text-amber-700 dark:text-amber-400 mt-0.5">
+                  <p className="text-[13px] text-muted-foreground mt-0.5">
                     We sent a verification link to <strong>{unverifiedEmail}</strong>. Check your inbox (and spam folder) and click the link to activate your account.
                   </p>
                 </div>
@@ -62,7 +62,7 @@ export default function LoginPage() {
               <div className="pl-8">
                 <Link
                   href={`/verify-email/resend?email=${encodeURIComponent(unverifiedEmail)}`}
-                  className="text-xs font-medium text-amber-700 dark:text-amber-400 underline underline-offset-2 hover:text-amber-900 dark:hover:text-amber-300"
+                  className="text-[13px] text-[var(--color-status-pending)] underline underline-offset-2 hover:opacity-80"
                 >
                   Didn&apos;t receive it? Resend verification email →
                 </Link>
@@ -71,35 +71,35 @@ export default function LoginPage() {
           )}
 
           {errors.email && (
-            <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">{errors.email[0]}</div>
+            <div className="rounded-xl bg-[var(--color-status-rejected-bg)] p-3 text-[13px] text-[var(--color-status-rejected)]">{errors.email[0]}</div>
           )}
 
-          <div className="space-y-2">
-            <label htmlFor="email" className="text-sm font-medium">Email</label>
+          <div className="space-y-1">
+            <label htmlFor="email" className="text-[13px] text-muted-foreground">Email</label>
             <input id="email" name="email" type="email" placeholder="you@example.com" required
-              className="flex h-10 w-full rounded-md border bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2" />
+              className="flex h-9 w-full rounded-xl border border-border bg-surface px-4 text-sm placeholder:text-muted-foreground focus:outline-none focus:outline-2 focus:outline-offset-2 focus:outline-[var(--color-focus)]" />
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-1">
             <div className="flex items-center justify-between">
-              <label htmlFor="password" className="text-sm font-medium">Password</label>
-              <Link href="/forgot-password" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
+              <label htmlFor="password" className="text-[13px] text-muted-foreground">Password</label>
+              <Link href="/forgot-password" className="text-[13px] text-muted-foreground hover:text-foreground transition-colors">
                 Forgot password?
               </Link>
             </div>
             <input id="password" name="password" type="password" placeholder="••••••••" required
-              className="flex h-10 w-full rounded-md border bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2" />
+              className="flex h-9 w-full rounded-xl border border-border bg-surface px-4 text-sm placeholder:text-muted-foreground focus:outline-none focus:outline-2 focus:outline-offset-2 focus:outline-[var(--color-focus)]" />
           </div>
 
           <button type="submit" disabled={loading}
-            className="flex h-10 w-full items-center justify-center rounded-md bg-primary text-sm font-medium text-primary-foreground transition-colors hover:opacity-90 disabled:opacity-50">
+            className="flex h-9 w-full items-center justify-center rounded-full bg-primary text-sm text-primary-foreground transition-colors hover:bg-[#3a3a3a] disabled:opacity-50 disabled:cursor-not-allowed">
             {loading ? "Signing in..." : "Sign In"}
           </button>
         </form>
 
-        <p className="text-center text-sm text-muted-foreground">
+        <p className="text-center text-[13px] text-muted-foreground">
           Don&apos;t have an account?{" "}
-          <Link href="/register" className="font-medium text-foreground hover:underline">Sign up</Link>
+          <Link href="/register" className="text-foreground hover:underline">Sign up</Link>
         </p>
       </div>
     </div>

@@ -29,13 +29,13 @@ export default function ForgotPasswordPage() {
   if (sent) {
     return (
       <div className="flex flex-1 items-center justify-center px-4">
-        <div className="w-full max-w-sm text-center space-y-4">
-          <CheckCircle2 className="w-12 h-12 text-green-500 mx-auto" />
-          <h1 className="text-xl font-bold">Check your inbox</h1>
-          <p className="text-sm text-muted-foreground">
+        <div className="w-full max-w-[440px] text-center space-y-4">
+          <CheckCircle2 className="w-12 h-12 text-[var(--color-status-approved)] mx-auto" />
+          <h1 className="text-xl">Check your inbox</h1>
+          <p className="text-[13px] text-muted-foreground">
             If an account exists for that email, we&apos;ve sent a password reset link. It expires in 1 hour.
           </p>
-          <Link href="/login" className="text-sm font-medium hover:underline">Back to sign in</Link>
+          <Link href="/login" className="text-[13px] text-foreground hover:underline">Back to sign in</Link>
         </div>
       </div>
     );
@@ -43,36 +43,36 @@ export default function ForgotPasswordPage() {
 
   return (
     <div className="flex flex-1 items-center justify-center px-4">
-      <div className="w-full max-w-sm space-y-6">
+      <div className="w-full max-w-[440px] space-y-6">
         <div className="space-y-2 text-center">
           <div className="flex justify-center">
-            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-              <Mail className="w-6 h-6 text-primary" />
+            <div className="w-12 h-12 rounded-full bg-surface flex items-center justify-center">
+              <Mail className="w-6 h-6 text-foreground" />
             </div>
           </div>
-          <h1 className="text-2xl font-bold">Forgot password?</h1>
-          <p className="text-sm text-muted-foreground">
+          <h1 className="text-2xl">Forgot password?</h1>
+          <p className="text-[13px] text-muted-foreground">
             Enter your email and we&apos;ll send a reset link.
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
-            <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
+            <div className="rounded-xl bg-[var(--color-status-rejected-bg)] p-3 text-[13px] text-[var(--color-status-rejected)]">{error}</div>
           )}
-          <div className="space-y-2">
-            <label htmlFor="email" className="text-sm font-medium">Email</label>
+          <div className="space-y-1">
+            <label htmlFor="email" className="text-[13px] text-muted-foreground">Email</label>
             <input id="email" name="email" type="email" placeholder="you@example.com" required
-              className="flex h-10 w-full rounded-md border bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2" />
+              className="flex h-9 w-full rounded-xl border border-border bg-surface px-4 text-sm placeholder:text-muted-foreground focus:outline-none focus:outline-2 focus:outline-offset-2 focus:outline-[var(--color-focus)]" />
           </div>
           <button type="submit" disabled={loading}
-            className="flex h-10 w-full items-center justify-center rounded-md bg-primary text-sm font-medium text-primary-foreground transition-colors hover:opacity-90 disabled:opacity-50">
+            className="flex h-9 w-full items-center justify-center rounded-full bg-primary text-sm text-primary-foreground transition-colors hover:bg-[#3a3a3a] disabled:opacity-50 disabled:cursor-not-allowed">
             {loading ? "Sending..." : "Send Reset Link"}
           </button>
         </form>
 
-        <p className="text-center text-sm text-muted-foreground">
-          <Link href="/login" className="font-medium text-foreground hover:underline">Back to sign in</Link>
+        <p className="text-center text-[13px] text-muted-foreground">
+          <Link href="/login" className="text-foreground hover:underline">Back to sign in</Link>
         </p>
       </div>
     </div>

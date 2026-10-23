@@ -17,22 +17,22 @@ function MockPipeline() {
     { name: "Get Offer", color: "#22c55e", cards: ["Stripe"] },
   ];
   return (
-    <div className="rounded-xl border bg-background shadow-sm overflow-hidden">
-      <div className="px-4 py-2.5 border-b bg-muted/40 flex items-center justify-between">
-        <span className="text-xs font-semibold">Pipeline Board</span>
+    <div className="rounded-xl border border-border bg-surface overflow-hidden">
+      <div className="px-4 py-2.5 border-b border-border bg-muted/40 flex items-center justify-between">
+        <span className="text-xs">Pipeline Board</span>
         <span className="text-[10px] text-muted-foreground">Drag to move</span>
       </div>
       <div className="p-3 flex gap-2">
         {cols.map((col) => (
-          <div key={col.name} className="flex-1 rounded-lg border bg-muted/20">
-            <div className="flex items-center gap-1.5 px-2 py-1.5 border-b">
+          <div key={col.name} className="flex-1 rounded-xl border border-border bg-muted/20">
+            <div className="flex items-center gap-1.5 px-2 py-1.5 border-b border-border">
               <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: col.color }} />
-              <span className="text-[10px] font-semibold truncate">{col.name}</span>
+              <span className="text-[10px] truncate">{col.name}</span>
             </div>
             <div className="p-1.5 space-y-1.5">
               {col.cards.map((c) => (
-                <div key={c} className="rounded-md border bg-background px-2 py-1.5 shadow-sm">
-                  <p className="text-[10px] font-medium">{c}</p>
+                <div key={c} className="rounded-xl border border-border bg-background px-2 py-1.5">
+                  <p className="text-[10px]">{c}</p>
                   <div className="h-0.5 w-2/3 rounded-full bg-muted mt-1" />
                 </div>
               ))}
@@ -53,9 +53,9 @@ function MockAnalytics() {
     { label: "Hired",      value: 4,   color: "#10b981" },
   ];
   return (
-    <div className="rounded-xl border bg-background shadow-sm overflow-hidden">
-      <div className="px-4 py-2.5 border-b bg-muted/40 flex items-center justify-between">
-        <span className="text-xs font-semibold">Analytics</span>
+    <div className="rounded-xl border border-border bg-surface overflow-hidden">
+      <div className="px-4 py-2.5 border-b border-border bg-muted/40 flex items-center justify-between">
+        <span className="text-xs">Analytics</span>
         <div className="flex gap-3 text-[10px] text-muted-foreground">
           <span>Interview rate <strong className="text-foreground">34%</strong></span>
           <span>Offer rate <strong className="text-foreground">8%</strong></span>
@@ -66,7 +66,7 @@ function MockAnalytics() {
           <div key={b.label} className="space-y-1">
             <div className="flex justify-between text-[10px]">
               <span className="text-muted-foreground">{b.label}</span>
-              <span className="font-semibold">{b.value}%</span>
+              <span className="text-foreground">{b.value}%</span>
             </div>
             <div className="h-2 rounded-full bg-muted overflow-hidden">
               <div className="h-full rounded-full" style={{ width: `${b.value}%`, backgroundColor: b.color, opacity: 0.85 }} />
@@ -80,24 +80,24 @@ function MockAnalytics() {
 
 function MockReminder() {
   return (
-    <div className="rounded-xl border bg-background shadow-sm overflow-hidden text-xs">
-      <div className="flex items-center gap-1.5 px-3 py-2 bg-muted/40 border-b">
+    <div className="rounded-xl border border-border bg-surface overflow-hidden text-xs">
+      <div className="flex items-center gap-1.5 px-3 py-2 bg-muted/40 border-b border-border">
         <span className="w-2.5 h-2.5 rounded-full bg-red-400" />
         <span className="w-2.5 h-2.5 rounded-full bg-yellow-400" />
         <span className="w-2.5 h-2.5 rounded-full bg-green-400" />
         <span className="ml-2 text-[10px] text-muted-foreground">Inbox · you@email.com</span>
       </div>
-      <div className="px-4 py-2.5 border-b bg-muted/20 flex justify-between items-start gap-2">
-        <p className="font-semibold text-[11px]">Interview reminder — Stripe · Screening</p>
+      <div className="px-4 py-2.5 border-b border-border bg-muted/20 flex justify-between items-start gap-2">
+        <p className="text-[11px]">Interview reminder — Stripe · Screening</p>
         <span className="text-[10px] text-muted-foreground shrink-0">Today</span>
       </div>
       <div className="px-4 py-3 space-y-2 text-[11px]">
         <p className="text-muted-foreground">Hi there,</p>
         <p>You have a <strong>Screening interview</strong> with <strong>Stripe</strong> tomorrow at <strong>10:00 AM</strong>.</p>
-        <div className="rounded-lg border bg-indigo-500/5 border-indigo-500/20 px-3 py-2 flex items-center gap-2">
-          <span className="text-indigo-500 text-sm">📅</span>
+        <div className="rounded-xl border border-border bg-surface px-3 py-2 flex items-center gap-2">
+          <span className="text-foreground text-sm">📅</span>
           <div>
-            <p className="font-semibold">Sep 8 · 10:00 AM</p>
+            <p>Sep 8 · 10:00 AM</p>
             <p className="text-[10px] text-muted-foreground">Frontend Engineer · Round 1</p>
           </div>
         </div>
@@ -184,11 +184,11 @@ export function FeaturesSection() {
 
         {/* Header */}
         <div className="text-center space-y-4">
-          <p className="text-sm font-medium text-indigo-500 uppercase tracking-widest">Features</p>
-          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">
+          <p className="text-[13px] text-muted-foreground uppercase tracking-widest">Features</p>
+          <h2 className="text-3xl sm:text-4xl tracking-tight">
             Manage your job search fast
           </h2>
-          <p className="text-muted-foreground max-w-md mx-auto text-sm">
+          <p className="text-muted-foreground max-w-md mx-auto text-[13px]">
             Everything you need to run a focused, organised, data-driven job search.
           </p>
         </div>
@@ -196,12 +196,12 @@ export function FeaturesSection() {
         {/* 3-column summary cards */}
         <div className="feat-cards-wrap grid grid-cols-1 md:grid-cols-3 gap-6">
           {featureCards.map((f) => (
-            <div key={f.title} className="feat-card opacity-0 rounded-xl border bg-background p-6 space-y-3 hover:shadow-sm transition-shadow">
-              <div className="w-10 h-10 rounded-lg bg-indigo-500/10 flex items-center justify-center">
-                <f.icon className="w-5 h-5 text-indigo-500" />
+            <div key={f.title} className="feat-card opacity-0 rounded-xl border border-border bg-surface p-6 space-y-3 hover:bg-floating transition-colors">
+              <div className="w-10 h-10 rounded-xl bg-control flex items-center justify-center">
+                <f.icon className="w-5 h-5 text-foreground" />
               </div>
-              <p className="font-semibold">{f.title}</p>
-              <p className="text-sm text-muted-foreground leading-relaxed">{f.description}</p>
+              <p className="text-[15px]">{f.title}</p>
+              <p className="text-[13px] text-muted-foreground leading-relaxed">{f.description}</p>
             </div>
           ))}
         </div>
@@ -215,13 +215,13 @@ export function FeaturesSection() {
             }`}
           >
             <div className="space-y-5">
-              <p className="text-4xl font-bold text-muted-foreground/20 font-mono">{f.number}</p>
-              <h3 className="text-2xl font-bold tracking-tight">{f.title}</h3>
+              <p className="text-4xl text-muted-foreground/20 font-mono">{f.number}</p>
+              <h3 className="text-2xl tracking-tight">{f.title}</h3>
               <p className="text-muted-foreground leading-relaxed">{f.description}</p>
               <ul className="space-y-2 pt-1">
                 {f.bullets.map((b) => (
-                  <li key={b} className="flex items-center gap-2.5 text-sm text-muted-foreground">
-                    <span className="w-4 h-4 rounded-full bg-indigo-500/15 text-indigo-500 flex items-center justify-center shrink-0 text-[9px] font-bold">✓</span>
+                  <li key={b} className="flex items-center gap-2.5 text-[13px] text-muted-foreground">
+                    <span className="w-4 h-4 rounded-full bg-control text-foreground flex items-center justify-center shrink-0 text-[9px]">✓</span>
                     {b}
                   </li>
                 ))}

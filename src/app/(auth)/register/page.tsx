@@ -33,28 +33,28 @@ export default function RegisterPage() {
   if (sentTo) {
     return (
       <div className="flex flex-1 items-center justify-center px-4">
-        <div className="w-full max-w-sm space-y-6 text-center">
+        <div className="w-full max-w-[440px] space-y-6 text-center">
           <div className="flex justify-center">
-            <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
-              <Mail className="w-8 h-8 text-primary" />
+            <div className="w-16 h-16 rounded-full bg-surface flex items-center justify-center">
+              <Mail className="w-8 h-8 text-foreground" />
             </div>
           </div>
           <div className="space-y-2">
-            <h1 className="text-2xl font-bold">Check your inbox</h1>
-            <p className="text-sm text-muted-foreground">
+            <h1 className="text-2xl">Check your inbox</h1>
+            <p className="text-[13px] text-muted-foreground">
               We sent a verification link to <strong className="text-foreground">{sentTo}</strong>.
               Click it to activate your account.
             </p>
           </div>
-          <div className="rounded-md bg-muted/50 p-4 text-sm text-muted-foreground space-y-1">
+          <div className="rounded-xl bg-surface p-4 text-[13px] text-muted-foreground space-y-1">
             <p>Didn't receive it? Check your spam folder.</p>
-            <Link href={`/verify-email/resend?email=${encodeURIComponent(sentTo)}`} className="font-medium text-foreground hover:underline">
+            <Link href={`/verify-email/resend?email=${encodeURIComponent(sentTo)}`} className="text-foreground hover:underline">
               Resend verification email
             </Link>
           </div>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-[13px] text-muted-foreground">
             Already verified?{" "}
-            <Link href="/login" className="font-medium text-foreground hover:underline">Sign in</Link>
+            <Link href="/login" className="text-foreground hover:underline">Sign in</Link>
           </p>
         </div>
       </div>
@@ -63,46 +63,46 @@ export default function RegisterPage() {
 
   return (
     <div className="flex flex-1 items-center justify-center px-4">
-      <div className="w-full max-w-sm space-y-6">
+      <div className="w-full max-w-[440px] space-y-6">
         <div className="space-y-2 text-center">
-          <h1 className="text-2xl font-bold">Create your account</h1>
-          <p className="text-sm text-muted-foreground">Start managing your job applications with Orbit</p>
+          <h1 className="text-2xl">Create your account</h1>
+          <p className="text-[13px] text-muted-foreground">Start managing your job applications with Orbit</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {(errors._form || errors.email || errors.name || errors.password) && (
-            <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
+            <div className="rounded-xl bg-[var(--color-status-rejected-bg)] p-3 text-[13px] text-[var(--color-status-rejected)]">
               {(errors._form?.[0] || errors.name?.[0] || errors.email?.[0] || errors.password?.[0])}
             </div>
           )}
 
-          <div className="space-y-2">
-            <label htmlFor="name" className="text-sm font-medium">Name</label>
+          <div className="space-y-1">
+            <label htmlFor="name" className="text-[13px] text-muted-foreground">Name</label>
             <input id="name" name="name" type="text" placeholder="Your name" required
-              className="flex h-10 w-full rounded-md border bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2" />
+              className="flex h-9 w-full rounded-xl border border-border bg-surface px-4 text-sm placeholder:text-muted-foreground focus:outline-none focus:outline-2 focus:outline-offset-2 focus:outline-[var(--color-focus)]" />
           </div>
 
-          <div className="space-y-2">
-            <label htmlFor="email" className="text-sm font-medium">Email</label>
+          <div className="space-y-1">
+            <label htmlFor="email" className="text-[13px] text-muted-foreground">Email</label>
             <input id="email" name="email" type="email" placeholder="you@example.com" required
-              className="flex h-10 w-full rounded-md border bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2" />
+              className="flex h-9 w-full rounded-xl border border-border bg-surface px-4 text-sm placeholder:text-muted-foreground focus:outline-none focus:outline-2 focus:outline-offset-2 focus:outline-[var(--color-focus)]" />
           </div>
 
-          <div className="space-y-2">
-            <label htmlFor="password" className="text-sm font-medium">Password</label>
+          <div className="space-y-1">
+            <label htmlFor="password" className="text-[13px] text-muted-foreground">Password</label>
             <input id="password" name="password" type="password" placeholder="••••••••" required minLength={8}
-              className="flex h-10 w-full rounded-md border bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2" />
+              className="flex h-9 w-full rounded-xl border border-border bg-surface px-4 text-sm placeholder:text-muted-foreground focus:outline-none focus:outline-2 focus:outline-offset-2 focus:outline-[var(--color-focus)]" />
           </div>
 
           <button type="submit" disabled={loading}
-            className="flex h-10 w-full items-center justify-center rounded-md bg-primary text-sm font-medium text-primary-foreground transition-colors hover:opacity-90 disabled:opacity-50">
+            className="flex h-9 w-full items-center justify-center rounded-full bg-primary text-sm text-primary-foreground transition-colors hover:bg-[#3a3a3a] disabled:opacity-50 disabled:cursor-not-allowed">
             {loading ? "Creating account..." : "Create Account"}
           </button>
         </form>
 
-        <p className="text-center text-sm text-muted-foreground">
+        <p className="text-center text-[13px] text-muted-foreground">
           Already have an account?{" "}
-          <Link href="/login" className="font-medium text-foreground hover:underline">Sign in</Link>
+          <Link href="/login" className="text-foreground hover:underline">Sign in</Link>
         </p>
       </div>
     </div>

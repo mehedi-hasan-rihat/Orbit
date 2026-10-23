@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { Logo } from "@/components/landing/logo";
 import { HeroSection } from "@/components/landing/hero";
 import { TrustBar } from "@/components/landing/trust-bar";
 import { StatsSection } from "@/components/landing/stats";
@@ -16,13 +15,13 @@ export default function Home() {
   return (
     <div className="flex flex-1 flex-col overflow-x-hidden font-sans">
       {/* Nav */}
-      <header className="fixed top-0 left-0 right-0 z-50 backdrop-blur-sm bg-background/90 border-b">
-        <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
+      <header className="fixed top-0 left-0 right-0 z-50 backdrop-blur-[var(--blur-floating)] bg-[var(--color-glass)] border-b border-border">
+        <div className="max-w-6xl mx-auto px-6 flex items-center justify-between" style={{ height: "var(--header-height)" }}>
           <Link href="/" className="flex items-center gap-2">
             {/* <Logo className="w-6 h-6" /> */}
-            <span className="text-base font-semibold tracking-tight">Orbit</span>
+            <span className="text-[15px] tracking-tight">Orbit</span>
           </Link>
-          <nav className="hidden md:flex items-center gap-7 text-sm text-muted-foreground">
+          <nav className="hidden md:flex items-center gap-7 text-[13px] text-muted-foreground">
             <a href="#features" className="hover:text-foreground transition-colors">Features</a>
             <a href="#how-it-works" className="hover:text-foreground transition-colors">How it works</a>
             <Link href="/pricing" className="hover:text-foreground transition-colors">Pricing</Link>
@@ -31,13 +30,13 @@ export default function Home() {
           <div className="flex items-center gap-2">
             <Link
               href="/login"
-              className="hidden sm:inline-flex h-9 items-center px-4 text-sm text-muted-foreground hover:text-foreground transition-colors"
+              className="hidden sm:inline-flex h-9 items-center px-4 text-[13px] text-muted-foreground hover:text-foreground transition-colors"
             >
               Sign in
             </Link>
             <Link
               href="/register"
-              className="inline-flex h-9 items-center rounded-lg px-5 text-sm font-semibold bg-indigo-500 text-white hover:bg-indigo-600 transition-colors"
+              className="inline-flex h-9 items-center rounded-full px-5 text-[13px] bg-primary text-primary-foreground hover:bg-[#3a3a3a] transition-colors"
             >
               Get started
             </Link>
@@ -70,25 +69,25 @@ export default function Home() {
       <CTASection />
 
       {/* Footer */}
-      <footer className="border-t bg-muted/20">
+      <footer className="border-t border-border bg-surface">
         <div className="max-w-6xl mx-auto px-6 py-12 flex flex-col sm:flex-row items-start justify-between gap-10">
           {/* Brand */}
           <div className="space-y-3 max-w-xs">
             <div className="flex items-center gap-2">
               {/* <Logo className="w-5 h-5" /> */}
-              <span className="font-semibold text-sm">Orbit</span>
+              <span className="text-[13px]">Orbit</span>
             </div>
-            <p className="text-xs text-muted-foreground leading-relaxed">
+            <p className="text-[13px] text-muted-foreground leading-relaxed">
               A job application tracker built to replace spreadsheet chaos. Visual pipeline, smart reminders, real analytics.
             </p>
-            <p className="text-xs text-muted-foreground">Currently free · No credit card required</p>
+            <p className="text-[13px] text-muted-foreground">Currently free · No credit card required</p>
             {/* Social icons placeholder */}
             <div className="flex items-center gap-3 pt-1">
               <a
                 href="https://github.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-7 h-7 rounded-md border flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors"
+                className="w-7 h-7 rounded-md border border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors"
                 aria-label="GitHub"
               >
                 <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 fill-current">
@@ -101,43 +100,43 @@ export default function Home() {
           {/* Links */}
           <div className="flex flex-wrap gap-12">
             <div className="space-y-3">
-              <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Product</p>
+              <p className="text-[13px] uppercase tracking-widest text-muted-foreground">Product</p>
               <div className="space-y-2.5">
-                <a href="#features" className="block text-xs text-muted-foreground hover:text-foreground transition-colors">Features</a>
-                <a href="#how-it-works" className="block text-xs text-muted-foreground hover:text-foreground transition-colors">How it works</a>
-                <a href="#faq" className="block text-xs text-muted-foreground hover:text-foreground transition-colors">FAQ</a>
-                <Link href="/pricing" className="block text-xs text-muted-foreground hover:text-foreground transition-colors">Pricing</Link>
+                <a href="#features" className="block text-[13px] text-muted-foreground hover:text-foreground transition-colors">Features</a>
+                <a href="#how-it-works" className="block text-[13px] text-muted-foreground hover:text-foreground transition-colors">How it works</a>
+                <a href="#faq" className="block text-[13px] text-muted-foreground hover:text-foreground transition-colors">FAQ</a>
+                <Link href="/pricing" className="block text-[13px] text-muted-foreground hover:text-foreground transition-colors">Pricing</Link>
               </div>
             </div>
             <div className="space-y-3">
-              <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Tracking</p>
+              <p className="text-[13px] uppercase tracking-widest text-muted-foreground">Tracking</p>
               <div className="space-y-2.5">
-                <a href="#features" className="block text-xs text-muted-foreground hover:text-foreground transition-colors">Pipeline</a>
-                <a href="#features" className="block text-xs text-muted-foreground hover:text-foreground transition-colors">Analytics</a>
-                <a href="#features" className="block text-xs text-muted-foreground hover:text-foreground transition-colors">Reminders</a>
-                <a href="#features" className="block text-xs text-muted-foreground hover:text-foreground transition-colors">Calendar</a>
+                <a href="#features" className="block text-[13px] text-muted-foreground hover:text-foreground transition-colors">Pipeline</a>
+                <a href="#features" className="block text-[13px] text-muted-foreground hover:text-foreground transition-colors">Analytics</a>
+                <a href="#features" className="block text-[13px] text-muted-foreground hover:text-foreground transition-colors">Reminders</a>
+                <a href="#features" className="block text-[13px] text-muted-foreground hover:text-foreground transition-colors">Calendar</a>
               </div>
             </div>
             <div className="space-y-3">
-              <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Account</p>
+              <p className="text-[13px] uppercase tracking-widest text-muted-foreground">Account</p>
               <div className="space-y-2.5">
-                <Link href="/register" className="block text-xs text-muted-foreground hover:text-foreground transition-colors">Get started</Link>
-                <Link href="/login" className="block text-xs text-muted-foreground hover:text-foreground transition-colors">Sign in</Link>
+                <Link href="/register" className="block text-[13px] text-muted-foreground hover:text-foreground transition-colors">Get started</Link>
+                <Link href="/login" className="block text-[13px] text-muted-foreground hover:text-foreground transition-colors">Sign in</Link>
               </div>
             </div>
             <div className="space-y-3">
-              <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Legal</p>
+              <p className="text-[13px] uppercase tracking-widest text-muted-foreground">Legal</p>
               <div className="space-y-2.5">
-                <Link href="/terms" className="block text-xs text-muted-foreground hover:text-foreground transition-colors">Terms of Service</Link>
-                <Link href="/privacy" className="block text-xs text-muted-foreground hover:text-foreground transition-colors">Privacy Policy</Link>
+                <Link href="/terms" className="block text-[13px] text-muted-foreground hover:text-foreground transition-colors">Terms of Service</Link>
+                <Link href="/privacy" className="block text-[13px] text-muted-foreground hover:text-foreground transition-colors">Privacy Policy</Link>
               </div>
             </div>
           </div>
         </div>
 
         {/* Bottom bar */}
-        <div className="border-t">
-          <div className="max-w-6xl mx-auto px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-muted-foreground">
+        <div className="border-t border-border">
+          <div className="max-w-6xl mx-auto px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-2 text-[13px] text-muted-foreground">
             <span>© 2026 Orbit. Built by <a href="https://mehedi-hasan-rihat.vercel.app" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">Mehedi Hasan</a>.</span>
             <span>Your data is yours — always.</span>
           </div>

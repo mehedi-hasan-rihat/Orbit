@@ -32,7 +32,7 @@ interface Props {
   availableTags: Tag[];
 }
 
-const BUTTON = "inline-flex h-8 items-center rounded-md border px-3 text-xs font-medium hover:bg-accent transition-colors disabled:opacity-50";
+const BUTTON = "inline-flex h-8 items-center rounded-full border border-border px-3 text-[13px] hover:bg-control transition-colors disabled:opacity-50";
 
 export function ApplicationActions({
   applicationId,
@@ -77,7 +77,7 @@ export function ApplicationActions({
         <button
           onClick={handleDelete}
           disabled={isSubmitting}
-          className="inline-flex h-8 items-center rounded-md bg-destructive px-3 text-xs font-medium text-white hover:opacity-90 transition-opacity disabled:opacity-50"
+          className="inline-flex h-8 items-center rounded-full bg-destructive px-3 text-[13px] text-destructive-foreground hover:opacity-90 transition-opacity disabled:opacity-50"
         >
           {isSubmitting ? "Deleting…" : "Delete"}
         </button>
@@ -100,7 +100,7 @@ export function ApplicationActions({
           onChange={(e) => run(() => updateApplicationStage(applicationId, e.target.value))}
           disabled={isSubmitting}
           aria-label="Stage"
-          className="h-8 rounded-md border bg-background px-2 text-xs focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50"
+          className="h-8 rounded-full border border-border bg-surface px-2 text-[13px] focus:outline-none focus:outline-2 focus:outline-offset-2 focus:outline-[var(--color-focus)] disabled:opacity-50"
         >
           {!stageId && <option value="">Unassigned</option>}
           {stages.map((s) => (

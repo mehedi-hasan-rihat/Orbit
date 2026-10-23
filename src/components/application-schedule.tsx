@@ -70,16 +70,16 @@ function FollowUpForm({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="w-full max-w-md rounded-lg border bg-background p-6 shadow-lg mx-4 max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#00000080] backdrop-blur-[8px]">
+      <div className="w-full max-w-md rounded-[32px] border border-border bg-[var(--color-floating)] backdrop-blur-[var(--blur-floating)] p-8 shadow-[0_8px_32px_#00000040] mx-4 max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-5">
-          <h3 className="font-semibold">{followUp ? "Edit reminder" : "New reminder"}</h3>
+          <h3>{followUp ? "Edit reminder" : "New reminder"}</h3>
           <button onClick={onClose} className="text-muted-foreground hover:text-foreground">✕</button>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <label className="text-sm font-medium">Title *</label>
+            <label className="text-[13px] text-muted-foreground">Title *</label>
             <input
               name="title"
               type="text"
@@ -87,13 +87,13 @@ function FollowUpForm({
               placeholder="Chase the recruiter about the offer letter"
               required
               maxLength={120}
-              className="flex h-9 w-full rounded-md border bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              className="flex h-9 w-full rounded-xl border border-border bg-surface px-4 text-sm focus:outline-none focus:outline-2 focus:outline-offset-2 focus:outline-[var(--color-focus)]"
             />
             {errors.title && <p className="text-xs text-destructive">{errors.title[0]}</p>}
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium">Due *</label>
+            <label className="text-[13px] text-muted-foreground">Due *</label>
             <DatePicker
               name="dueAt"
               placeholder="Pick a date"
@@ -107,14 +107,14 @@ function FollowUpForm({
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium">Details</label>
+            <label className="text-[13px] text-muted-foreground">Details</label>
             <textarea
               name="details"
               rows={3}
               defaultValue={followUp?.details ?? ""}
               placeholder="What exactly you need to ask, who to contact..."
               maxLength={2000}
-              className="flex w-full rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring resize-none"
+              className="flex w-full rounded-xl border border-border bg-surface px-4 py-2 text-sm focus:outline-none focus:outline-2 focus:outline-offset-2 focus:outline-[var(--color-focus)] resize-none"
             />
           </div>
 
@@ -126,10 +126,10 @@ function FollowUpForm({
           )}
 
           <div className="flex justify-end gap-2">
-            <button type="button" onClick={onClose} className="h-9 px-4 rounded-md border text-sm font-medium hover:bg-accent transition-colors">
+            <button type="button" onClick={onClose} className="h-9 px-4 rounded-full border border-border text-[13px] hover:bg-control transition-colors">
               Cancel
             </button>
-            <button type="submit" disabled={loading} className="h-9 px-4 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 disabled:opacity-50 transition-colors">
+            <button type="submit" disabled={loading} className="h-9 px-4 rounded-full bg-primary text-primary-foreground text-[13px] hover:bg-[#3a3a3a] disabled:opacity-50 transition-colors">
               {loading ? "Saving..." : followUp ? "Update" : "Add reminder"}
             </button>
           </div>
@@ -184,21 +184,21 @@ function NoteForm({
         rows={3}
         placeholder="Write a note…"
         maxLength={5000}
-        className="flex w-full rounded-lg border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring resize-none"
+        className="flex w-full rounded-xl border border-border bg-surface px-4 py-2 text-sm focus:outline-none focus:outline-2 focus:outline-offset-2 focus:outline-[var(--color-focus)] resize-none"
       />
       {error && <p className="text-xs text-destructive">{error}</p>}
       <div className="flex gap-2">
         <button
           type="submit"
           disabled={loading}
-          className="h-7 px-3 rounded-md bg-primary text-primary-foreground text-xs font-medium hover:opacity-90 disabled:opacity-50 transition-opacity"
+          className="h-7 px-3 rounded-full bg-primary text-primary-foreground text-[13px] hover:bg-[#3a3a3a] disabled:opacity-50 transition-colors"
         >
           {loading ? "Saving…" : note ? "Update" : "Save note"}
         </button>
         <button
           type="button"
           onClick={onClose}
-          className="h-7 px-3 rounded-md border text-xs font-medium hover:bg-accent transition-colors"
+          className="h-7 px-3 rounded-full border border-border text-[13px] hover:bg-control transition-colors"
         >
           Cancel
         </button>
@@ -257,7 +257,7 @@ export function ApplicationSchedule({
       {/* ── Reminders ───────────────────────────────────────────────────── */}
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div>
-          <h2 className="text-sm font-semibold tracking-tight">Reminders</h2>
+          <h2 className="text-sm tracking-tight">Reminders</h2>
           <p className="text-xs text-muted-foreground mt-0.5">
             {open.length} of {MAX_ACTIVE_REMINDERS} open · emailed to you on the day each one is due
           </p>
@@ -296,7 +296,7 @@ export function ApplicationSchedule({
               >
                 <div className="flex items-start justify-between gap-3 flex-wrap">
                   <div className="min-w-0">
-                    <p className={clsx("text-sm font-medium", followUp.done && "line-through")}>
+                    <p className={clsx("text-[13px] text-muted-foreground", followUp.done && "line-through")}>
                       {followUp.title}
                     </p>
                     <p className={clsx("text-xs", overdue ? "text-destructive" : "text-muted-foreground")}>
@@ -340,7 +340,7 @@ export function ApplicationSchedule({
       {/* ── Notes ───────────────────────────────────────────────────────── */}
       <div className="border-t pt-4 space-y-3">
         <div className="flex items-center justify-between gap-3">
-          <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          <h3 className="text-[13px] uppercase tracking-wide text-muted-foreground">
             Notes
           </h3>
           {!addingNote && (
