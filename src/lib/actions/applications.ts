@@ -774,6 +774,53 @@ export async function exportApplicationsCsv() {
   return csv;
 }
 
+export type ExportRow = {
+  company: string;
+  role: string;
+  status: string;
+  outcome: string;
+  appliedDate: string;
+  jobUrl: string;
+  addedOn: string;
+};
+
+export async function exportApplicationsData(params: {
+  include: "active" | "closed" | "both";
+  sortBy: "appliedDate" | "createdAt";
+}): Promise<ExportRow[]> {
+  const session = await requireUser();
+
+  const where: Record<string, unknown> = {
+    userId: session.userId,
+    archived: false,
+  };
+
+  if (params.include === "active") where.closed = false;
+  else if (params.include === "closed") where.closed = true;
+  // "both" — no closed filter
+
+  const applications = await prisma.application.findMany({
+    where,
+    orderBy: { [params.sortBy]: "desc" },
+    include: {
+      tags: { include: { tag: true } },
+      stage: { select: { name: true, color: true } },
+    },
+  });
+
+  return applications.map((app) => ({
+    company: app.company,
+    role: app.role,
+    status: resolveStage(app).name,
+    outcome: app.stageOutcome
+      ? app.stageOutcome.charAt(0) + app.stageOutcome.slice(1).toLowerCase()
+      : "",
+    appliedDate: app.appliedDate ? app.appliedDate.toISOString().split("T")[0] : "",
+    jobUrl: app.jobUrl ?? "",
+    addedOn: app.createdAt.toISOString().split("T")[0],
+  }));
+}
+
 // Returns scheduled applications and open reminders that are due today or
 // overdue. Used by the dashboard "Due today" section and the detail page banners.
 export async function getDueItems() {
